@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "626087765038",
+    "firebase_url": "https://eatmeh-a70a6-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "eatmeh-a70a6",
+    "storage_bucket": "eatmeh-a70a6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:626087765038:android:59a2dc3124de8133382bbf",
+        "android_client_info": {
+          "package_name": "com.example.eatmehv2"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCCgDzGijPTI_TeX_EN_J18Fnw2aQULb3c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
