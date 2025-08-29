@@ -174,7 +174,7 @@ class UserService {
       });
       log('Friend request accepted!');
     } catch (e) {
-      print('Error accepting friend request: $e');
+      log('Error accepting friend request: $e');
     }
   }
 

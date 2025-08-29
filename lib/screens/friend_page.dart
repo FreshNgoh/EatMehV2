@@ -127,9 +127,7 @@ class _FriendPageState extends State<FriendPage> {
         final imageUrl = latestRecord?.imageUrl;
         final timeAgo = _formatTimestamp(latestRecord?.createdAt);
         var calorieColor = getCalorieColor(0);
-        if (calories != null) {
-          calorieColor = getCalorieColor(int.tryParse(calories!) ?? 0);
-        }
+        calorieColor = getCalorieColor(int.tryParse(calories) ?? 0);
 
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
