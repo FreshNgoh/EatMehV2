@@ -32,8 +32,8 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
-/lib/utils/constant.dart
-/lib/utils/firebase_option.dart
+/lib/utils/constants.dart
+/lib/utils/firebase_options.dart
 firebase.json
 
 # Symbolication related
