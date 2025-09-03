@@ -32,9 +32,9 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
-/lib/utils/constants.dart
 /lib/utils/firebase_options.dart
 firebase.json
+.env
 
 # Symbolication related
 app.*.symbols

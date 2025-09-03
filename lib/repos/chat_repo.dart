@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:eatmehv2/models/chat_message_model.dart';
-import 'package:eatmehv2/utils/constants.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ChatRepo {
   static chatIRecipeGenerationRepo(
@@ -8,6 +8,7 @@ class ChatRepo {
   ) async {
     try {
       Dio dio = Dio();
+      String? apiKey = dotenv.env['chatApiKey'];
 
       final requestData = {
         "contents": previousMessages.map((e) => e.toMap()).toList(),
@@ -18,7 +19,7 @@ class ChatRepo {
       };
 
       final response = await dio.post(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$chatApiKey",
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey",
         data: requestData,
         options: Options(
           contentType: Headers.jsonContentType,
