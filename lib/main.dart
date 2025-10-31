@@ -1,75 +1,28 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:eatmehv2/bloc/chat/chat_bloc_bloc.dart';
-import 'package:eatmehv2/screens/login_page.dart';
-import 'package:eatmehv2/utils/firebase_options.dart';
-import 'package:eatmehv2/widgets/bar.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'app.dart';
+import 'core/localization/app_localizations.dart';
+import 'data/services/local/shared_prefs_service.dart';
+import 'data/services/local/notification_service.dart';
+import '../lib_claude/utils/firebase_options.dart';
 
-Future<void> main() async {
-  // Initialize Flutter bindings and Firebase
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Initialize Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // Get data from the cache
-  FirebaseFirestore.instance.settings = const Settings(
-    persistenceEnabled: true,
-  );
-
-  // Load environment variables from .env file
+  // Load environment variables
   await dotenv.load(fileName: ".env");
 
-  runApp(const MyApp());
-}
+  // Initialize SharedPreferences
+  await SharedPrefsService.init();
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  // Initialize Notifications
+  await NotificationService.init();
 
-  @override
-  Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [BlocProvider(create: (context) => ChatBlocBloc())],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Eat Meh',
-        theme: ThemeData(
-          fontFamily: "Poppins",
-          scaffoldBackgroundColor: Colors.white,
-        ),
-        home: AuthWrapper(),
-      ),
-    );
-  }
-}
-
-// AuthWrapper listens to authentication state changes
-class AuthWrapper extends StatelessWidget {
-  const AuthWrapper({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {
-        // If the connection state is waiting, show a loading indicator
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-
-        // If the user is signed in, show the authenticated page (NutritionScreen with Bar)
-        if (snapshot.hasData) {
-          return const Bar(); // Assuming Bar includes Navigation to NutritionScreen
-        }
-
-        // If the user is not signed in, show the LoginPage
-        return const LoginPage(); // Show the login page
-      },
-    );
-  }
+  runApp(const EatMehApp());
 }
