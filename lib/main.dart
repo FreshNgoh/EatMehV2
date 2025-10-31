@@ -7,7 +7,7 @@ import 'app.dart';
 import 'core/localization/app_localizations.dart';
 import 'data/services/local/shared_prefs_service.dart';
 import 'data/services/local/notification_service.dart';
-import '../lib_claude/utils/firebase_options.dart';
+import 'utils/firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

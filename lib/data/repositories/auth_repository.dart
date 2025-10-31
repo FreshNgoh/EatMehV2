@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
 import '../models/user/user_model.dart';
 import 'user_repository.dart';
 
@@ -10,6 +9,11 @@ class AuthRepository {
 
   Stream<User?> get authStateChanges => _firebaseAuth.authStateChanges();
   User? get currentUser => _firebaseAuth.currentUser;
+
+  // Get user model from Firestore
+  Future<UserModel?> getUserModel(String uid) async {
+    return await _userRepository.getUser(uid);
+  }
 
   Future<UserModel?> signIn(String email, String password) async {
     try {
