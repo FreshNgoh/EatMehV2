@@ -1,24 +1,26 @@
 import 'package:flutter/material.dart';
-import '../friends/friends_screen.dart';
-import '../records/records_screen.dart';
-import '../camera/camera_screen.dart';
-import '../profile/profile_screen.dart';
-import '../../../widgets/common/custom_app_bar.dart';
+import '../common/friends/friends_screen.dart';
+import '../common/records/records_screen.dart';
+import '../common/camera/camera_screen.dart';
+import 'trainees_screen.dart';
+import '../common/profile/profile_screen.dart';
+import '../../widgets/common/custom_app_bar.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class TrainerHomeScreen extends StatefulWidget {
+  const TrainerHomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<TrainerHomeScreen> createState() => _TrainerHomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
   int _selectedIndex = 0;
 
   final List<Widget> _pages = [
     const FriendsScreen(),
     const RecordsScreen(),
     const CameraScreen(),
+    const TraineesScreen(),
     const ProfileScreen(),
   ];
 
@@ -26,6 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
     'Friends',
     'Records',
     'Camera',
+    'Trainees',
     'Profile',
   ];
 
@@ -54,14 +57,15 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildNavItem(0, Icons.people, 'Friends'),
                 _buildNavItem(1, Icons.assessment, 'Records'),
                 _buildNavItem(2, Icons.camera_alt, 'Camera'),
-                _buildNavItem(3, Icons.person, 'Profile'),
+                _buildNavItem(3, Icons.fitness_center, 'Trainees'),
+                _buildNavItem(4, Icons.person, 'Profile'),
               ],
             ),
           ),
@@ -95,13 +99,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon,
                 color:
                     isSelected ? const Color(0xFF191919) : Colors.grey.shade600,
-                size: 24,
+                size: 22,
               ),
               const SizedBox(height: 4),
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 11,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                   color: isSelected
                       ? const Color(0xFF191919)

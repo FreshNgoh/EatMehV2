@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'core/theme/app_theme.dart';
 import 'core/localization/app_localizations.dart';
 import 'presentation/blocs/theme/theme_bloc.dart';
@@ -63,20 +64,31 @@ class EatMehApp extends StatelessWidget {
                   home: BlocBuilder<AuthBloc, AuthState>(
                     builder: (context, authState) {
                       if (authState is AuthLoading) {
+                        debugPrint(
+                            "🟡 Auth State: AuthLoading — showing loading screen");
                         return const Scaffold(
                           body: Center(child: CircularProgressIndicator()),
                         );
                       }
 
                       if (authState is Authenticated) {
+                        debugPrint(
+                            "🟢 Auth State: Authenticated — user logged in");
+
                         // Check if onboarding is needed
                         if (settingsState is SettingsLoaded &&
                             settingsState.settings.showOnboarding) {
+                          debugPrint("🟣 Showing OnboardingScreen");
                           return const OnboardingScreen();
                         }
+
+                        debugPrint(
+                            "🔵 Navigating to home screen for role: ${authState.user.role}");
                         return AppRouter.getHomeScreen(authState.user.role);
                       }
 
+                      debugPrint(
+                          "🔴 Auth State: Unauthenticated — showing LoginScreen");
                       return const LoginScreen();
                     },
                   ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../data/dummy_data.dart';
+import '../../../data/dummy_data.dart';
 
 class TraineesScreen extends StatelessWidget {
   const TraineesScreen({super.key});
