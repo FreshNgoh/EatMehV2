@@ -32,51 +32,42 @@ class AppLocalizations {
     return _localizedStrings[key] ?? key;
   }
 
-  // Getters for common translations
-  String get appName => translate('app_name');
-  String get welcome => translate('welcome');
-  String get login => translate('login');
-  String get register => translate('register');
-  String get email => translate('email');
-  String get password => translate('password');
-  String get username => translate('username');
-  String get forgotPassword => translate('forgot_password');
+  // Login & Register
+  String get appName => translate('appName');
+  String get tagline => translate('tagline');
 
-  // Navigation
-  String get friends => translate('friends');
-  String get records => translate('records');
-  String get camera => translate('camera');
-  String get consult => translate('consult');
-  String get profile => translate('profile');
+  String get emailLabel => translate('emailLabel');
+  String get emailHint => translate('emailHint');
+  String get emailErrorEmpty => translate('emailErrorEmpty');
+  String get emailErrorInvalid => translate('emailErrorInvalid');
 
-  // Camera & Stories
-  String get takePhoto => translate('take_photo');
-  String get analyzeMeal => translate('analyze_meal');
-  String get postStory => translate('post_story');
-  String get viewStories => translate('view_stories');
-  String get yourStory => translate('your_story');
+  String get passwordLabel => translate('passwordLabel');
+  String get passwordHint => translate('passwordHint');
+  String get passwordErrorEmpty => translate('passwordErrorEmpty');
+  String get passwordErrorShort => translate('passwordErrorShort');
 
-  // Meal Analysis
-  String get calories => translate('calories');
-  String get recommendation => translate('recommendation');
-  String get breakfast => translate('breakfast');
-  String get lunch => translate('lunch');
-  String get dinner => translate('dinner');
-  String get snack => translate('snack');
+  String get forgotPassword => translate('forgotPassword');
+  String get loginButton => translate('loginButton');
+  String get noAccount => translate('noAccount');
+  String get registerNow => translate('registerNow');
+  String get loginError => translate('loginError');
 
-  // Settings
-  String get settings => translate('settings');
-  String get language => translate('language');
-  String get darkMode => translate('dark_mode');
-  String get notifications => translate('notifications');
-  String get userManual => translate('user_manual');
-  String get logout => translate('logout');
+  String get createAccount => translate('createAccount');
 
-  // Status
-  String get healthy => translate('healthy');
-  String get underweight => translate('underweight');
-  String get overweight => translate('overweight');
-  String get needsAttention => translate('needs_attention');
+  String get usernameLabel => translate('usernameLabel');
+  String get usernameHint => translate('usernameHint');
+  String get usernameErrorEmpty => translate('usernameErrorEmpty');
+  String get usernameErrorShort => translate('usernameErrorShort');
+
+  String get confirmPasswordLabel => translate('confirmPasswordLabel');
+  String get confirmPasswordHint => translate('confirmPasswordHint');
+  String get confirmPasswordErrorEmpty =>
+      translate('confirmPasswordErrorEmpty');
+  String get confirmPasswordErrorMismatch =>
+      translate('confirmPasswordErrorMismatch');
+
+  String get registerButton => translate('registerButton');
+  String get termsNotice => translate('termsNotice');
 }
 
 class _AppLocalizationsDelegate

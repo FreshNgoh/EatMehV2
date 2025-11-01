@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:eatmehv2/models/user_exercise_model.dart';
+import 'package:eatmehv2/data/models/user_exercise_model.dart';
 
 const String USER_EXERCISE_COLLECTION_REF = "user_exercise";
 

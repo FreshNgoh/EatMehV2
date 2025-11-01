@@ -49,6 +49,8 @@ dependencies:
   image_gallery_saver:
   permission_handler:
   flutter_dotenv:
+  provider:
+  equatable:
 
   # Localization
   flutter_localizations:

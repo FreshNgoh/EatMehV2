@@ -1,6 +1,6 @@
 import 'dart:developer';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:eatmehv2/models/user_records_model.dart';
+import 'package:eatmehv2/data/models/user_records_model.dart';
 
 const String USER_RECORD_COLLECTION_REF = "users";
 
