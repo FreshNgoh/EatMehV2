@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:eatmehv2/widgets/bar.dart';
 import 'package:eatmehv2/models/user_model.dart';
 import "package:eatmehv2/services/user_service.dart";
+import 'package:eatmehv2/core/localization/app_localizations.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -23,7 +24,7 @@ class _LoginPageState extends State<LoginPage> {
   // final Random _random = Random();
   bool _isLogin = true;
   bool _obscurePassword = true;
-  final GlobalKey _avatarKey = GlobalKey(); // Key for RepaintBoundary
+  // final GlobalKey _avatarKey = GlobalKey(); // Key for RepaintBoundary
   // NotionAvatarController? _avatarController; // To access the controller
 
   void _toggleTab(bool isLoginTab) {
@@ -112,16 +113,16 @@ class _LoginPageState extends State<LoginPage> {
           email: email,
           password: password,
         );
+        if (!mounted) return;
+
         if (_auth.currentUser != null) {
           log("User is logged in: ${_auth.currentUser?.email}");
           // Navigate to the home page
-          if (mounted) {
-            // Check if the widget is still in the tree
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const Bar()),
-            );
-          }
+          if (!mounted) return;
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const Bar()),
+          );
         }
       } else {
         UserCredential userCredential = await _auth
@@ -162,6 +163,7 @@ class _LoginPageState extends State<LoginPage> {
               // avatarOptions: avatarIndices,
             );
             await _userService.addUser(newUser);
+            if (!mounted) return;
             _showSuccess("Registration successful!");
             // Do NOT redirect to Bar() here
             if (mounted) {
@@ -209,6 +211,7 @@ class _LoginPageState extends State<LoginPage> {
         }
       }
     } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
       _handleAuthError(e);
       if (mounted) {
         setState(() {
@@ -216,6 +219,7 @@ class _LoginPageState extends State<LoginPage> {
         });
       }
     } catch (e) {
+      if (!mounted) return;
       _showError("Something went wrong. Please try again.");
       if (mounted) {
         setState(() {
@@ -232,9 +236,10 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _showSuccess(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.green),
-    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   void _handleAuthError(FirebaseAuthException e) {
@@ -292,7 +297,7 @@ class _LoginPageState extends State<LoginPage> {
       children: [
         TextField(
           controller: _emailController,
-          decoration: const InputDecoration(labelText: "Email"),
+          decoration: InputDecoration(labelText: context.loc.email),
           keyboardType: TextInputType.emailAddress,
         ),
         const SizedBox(height: 10),
@@ -300,7 +305,7 @@ class _LoginPageState extends State<LoginPage> {
           controller: _passwordController,
           obscureText: _obscurePassword,
           decoration: InputDecoration(
-            labelText: "Password",
+            labelText: context.loc.password,
             suffixIcon: IconButton(
               icon: Icon(
                 _obscurePassword ? Icons.visibility_off : Icons.visibility,
@@ -326,12 +331,12 @@ class _LoginPageState extends State<LoginPage> {
           children: [
             TextField(
               controller: _usernameController,
-              decoration: const InputDecoration(labelText: "Username"),
+              decoration: InputDecoration(labelText: context.loc.username),
             ),
             const SizedBox(height: 10),
             TextField(
               controller: _emailController,
-              decoration: const InputDecoration(labelText: "Email"),
+              decoration: InputDecoration(labelText: context.loc.email),
               keyboardType: TextInputType.emailAddress,
             ),
             const SizedBox(height: 10),
@@ -339,7 +344,7 @@ class _LoginPageState extends State<LoginPage> {
               controller: _passwordController,
               obscureText: _obscurePassword,
               decoration: InputDecoration(
-                labelText: "Password",
+                labelText: context.loc.password,
                 suffixIcon: IconButton(
                   icon: Icon(
                     _obscurePassword ? Icons.visibility_off : Icons.visibility,
@@ -356,22 +361,7 @@ class _LoginPageState extends State<LoginPage> {
             // No visible placeholder for the avatar anymore
           ],
         ),
-        Positioned(
-          left: -1000, // Position far off-screen to the left
-          top: 0,
-          child: RepaintBoundary(
-            key: _avatarKey,
-            child: SizedBox(
-              width: 100,
-              height: 100,
-              // child: NotionAvatar(
-              //   onCreated: (controller) {
-              //     _avatarController = controller;
-              //   },
-              // ),
-            ),
-          ),
-        ),
+        RepaintBoundary(child: SizedBox(width: 100, height: 100)),
       ],
     );
   }
@@ -388,7 +378,7 @@ class _LoginPageState extends State<LoginPage> {
               children: [
                 // 🖼️ App logo
                 Image.asset(
-                  'assets/logo.png', // Replace with your actual image path
+                  'assets/logo/logo.png', // Replace with your actual image path
                   height: 150,
                 ),
                 const SizedBox(height: 20),
@@ -403,14 +393,14 @@ class _LoginPageState extends State<LoginPage> {
                   borderRadius: BorderRadius.circular(10),
                   isSelected: [_isLogin, !_isLogin],
                   onPressed: (index) => _toggleTab(index == 0),
-                  children: const [
+                  children: [
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 20),
-                      child: Text("Login"),
+                      child: Text(context.loc.login),
                     ),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 20),
-                      child: Text("Register"),
+                      child: Text(context.loc.register),
                     ),
                   ],
                 ),
@@ -426,7 +416,9 @@ class _LoginPageState extends State<LoginPage> {
                     ? const CircularProgressIndicator()
                     : ElevatedButton(
                       onPressed: _submit,
-                      child: Text(_isLogin ? "Login" : "Register"),
+                      child: Text(
+                        _isLogin ? context.loc.login : context.loc.register,
+                      ),
                     ),
               ],
             ),

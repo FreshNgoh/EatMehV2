@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eatmehv2/bloc/chat/chat_bloc_bloc.dart';
+import 'package:eatmehv2/core/localization/app_localizations.dart';
+import 'package:eatmehv2/core/theme/app_theme.dart';
 import 'package:eatmehv2/screens/login_page.dart';
 import 'package:eatmehv2/utils/firebase_options.dart';
 import 'package:eatmehv2/widgets/bar.dart';
@@ -8,6 +10,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 Future<void> main() async {
   // Initialize Flutter bindings and Firebase
@@ -36,10 +39,25 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Eat Meh',
-        theme: ThemeData(
-          fontFamily: "Poppins",
-          scaffoldBackgroundColor: Colors.white,
-        ),
+        // Theme
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        // Add localization delegates
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+
+        //  Supported languages
+        supportedLocales: const [
+          Locale('en', ''), // English
+          Locale('zh', ''), // Chinese
+        ],
+
+        // default locale
+        locale: const Locale('en'),
         home: AuthWrapper(),
       ),
     );

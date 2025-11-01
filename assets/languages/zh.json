@@ -1,0 +1,70 @@
+{
+  "app_name": "吃吧",
+  "welcome": "欢迎",
+  "login": "登录",
+  "register": "注册",
+  "email": "邮箱",
+  "password": "密码",
+  "username": "用户名",
+  "forgot_password": "忘记密码？",
+
+  "friends": "朋友",
+  "records": "记录",
+  "camera": "相机",
+  "consult": "咨询",
+  "profile": "个人资料",
+
+  "take_photo": "拍照",
+  "analyze_meal": "分析餐食",
+  "post_story": "发布动态",
+  "view_stories": "查看动态",
+  "your_story": "你的动态",
+
+  "calories": "卡路里",
+  "recommendation": "建议",
+  "breakfast": "早餐",
+  "lunch": "午餐",
+  "dinner": "晚餐",
+  "snack": "小吃",
+
+  "settings": "设置",
+  "language": "语言",
+  "dark_mode": "深色模式",
+  "notifications": "通知",
+  "user_manual": "用户手册",
+  "logout": "登出",
+
+  "healthy": "健康体重",
+  "underweight": "体重不足",
+  "overweight": "超重",
+  "needs_attention": "需要注意",
+
+  "add_friend": "添加朋友",
+  "friend_requests": "好友请求",
+  "send_request": "发送请求",
+  "accept": "接受",
+  "reject": "拒绝",
+
+  "current_weight": "当前体重",
+  "goal_weight": "目标体重",
+  "height": "身高",
+  "bmi": "体重指数",
+
+  "exercise": "运动",
+  "duration": "持续时间",
+  "calories_burnt": "消耗卡路里",
+
+  "trainer_mode": "教练模式",
+  "trainees": "学员",
+  "diet_plan": "饮食计划",
+  "consultation": "咨询",
+
+  "save": "保存",
+  "cancel": "取消",
+  "delete": "删除",
+  "edit": "编辑",
+  "search": "搜索",
+  "loading": "加载中...",
+  "error": "错误",
+  "success": "成功"
+}

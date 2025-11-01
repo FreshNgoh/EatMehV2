@@ -1,0 +1,70 @@
+{
+  "app_name": "EatMeh",
+  "welcome": "Welcome",
+  "login": "Login",
+  "register": "Register",
+  "email": "Email",
+  "password": "Password",
+  "username": "Username",
+  "forgot_password": "Forgot Password?",
+
+  "friends": "Friends",
+  "records": "Records",
+  "camera": "Camera",
+  "consult": "Consult",
+  "profile": "Profile",
+
+  "take_photo": "Take Photo",
+  "analyze_meal": "Analyze Meal",
+  "post_story": "Post Story",
+  "view_stories": "View Stories",
+  "your_story": "Your Story",
+
+  "calories": "Calories",
+  "recommendation": "Recommendation",
+  "breakfast": "Breakfast",
+  "lunch": "Lunch",
+  "dinner": "Dinner",
+  "snack": "Snack",
+
+  "settings": "Settings",
+  "language": "Language",
+  "dark_mode": "Dark Mode",
+  "notifications": "Notifications",
+  "user_manual": "User Manual",
+  "logout": "Logout",
+
+  "healthy": "Healthy Weight",
+  "underweight": "Underweight",
+  "overweight": "Overweight",
+  "needs_attention": "Needs Attention",
+
+  "add_friend": "Add Friend",
+  "friend_requests": "Friend Requests",
+  "send_request": "Send Request",
+  "accept": "Accept",
+  "reject": "Reject",
+
+  "current_weight": "Current Weight",
+  "goal_weight": "Goal Weight",
+  "height": "Height",
+  "bmi": "BMI",
+
+  "exercise": "Exercise",
+  "duration": "Duration",
+  "calories_burnt": "Calories Burnt",
+
+  "trainer_mode": "Trainer Mode",
+  "trainees": "Trainees",
+  "diet_plan": "Diet Plan",
+  "consultation": "Consultation",
+
+  "save": "Save",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "edit": "Edit",
+  "search": "Search",
+  "loading": "Loading...",
+  "error": "Error",
+  "success": "Success"
+}
