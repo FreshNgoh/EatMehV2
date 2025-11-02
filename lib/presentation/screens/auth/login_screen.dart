@@ -42,9 +42,14 @@ class _LoginScreenState extends State<LoginScreen> {
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthError) {
+            final errorMsg = state.message.replaceFirst('Exception: ', '');
             ScaffoldMessenger.of(
               context,
-            ).showSnackBar(SnackBar(content: Text(state.message)));
+            ).showSnackBar(SnackBar(content: Text(errorMsg)));
+          }
+
+          if (state is Authenticated) {
+            Navigator.of(context).popUntil((route) => route.isFirst);
           }
         },
         child: SafeArea(

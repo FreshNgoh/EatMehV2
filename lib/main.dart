@@ -6,10 +6,8 @@ import 'package:eatmehv2/core/theme/app_theme.dart';
 import 'package:eatmehv2/data/repos/auth_repo.dart';
 import 'package:eatmehv2/data/repos/user_repo.dart';
 import 'package:eatmehv2/presentation/screens/auth/login_screen.dart';
-import 'package:eatmehv2/presentation/screens/login_page.dart';
-import 'package:eatmehv2/presentation/screens/auth/login_screen.dart';
+import 'package:eatmehv2/presentation/screens/friend_page.dart';
 import 'package:eatmehv2/utils/firebase_options.dart';
-import 'package:eatmehv2/widgets/bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -30,7 +28,7 @@ Future<void> main() async {
 
   // Load environment variables from .env file
   await dotenv.load(fileName: ".env");
-
+  await FirebaseAuth.instance.signOut();
   runApp(const MyApp());
 }
 
@@ -72,17 +70,11 @@ class MyApp extends StatelessWidget {
           locale: const Locale('zh'),
           home: BlocBuilder<AuthBloc, AuthState>(
             builder: (context, authState) {
-              if (authState is AuthLoading) {
-                const Scaffold(
-                  body: Center(child: CircularProgressIndicator()),
-                );
-              }
-
               if (authState is Authenticated) {
-                return const LoginScreen();
+                return const FriendPage();
               }
 
-              return const LoginScreen(); // Show the login page
+              return const LoginScreen();
             },
           ),
         ),
