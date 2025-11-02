@@ -4,7 +4,6 @@ class TrainerApplication {
   final String uid;
   final String userId;
   final List<String> certificateUrls;
-  final String specialization;
   final String experience;
   final String status; // "pending", "approved", "rejected"
   final String? rejectionReason;
@@ -15,7 +14,6 @@ class TrainerApplication {
     required this.uid,
     required this.userId,
     required this.certificateUrls,
-    required this.specialization,
     required this.experience,
     this.status = 'pending',
     this.rejectionReason,
@@ -28,7 +26,6 @@ class TrainerApplication {
       uid: uid,
       userId: map['userId'],
       certificateUrls: List<String>.from(map['certificateUrls'] ?? []),
-      specialization: map['specialization'],
       experience: map['experience'],
       status: map['status'] ?? 'pending',
       rejectionReason: map['rejectionReason'],
@@ -41,7 +38,6 @@ class TrainerApplication {
     return {
       'userId': userId,
       'certificateUrls': certificateUrls,
-      'specialization': specialization,
       'experience': experience,
       'status': status,
       'rejectionReason': rejectionReason,

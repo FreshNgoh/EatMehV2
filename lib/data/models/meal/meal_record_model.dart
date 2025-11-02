@@ -6,6 +6,7 @@ class MealRecordModel {
   final String uid;
   final String userId;
   final int calories;
+  final String foodName;
   final String? imageUrl;
   final NutritionInfo nutritionInfo;
   final String recommendation;
@@ -17,6 +18,7 @@ class MealRecordModel {
     required this.userId,
     required this.imageUrl,
     required this.calories,
+    required this.foodName,
     required this.nutritionInfo,
     required this.recommendation,
     required this.createdAt,
@@ -29,6 +31,7 @@ class MealRecordModel {
       userId: map['userId'] as String,
       imageUrl: map['imageUrl'] as String,
       calories: map['calories'] as int,
+      foodName: map['foodName'] as String,
       nutritionInfo: NutritionInfo.fromMap(
         map['nutritionInfo'] as Map<String, dynamic>,
       ),
