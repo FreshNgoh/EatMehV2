@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../trainer/trainer_profile_model.dart';
-import 'user_status_model.dart';
 import 'user_settings_model.dart';
 
 class UserModel {
@@ -10,12 +9,13 @@ class UserModel {
   final String role; // "user", "trainer", "admin"
   final String? imageUrl;
   final String? bio;
-  final List<String> friends;
+  final List<String> friends; // Friend UIDs
+  final List<String> friendRequests; // Optional pending requests
   final Timestamp createdAt;
   final Timestamp updatedAt;
-  final UserStatus? status;
   final UserSettings? settings;
   final TrainerProfile? trainerProfile;
+  final bool isFrozen; // Admin control
 
   UserModel({
     required this.uid,
@@ -25,11 +25,12 @@ class UserModel {
     this.imageUrl,
     this.bio,
     this.friends = const [],
+    this.friendRequests = const [],
     required this.createdAt,
     required this.updatedAt,
-    this.status,
     this.settings,
     this.trainerProfile,
+    this.isFrozen = false,
   });
 
   factory UserModel.fromMap(Map<String, dynamic> map) {
@@ -41,12 +42,9 @@ class UserModel {
       imageUrl: map['imageUrl'] as String?,
       bio: map['bio'] as String?,
       friends: List<String>.from(map['friends'] ?? []),
+      friendRequests: List<String>.from(map['friendRequests'] ?? []),
       createdAt: map['createdAt'] as Timestamp,
       updatedAt: map['updatedAt'] as Timestamp,
-      status:
-          map['status'] != null
-              ? UserStatus.fromMap(map['status'] as Map<String, dynamic>)
-              : null,
       settings:
           map['settings'] != null
               ? UserSettings.fromMap(map['settings'] as Map<String, dynamic>)
@@ -57,6 +55,7 @@ class UserModel {
                 map['trainerProfile'] as Map<String, dynamic>,
               )
               : null,
+      isFrozen: map['isFrozen'] as bool? ?? false,
     );
   }
 
@@ -69,11 +68,12 @@ class UserModel {
       'imageUrl': imageUrl,
       'bio': bio,
       'friends': friends,
+      'friendRequests': friendRequests,
       'createdAt': createdAt,
       'updatedAt': updatedAt,
-      'status': status?.toMap(),
       'settings': settings?.toMap(),
       'trainerProfile': trainerProfile?.toMap(),
+      'isFrozen': isFrozen,
     };
   }
 
@@ -85,11 +85,12 @@ class UserModel {
     String? imageUrl,
     String? bio,
     List<String>? friends,
+    List<String>? friendRequests,
     Timestamp? createdAt,
     Timestamp? updatedAt,
-    UserStatus? status,
     UserSettings? settings,
     TrainerProfile? trainerProfile,
+    bool? isFrozen,
   }) {
     return UserModel(
       uid: uid ?? this.uid,
@@ -99,11 +100,12 @@ class UserModel {
       imageUrl: imageUrl ?? this.imageUrl,
       bio: bio ?? this.bio,
       friends: friends ?? this.friends,
+      friendRequests: friendRequests ?? this.friendRequests,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
-      status: status ?? this.status,
       settings: settings ?? this.settings,
       trainerProfile: trainerProfile ?? this.trainerProfile,
+      isFrozen: isFrozen ?? this.isFrozen,
     );
   }
 }
