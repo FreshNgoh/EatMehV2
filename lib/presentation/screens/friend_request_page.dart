@@ -348,10 +348,13 @@ class FriendRequestPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Simple Page'), centerTitle: true),
+      appBar: AppBar(
+        title: const Text('FriendRequest Page'),
+        centerTitle: true,
+      ),
       body: const Center(
         child: Text(
-          'This is a simple Flutter page!',
+          'This is a simple FriendRequest page!',
           style: TextStyle(fontSize: 20),
         ),
       ),

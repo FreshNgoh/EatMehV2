@@ -7,6 +7,7 @@ import 'package:eatmehv2/data/repos/auth_repo.dart';
 import 'package:eatmehv2/data/repos/user_repo.dart';
 import 'package:eatmehv2/presentation/screens/auth/login_screen.dart';
 import 'package:eatmehv2/presentation/screens/friend_page.dart';
+import 'package:eatmehv2/routes/app_router.dart';
 import 'package:eatmehv2/utils/firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -71,7 +72,7 @@ class MyApp extends StatelessWidget {
           home: BlocBuilder<AuthBloc, AuthState>(
             builder: (context, authState) {
               if (authState is Authenticated) {
-                return const FriendPage();
+                return AppRouter.getHomeScreen(authState.user.role);
               }
 
               return const LoginScreen();

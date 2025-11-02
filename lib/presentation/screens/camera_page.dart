@@ -606,10 +606,10 @@ class CameraPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Simple Page'), centerTitle: true),
+      appBar: AppBar(title: const Text('Camera Page'), centerTitle: true),
       body: const Center(
         child: Text(
-          'This is a simple Flutter page!',
+          'This is a simple Camera page!',
           style: TextStyle(fontSize: 20),
         ),
       ),
