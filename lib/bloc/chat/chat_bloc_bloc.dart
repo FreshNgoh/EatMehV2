@@ -9,7 +9,8 @@ part 'chat_bloc_event.dart';
 part 'chat_bloc_state.dart';
 
 class ChatBlocBloc extends Bloc<ChatBlocEvent, ChatBlocState> {
-  ChatBlocBloc() : super(ChatSuccessState(messages: [])) {
+  ChatBlocBloc({required chatRepository})
+    : super(ChatSuccessState(messages: [])) {
     on<ChatGenerateNewRecipeEvent>(chatGenerateNewRecipeEvent);
     on<AnalyzeMealImageEvent>(analyzeMealImageEvent);
   }
@@ -45,7 +46,9 @@ class ChatBlocBloc extends Bloc<ChatBlocEvent, ChatBlocState> {
       messages.add(userMessage);
       emit(ChatLoadingState());
 
-      final aiResponse = await ChatRepo.chatIRecipeGenerationRepo(messages);
+      final aiResponse = await ChatRepository.chatIRecipeGenerationRepo(
+        messages,
+      );
       final aiMessage = ChatMessageModel(
         parts: [ChatPartModel(text: _parseAIResponse(aiResponse))],
       );
@@ -95,7 +98,9 @@ class ChatBlocBloc extends Bloc<ChatBlocEvent, ChatBlocState> {
       messages.add(analysis);
       emit(AnalyzeMealLoadingState());
 
-      final aiResponse = await ChatRepo.chatIRecipeGenerationRepo(messages);
+      final aiResponse = await ChatRepository.chatIRecipeGenerationRepo(
+        messages,
+      );
       final aiMessage = ChatMessageModel(
         parts: [ChatPartModel(text: _parseAIResponse(aiResponse))],
       );

@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eatmehv2/bloc/auth/auth_bloc.dart';
+import 'package:eatmehv2/bloc/chat/chat_bloc_bloc.dart';
 // import 'package:eatmehv2/bloc/chat/chat_bloc_bloc.dart';
 import 'package:eatmehv2/core/localization/app_localizations.dart';
 import 'package:eatmehv2/core/theme/app_theme.dart';
 import 'package:eatmehv2/data/repos/auth_repo.dart';
+import 'package:eatmehv2/data/repos/chat_repo.dart';
 import 'package:eatmehv2/data/repos/user_repo.dart';
 import 'package:eatmehv2/presentation/screens/auth/login_screen.dart';
 import 'package:eatmehv2/presentation/screens/friend_page.dart';
@@ -42,6 +44,7 @@ class MyApp extends StatelessWidget {
       providers: [
         RepositoryProvider(create: (_) => AuthRepository()),
         RepositoryProvider(create: (_) => UserRepository()),
+        RepositoryProvider(create: (_) => ChatRepository()),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -50,6 +53,12 @@ class MyApp extends StatelessWidget {
                 (context) =>
                     AuthBloc(authRepository: context.read<AuthRepository>())
                       ..add(AuthCheckRequested()),
+          ),
+          BlocProvider(
+            create:
+                (context) => ChatBlocBloc(
+                  chatRepository: context.read<ChatRepository>(),
+                ),
           ),
         ],
 

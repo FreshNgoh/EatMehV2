@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:eatmehv2/data/models/chat_message_model.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-class ChatRepo {
+class ChatRepository {
   static chatIRecipeGenerationRepo(
     List<ChatMessageModel> previousMessages,
   ) async {

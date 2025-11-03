@@ -1,6 +1,10 @@
 import 'dart:io';
+import 'dart:convert';
+import 'package:eatmehv2/data/models/chat_message_model.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:eatmehv2/bloc/chat/chat_bloc_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
@@ -17,7 +21,6 @@ class _CameraScreenState extends State<CameraScreen> {
   @override
   void initState() {
     super.initState();
-    // Auto-show camera options when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_selectedImage == null) {
         _showImageSourceDialog();
@@ -77,33 +80,19 @@ class _CameraScreenState extends State<CameraScreen> {
         _selectedImage = File(pickedFile.path);
         _analysisResult = null;
       });
-      _analyzeMeal();
+
+      // Trigger Gemini analysis
+      _analyzeWithGemini(_selectedImage!);
     }
   }
 
-  Future<void> _analyzeMeal() async {
+  Future<void> _analyzeWithGemini(File imageFile) async {
     setState(() => _isAnalyzing = true);
 
-    // Simulate AI analysis with delay
-    await Future.delayed(const Duration(seconds: 2));
-
-    // Dummy analysis result
-    setState(() {
-      _analysisResult = {
-        'calories': 450,
-        'mealType': 'lunch',
-        'foodItems': ['Grilled Chicken', 'Rice', 'Vegetables'],
-        'nutrition': {
-          'protein': 35.0,
-          'carbs': 45.0,
-          'fat': 12.0,
-          'fiber': 8.0,
-        },
-        'recommendation':
-            'Great balanced meal! Good protein and fiber content.',
-      };
-      _isAnalyzing = false;
-    });
+    // Dispatch Gemini analysis event
+    context.read<ChatBlocBloc>().add(
+      AnalyzeMealImageEvent(inputImage: imageFile),
+    );
   }
 
   @override
@@ -124,108 +113,109 @@ class _CameraScreenState extends State<CameraScreen> {
               onPressed: _showImageSourceDialog,
               icon: const Icon(Icons.add_a_photo),
               label: const Text('Take Photo'),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-              ),
             ),
           ],
         ),
       );
     }
 
-    return Column(
-      children: [
-        // Image Preview
-        Expanded(
-          flex: 6,
-          child: Stack(
-            children: [
-              Container(
-                margin: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
+    return BlocListener<ChatBlocBloc, ChatBlocState>(
+      listener: (context, state) {
+        if (state is ChatLoadingState) {
+          setState(() => _isAnalyzing = true);
+        } else if (state is ChatSuccessState) {
+          setState(() {
+            _analysisResult = _extractFirstValidAnalysis(state.messages);
+            _isAnalyzing = false;
+          });
+        } else if (state is AnalyzeMealErrorState) {
+          setState(() => _isAnalyzing = false);
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error: ${state.error}')));
+        }
+      },
+      child: Column(
+        children: [
+          Expanded(
+            flex: 6,
+            child: Stack(
+              children: [
+                Container(
+                  margin: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.file(
+                      _selectedImage!,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
                     ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: Image.file(
-                    _selectedImage!,
-                    fit: BoxFit.cover,
-                    width: double.infinity,
                   ),
                 ),
-              ),
-              // Close button
-              Positioned(
-                top: 24,
-                left: 24,
-                child: IconButton(
-                  icon: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.5),
-                      shape: BoxShape.circle,
+                Positioned(
+                  top: 24,
+                  left: 24,
+                  child: IconButton(
+                    icon: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.5),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.close, color: Colors.white),
                     ),
-                    child: const Icon(Icons.close, color: Colors.white),
+                    onPressed: () {
+                      setState(() {
+                        _selectedImage = null;
+                        _analysisResult = null;
+                      });
+                    },
                   ),
-                  onPressed: () {
-                    setState(() {
-                      _selectedImage = null;
-                      _analysisResult = null;
-                    });
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        // Analysis Result
-        Expanded(
-          flex: 4,
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(30),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, -5),
                 ),
               ],
             ),
-            child:
-                _isAnalyzing
-                    ? const Center(child: CircularProgressIndicator())
-                    : _analysisResult != null
-                    ? SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
-                      child: _buildAnalysisResult(),
-                    )
-                    : const SizedBox(),
           ),
-        ),
-      ],
+          Expanded(
+            flex: 4,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+              ),
+              child:
+                  _isAnalyzing
+                      ? const Center(child: CircularProgressIndicator())
+                      : _analysisResult != null
+                      ? SingleChildScrollView(
+                        padding: const EdgeInsets.only(bottom: 20),
+                        child: _buildAnalysisResult(),
+                      )
+                      : const SizedBox(),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildAnalysisResult() {
     final result = _analysisResult!;
-    final calories = result['calories'] as int;
+    final calories = int.tryParse(result['calories'].toString()) ?? 0;
+    final recommendation =
+        result['recommendation'] ?? 'No recommendation found';
+
     final calorieColor =
         calories > 700
             ? Colors.red
@@ -233,118 +223,56 @@ class _CameraScreenState extends State<CameraScreen> {
             ? Colors.green
             : Colors.orange;
 
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Calories
-          Row(
-            children: [
-              Icon(Icons.local_fire_department, color: calorieColor, size: 40),
-              const SizedBox(width: 12),
-              Text(
-                '$calories kcal',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: calorieColor,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              (result['mealType'] as String).toUpperCase(),
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Colors.blue,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.local_fire_department, color: calorieColor, size: 40),
+            const SizedBox(width: 12),
+            Text(
+              '$calories kcal',
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                color: calorieColor,
               ),
             ),
-          ),
-          const SizedBox(height: 20),
-
-          // Food Items
-          const Text(
-            'Detected Food:',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 8),
-          ...(result['foodItems'] as List).map((item) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Text('• $item', style: const TextStyle(fontSize: 14)),
-            );
-          }),
-          const SizedBox(height: 20),
-
-          // Recommendation
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.blue.shade50,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.lightbulb_outline, color: Colors.blue),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    result['recommendation'] as String,
-                    style: const TextStyle(fontSize: 13),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Action Buttons
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Meal saved to records!')),
-                    );
-                  },
-                  icon: const Icon(Icons.save),
-                  label: const Text('Save'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF191919),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Posted as story!')),
-                    );
-                  },
-                  icon: const Icon(Icons.add_circle),
-                  label: const Text('Post Story'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF191919),
-                    side: const BorderSide(color: Color(0xFF191919)),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'Recommendation:',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          recommendation,
+          style: const TextStyle(fontSize: 14, color: Colors.black87),
+        ),
+      ],
     );
+  }
+
+  /// 🔍 Helper to extract valid Gemini JSON response
+  Map<String, dynamic>? _extractFirstValidAnalysis(
+    List<ChatMessageModel> messages,
+  ) {
+    for (final message in messages) {
+      for (final part in message.parts) {
+        final text = part.text;
+        if (text != null && text.toLowerCase() != 'null') {
+          debugPrint('Gemini raw response: $text'); // 👈 Add this line
+          try {
+            final decoded = jsonDecode(text);
+            if (decoded is Map<String, dynamic>) {
+              return decoded;
+            }
+          } catch (e) {
+            debugPrint('Invalid JSON: $e');
+          }
+        }
+      }
+    }
   }
 }
