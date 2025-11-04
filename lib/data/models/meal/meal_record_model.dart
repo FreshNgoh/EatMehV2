@@ -4,7 +4,7 @@ import 'nutrition_info_model.dart';
 
 class MealRecordModel {
   final String uid;
-  final String userId;
+  final String userUid;
   final int calories;
   final String foodName;
   final String? imageUrl;
@@ -15,7 +15,7 @@ class MealRecordModel {
 
   MealRecordModel({
     required this.uid,
-    required this.userId,
+    required this.userUid,
     required this.imageUrl,
     required this.calories,
     required this.foodName,
@@ -28,7 +28,7 @@ class MealRecordModel {
   factory MealRecordModel.fromMap(String uid, Map<String, dynamic> map) {
     return MealRecordModel(
       uid: uid,
-      userId: map['userId'] as String,
+      userUid: map['userUid'] as String,
       imageUrl: map['imageUrl'] as String,
       calories: map['calories'] as int,
       foodName: map['foodName'] as String,
@@ -43,7 +43,7 @@ class MealRecordModel {
 
   Map<String, dynamic> toMap() {
     return {
-      'userId': userId,
+      'userUid': userUid,
       'imageUrl': imageUrl,
       'calories': calories,
       'nutritionInfo': nutritionInfo.toMap(),
