@@ -75,7 +75,7 @@ class MyApp extends StatelessWidget {
             Locale('en', ''), // English
             Locale('zh', ''), // Chinese
           ],
-          locale: const Locale('zh'),
+          locale: const Locale('en'),
           home: BlocBuilder<AuthBloc, AuthState>(
             builder: (context, authState) {
               if (authState is Authenticated) {

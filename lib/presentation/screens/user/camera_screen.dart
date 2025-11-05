@@ -4,13 +4,14 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eatmehv2/bloc/auth/auth_bloc.dart';
 import 'package:eatmehv2/bloc/chat/chat_bloc_bloc.dart';
+import 'package:eatmehv2/core/constants/firebase_constants.dart';
 import 'package:eatmehv2/core/theme/app_colors.dart';
 import 'package:eatmehv2/data/models/chat/chat_message_model.dart';
 import 'package:eatmehv2/data/models/meal/meal_record_model.dart';
 import 'package:eatmehv2/data/models/meal/nutrition_info_model.dart';
 import 'package:eatmehv2/data/repos/meal_records_repo.dart';
 import 'package:eatmehv2/presentation/widgets/custom_button.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:eatmehv2/utils/firebase_storage_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
@@ -56,20 +57,21 @@ class _CameraScreenState extends State<CameraScreen> {
     final file = File(_selectedImage!.path);
 
     try {
-      // 1️⃣ Upload image
-      final storageRef = FirebaseStorage.instance
-          .ref()
-          .child('meal_images')
-          .child('${userUid}_${DateTime.now().millisecondsSinceEpoch}.jpg');
+      // 1. Upload image
+      final storageService = FirebaseStorageService();
+      final downloadUrl = await storageService.uploadMealImage(
+        file: file,
+        userUid: userUid,
+        folderName: FirebaseConstants.mealRecordFolder,
+      );
 
-      await storageRef.putFile(file);
-
-      // 2️⃣ Get the download URL
-      final downloadUrl = await storageRef.getDownloadURL();
-
-      // 3️⃣ Save Firestore record
+      // 2. Save Firestore record
       final meal = MealRecordModel(
-        uid: FirebaseFirestore.instance.collection('meal_records').doc().id,
+        uid:
+            FirebaseFirestore.instance
+                .collection(FirebaseConstants.mealRecordFolder)
+                .doc()
+                .id,
         userUid: userUid,
         imageUrl: downloadUrl,
         calories: calories,
