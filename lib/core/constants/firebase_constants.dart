@@ -7,7 +7,7 @@ class FirebaseConstants {
   static const String friendRequestsCollection = 'friend_requests';
   static const String consultationsCollection = 'consultations';
   static const String dietPlansCollection = 'diet_plans';
-  static const String trainerApplicationsCollection = 'trainer_applications';
+  static const String trainerApplicationsCollection = 'trainer_application';
   static const String notificationsCollection = 'notifications';
   static const String userAnalyticsCollection = 'user_analytics';
 

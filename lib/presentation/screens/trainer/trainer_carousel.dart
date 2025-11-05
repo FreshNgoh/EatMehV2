@@ -1,30 +1,55 @@
-import 'package:eatmehv2/presentation/widgets/custom_button.dart';
+import 'package:eatmehv2/data/services/trainer_service.dart';
+import 'package:eatmehv2/presentation/screens/trainer/trainee_list.dart';
 import 'package:eatmehv2/presentation/screens/trainer/trainer_instruction.dart';
 import 'package:eatmehv2/presentation/screens/trainer/trainer_list.dart';
+import 'package:eatmehv2/presentation/widgets/custom_button.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class CarouselApp extends StatelessWidget {
   const CarouselApp({super.key});
 
+  Future<String> _getApplicationStatus() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return 'none';
+
+    final trainerService = TrainerService();
+    final status = await trainerService.getApplicationStatus(user.uid);
+    return status;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        scaffoldBackgroundColor: Colors.white,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.green,
-          surface: Colors.white,
-        ),
-        useMaterial3: true,
-      ),
-      home: Scaffold(body: const Carousel()),
+    return FutureBuilder<String>(
+      future: _getApplicationStatus(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return const Scaffold(
+            body: Center(child: Text('Something went wrong.')),
+          );
+        }
+
+        final status = snapshot.data ?? 'none';
+
+        if (status == 'approved') {
+          return const TraineeList();
+        } else {
+          return Carousel(applicationStatus: status);
+        }
+      },
     );
   }
 }
 
 class Carousel extends StatefulWidget {
-  const Carousel({super.key});
+  final String applicationStatus;
+  const Carousel({super.key, required this.applicationStatus});
 
   @override
   State<Carousel> createState() => _CarouselState();
@@ -32,7 +57,6 @@ class Carousel extends StatefulWidget {
 
 class _CarouselState extends State<Carousel> {
   final CarouselController controller = CarouselController(initialItem: 1);
-  bool applyForTrainer = false;
 
   @override
   void dispose() {
@@ -44,91 +68,99 @@ class _CarouselState extends State<Carousel> {
   Widget build(BuildContext context) {
     final double height = MediaQuery.sizeOf(context).height;
 
-    return ListView(
-      children: <Widget>[
-        ConstrainedBox(
-          constraints: BoxConstraints(maxHeight: height / 2),
-          child: CarouselView.weighted(
-            controller: controller,
-            itemSnapping: true,
-            flexWeights: const <int>[1, 7, 1],
-            children:
-                ImageInfo.values.map((ImageInfo image) {
-                  return HeroLayoutCard(imageInfo: image);
-                }).toList(),
+    return Scaffold(
+      body: ListView(
+        children: <Widget>[
+          const SizedBox(height: 30),
+          ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: height / 2),
+            child: CarouselView.weighted(
+              controller: controller,
+              itemSnapping: true,
+              flexWeights: const <int>[1, 7, 1],
+              children:
+                  ImageInfo.values
+                      .map(
+                        (ImageInfo image) => HeroLayoutCard(imageInfo: image),
+                      )
+                      .toList(),
+            ),
           ),
-        ),
-        const SizedBox(height: 40),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0),
-          child: Column(
-            children: [
-              Text(
-                "Ready to start your healthy journey?",
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+          const SizedBox(height: 30),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            child: Column(
+              children: [
+                Text(
+                  "Ready to start your healthy journey?",
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                "Choose to guide others as a trainer, or connect with one to reach your goals.",
-                textAlign: TextAlign.center,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade700),
-              ),
-            ],
+                const SizedBox(height: 8),
+                Text(
+                  "Choose to guide others as a trainer, or connect with one to reach your goals.",
+                  textAlign: TextAlign.center,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade700),
+                ),
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: 30),
+          const SizedBox(height: 30),
 
-        // Apply Trainer Button
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 50),
-          child: CustomButton(
-            text:
-                applyForTrainer ? "Application Submitted" : "Apply as Trainer",
-            onPressed:
-                applyForTrainer
-                    ? null
-                    : () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const TrainerInstruction(),
-                        ),
-                      );
-                    },
-            backgroundColor: Colors.green.shade600,
-            textColor: Colors.white,
+          // Apply Trainer Button
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 50),
+            child: CustomButton(
+              text:
+                  widget.applicationStatus == 'pending'
+                      ? "Application Pending"
+                      : "Apply as Trainer",
+              onPressed:
+                  widget.applicationStatus == 'pending'
+                      ? null
+                      : () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const TrainerInstruction(),
+                          ),
+                        );
+                      },
+              backgroundColor: Colors.green.shade600,
+              textColor: Colors.white,
+            ),
           ),
-        ),
-        const SizedBox(height: 25),
+          const SizedBox(height: 25),
 
-        // Request Trainer Button
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 50),
-          child: CustomButton(
-            text: "Request For Trainer",
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const TrainerList()),
-              );
-            },
-            backgroundColor:
-                applyForTrainer ? Colors.green.shade600 : Colors.white,
-            textColor: applyForTrainer ? Colors.white : Colors.green.shade600,
-          ),
-        ),
-        const SizedBox(height: 40),
-      ],
+          // Request Trainer Button
+          if (widget.applicationStatus != 'pending')
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 50),
+              child: CustomButton(
+                text: "Request For Trainer",
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const TrainerList()),
+                  );
+                },
+                backgroundColor: Colors.white,
+                textColor: Colors.green.shade600,
+              ),
+            ),
+          const SizedBox(height: 40),
+        ],
+      ),
     );
   }
 }
 
+// HERO LAYOUT
 class HeroLayoutCard extends StatelessWidget {
   const HeroLayoutCard({super.key, required this.imageInfo});
 

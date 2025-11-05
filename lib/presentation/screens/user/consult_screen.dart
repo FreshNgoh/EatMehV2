@@ -1,4 +1,3 @@
-import 'package:eatmehv2/presentation/screens/trainer/trainee_list.dart';
 import 'package:eatmehv2/presentation/screens/trainer/trainer_carousel.dart';
 import 'package:flutter/material.dart';
 
@@ -10,13 +9,8 @@ class ConsultScreen extends StatefulWidget {
 }
 
 class _ConsultScreenState extends State<ConsultScreen> {
-  bool isTrainer = false;
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body:
-          isTrainer ? const TraineeList() : const Center(child: CarouselApp()),
-    );
+    return Scaffold(body: const Center(child: CarouselApp()));
   }
 }
