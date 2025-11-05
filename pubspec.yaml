@@ -51,6 +51,9 @@ dependencies:
   flutter_dotenv:
   provider:
   equatable:
+  smooth_page_indicator: ^1.2.1
+  flutter_form_builder:
+  form_builder_validators:
 
   # Localization
   flutter_localizations:

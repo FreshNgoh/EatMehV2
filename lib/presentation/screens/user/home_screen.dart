@@ -4,6 +4,7 @@ import 'package:eatmehv2/presentation/screens/friend_request_page.dart';
 import 'package:eatmehv2/presentation/screens/profile_page.dart';
 import 'package:eatmehv2/presentation/screens/record_page.dart';
 import 'package:eatmehv2/presentation/screens/user/camera_screen.dart';
+import 'package:eatmehv2/presentation/screens/user/consult_screen.dart';
 import 'package:eatmehv2/presentation/widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 
@@ -129,7 +130,7 @@ Widget _buildPage(int index) {
     case 2:
       return const CameraScreen();
     case 3:
-      return const ProfilePage();
+      return const ConsultScreen();
     case 4:
       return const RecordPage();
     default:
