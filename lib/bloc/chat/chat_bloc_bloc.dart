@@ -89,8 +89,22 @@ class ChatBlocBloc extends Bloc<ChatBlocEvent, ChatBlocState> {
             inlineData: InlineData(mimeType: 'image/jpeg', data: base64Image),
           ),
           ChatPartModel(
-            text:
-                'This is a meal image for one serving, analyze the calories of the meal by giving an exact number although it may not be accurate. Also provide a brief recommendation to the meal in one sentence. Return your response in JSON format',
+            text: '''
+              This is a meal image for one serving. 
+              Analyze the food and return the following data **in strict JSON format only**:
+
+              {
+                "foodName": "name of the meal",
+                "calories": number,
+                "protein": number (grams),
+                "carbs": number (grams),
+                "fat": number (grams),
+                "fiber": number (grams),
+                "recommendation": "short sentence recommending improvements"
+              }
+
+              Make sure all numbers are integers and units are not included in the values.
+              ''',
           ),
         ],
       );

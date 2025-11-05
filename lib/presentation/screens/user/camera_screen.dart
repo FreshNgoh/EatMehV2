@@ -1,10 +1,18 @@
 import 'dart:io';
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:eatmehv2/bloc/auth/auth_bloc.dart';
+import 'package:eatmehv2/core/theme/app_colors.dart';
 import 'package:eatmehv2/data/models/chat_message_model.dart';
+import 'package:eatmehv2/data/models/meal/meal_record_model.dart';
+import 'package:eatmehv2/data/models/meal/nutrition_info_model.dart';
+import 'package:eatmehv2/data/repos/meal_records_repo.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:eatmehv2/bloc/chat/chat_bloc_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:eatmehv2/presentation/widgets/custom_button.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
@@ -16,6 +24,7 @@ class CameraScreen extends StatefulWidget {
 class _CameraScreenState extends State<CameraScreen> {
   File? _selectedImage;
   bool _isAnalyzing = false;
+  bool _isSaving = false;
   Map<String, dynamic>? _analysisResult;
 
   @override
@@ -26,6 +35,71 @@ class _CameraScreenState extends State<CameraScreen> {
         _showImageSourceDialog();
       }
     });
+  }
+
+  Future<void> _saveMealRecord({
+    required String foodName,
+    required int calories,
+    required num protein,
+    required num carbs,
+    required num fat,
+    required num fiber,
+    required String recommendation,
+  }) async {
+    setState(() => _isSaving = true); // 🟡 start loading
+
+    final authState = context.read<AuthBloc>().state as Authenticated;
+    final userUid = authState.user.uid;
+    final mealRepo = MealRecordsRepository();
+
+    final file = File(_selectedImage!.path);
+
+    try {
+      // 1️⃣ Upload image
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('meal_images')
+          .child('${userUid}_${DateTime.now().millisecondsSinceEpoch}.jpg');
+
+      await storageRef.putFile(file);
+
+      // 2️⃣ Get the download URL
+      final downloadUrl = await storageRef.getDownloadURL();
+
+      // 3️⃣ Save Firestore record
+      final meal = MealRecordModel(
+        uid: FirebaseFirestore.instance.collection('meal_records').doc().id,
+        userUid: userUid,
+        imageUrl: downloadUrl,
+        calories: calories,
+        foodName: foodName,
+        nutritionInfo: NutritionInfo(
+          protein: protein.toDouble(),
+          carbs: carbs.toDouble(),
+          fat: fat.toDouble(),
+          fiber: fiber.toDouble(),
+        ),
+        recommendation: recommendation,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      );
+
+      await mealRepo.saveMealRecord(meal);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('✅ Meal saved successfully!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('❌ Failed to save meal: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false); // 🔵 stop loading
+    }
   }
 
   Future<void> _showImageSourceDialog() async {
@@ -135,122 +209,306 @@ class _CameraScreenState extends State<CameraScreen> {
           ).showSnackBar(SnackBar(content: Text('Error: ${state.error}')));
         }
       },
-      child: Column(
-        children: [
-          Expanded(
-            flex: 6,
-            child: Stack(
-              children: [
-                Container(
-                  margin: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
+      child:
+          _selectedImage == null
+              ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.camera_alt,
+                      size: 100,
+                      color: Colors.grey.shade400,
+                    ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'No image selected',
+                      style: TextStyle(fontSize: 18, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton.icon(
+                      onPressed: _showImageSourceDialog,
+                      icon: const Icon(Icons.add_a_photo),
+                      label: const Text('Take Photo'),
+                    ),
+                  ],
+                ),
+              )
+              : CustomScrollView(
+                slivers: [
+                  // ======= Collapsible image header =======
+                  SliverAppBar(
+                    expandedHeight: 350,
+                    pinned: true,
+                    backgroundColor: Colors.white,
+                    automaticallyImplyLeading: false,
+                    flexibleSpace: FlexibleSpaceBar(
+                      background: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Container(
+                            margin: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.2),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 5),
+                                ),
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: Image.file(
+                                _selectedImage!,
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                              ),
+                            ),
+                          ),
+                          // Close button
+                          Positioned(
+                            top: 24,
+                            left: 24,
+                            child: IconButton(
+                              icon: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.5),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _selectedImage = null;
+                                  _analysisResult = null;
+                                });
+                              },
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Image.file(
-                      _selectedImage!,
-                      fit: BoxFit.cover,
+
+                  // ======= Scrollable Content Section =======
+                  SliverToBoxAdapter(
+                    child: Container(
                       width: double.infinity,
+                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+                      child:
+                          _isAnalyzing
+                              ? const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 40),
+                                  child: CircularProgressIndicator(),
+                                ),
+                              )
+                              : _analysisResult != null
+                              ? _buildAnalysisResult()
+                              : const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 40),
+                                  child: Text(
+                                    'No analysis result yet.',
+                                    style: TextStyle(color: Colors.grey),
+                                  ),
+                                ),
+                              ),
                     ),
                   ),
-                ),
-                Positioned(
-                  top: 24,
-                  left: 24,
-                  child: IconButton(
-                    icon: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.5),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.close, color: Colors.white),
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _selectedImage = null;
-                        _analysisResult = null;
-                      });
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            flex: 4,
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+                ],
               ),
-              child:
-                  _isAnalyzing
-                      ? const Center(child: CircularProgressIndicator())
-                      : _analysisResult != null
-                      ? SingleChildScrollView(
-                        padding: const EdgeInsets.only(bottom: 20),
-                        child: _buildAnalysisResult(),
-                      )
-                      : const SizedBox(),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
   Widget _buildAnalysisResult() {
     final result = _analysisResult!;
-    final calories = int.tryParse(result['calories'].toString()) ?? 0;
-    final recommendation =
-        result['recommendation'] ?? 'No recommendation found';
 
-    final calorieColor =
-        calories > 700
-            ? Colors.red
-            : calories >= 300
-            ? Colors.green
-            : Colors.orange;
+    final foodName = result['foodName'] ?? 'Unknown Meal';
+    final calories = int.tryParse(result['calories'].toString()) ?? 0;
+    final protein = result['protein'] ?? 0;
+    final carbs = result['carbs'] ?? 0;
+    final fat = result['fat'] ?? 0;
+    final fiber = result['fiber'] ?? 0;
+    final recommendation =
+        result['recommendation'] ?? 'No recommendation available';
+
+    final calorieColor = AppColors.getCalorieColor(calories);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(Icons.local_fire_department, color: calorieColor, size: 40),
-            const SizedBox(width: 12),
+            Icon(Icons.local_fire_department, color: calorieColor, size: 32),
+            const SizedBox(width: 8),
             Text(
               '$calories kcal',
               style: TextStyle(
-                fontSize: 32,
+                fontSize: 24,
                 fontWeight: FontWeight.bold,
                 color: calorieColor,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 12),
-        Text(
-          'Recommendation:',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+
+        const SizedBox(height: 20),
+
+        // --- Nutrition Breakdown ---
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8F9FA),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.15),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              _buildNutrientRow(
+                Icons.egg_alt_outlined,
+                "Protein",
+                "$protein g",
+                AppColors.protein,
+              ),
+              _buildNutrientRow(
+                Icons.grain,
+                "Carbs",
+                "$carbs g",
+                AppColors.carbs,
+              ),
+              _buildNutrientRow(
+                Icons.water_drop_sharp,
+                "Fat",
+                "$fat g",
+                AppColors.fat,
+              ),
+              _buildNutrientRow(
+                Icons.eco,
+                "Fiber",
+                "$fiber g",
+                AppColors.fiber,
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: 6),
-        Text(
-          recommendation,
-          style: const TextStyle(fontSize: 14, color: Colors.black87),
+
+        const SizedBox(height: 24),
+
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.blue.shade50,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.lightbulb_outline, color: Colors.blue),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  recommendation.toString(),
+                  style: const TextStyle(fontSize: 13),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 20),
+
+        // Action Buttons
+        Row(
+          children: [
+            // 🟩 Save Button
+            Expanded(
+              child: CustomButton(
+                text: _isSaving ? 'Saving...' : 'Save',
+                icon: _isSaving ? null : Icons.save,
+                onPressed:
+                    _isSaving
+                        ? null // 🔒 disable while saving
+                        : () {
+                          _saveMealRecord(
+                            foodName: foodName,
+                            calories: calories,
+                            protein: protein,
+                            carbs: carbs,
+                            fat: fat,
+                            fiber: fiber,
+                            recommendation: recommendation,
+                          );
+                        },
+              ),
+            ),
+            const SizedBox(width: 12),
+
+            // ⚪ Post Story Button (outlined look)
+            Expanded(
+              child: CustomButton(
+                text: 'Post Story',
+                icon: Icons.add_circle,
+                backgroundColor: Colors.white,
+                textColor: const Color(0xFF191919),
+                onPressed: () {
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('Story add!')));
+                },
+              ),
+            ),
+          ],
         ),
       ],
+    );
+  }
+
+  Widget _buildNutrientRow(
+    IconData icon,
+    String label,
+    String value,
+    Color customColor,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: customColor, size: 22),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: customColor,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
