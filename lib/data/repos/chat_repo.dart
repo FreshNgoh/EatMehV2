@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:eatmehv2/data/models/chat_message_model.dart';
+import 'package:eatmehv2/data/models/chat/chat_message_model.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ChatRepository {

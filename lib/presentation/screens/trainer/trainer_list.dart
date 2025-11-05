@@ -1,4 +1,3 @@
-import 'package:eatmehv2/presentation/screens/trainer/trainee_list.dart';
 import 'package:eatmehv2/presentation/widgets/custom_list.dart';
 import 'package:flutter/material.dart';
 

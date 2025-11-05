@@ -1,18 +1,19 @@
-import 'dart:io';
 import 'dart:convert';
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eatmehv2/bloc/auth/auth_bloc.dart';
+import 'package:eatmehv2/bloc/chat/chat_bloc_bloc.dart';
 import 'package:eatmehv2/core/theme/app_colors.dart';
-import 'package:eatmehv2/data/models/chat_message_model.dart';
+import 'package:eatmehv2/data/models/chat/chat_message_model.dart';
 import 'package:eatmehv2/data/models/meal/meal_record_model.dart';
 import 'package:eatmehv2/data/models/meal/nutrition_info_model.dart';
 import 'package:eatmehv2/data/repos/meal_records_repo.dart';
+import 'package:eatmehv2/presentation/widgets/custom_button.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:eatmehv2/bloc/chat/chat_bloc_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:eatmehv2/presentation/widgets/custom_button.dart';
+import 'package:image_picker/image_picker.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});

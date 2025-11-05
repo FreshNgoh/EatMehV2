@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:bloc/bloc.dart';
-import '../../data/models/chat_message_model.dart';
+import '../../data/models/chat/chat_message_model.dart';
 import '../../data/repos/chat_repo.dart';
 import 'package:meta/meta.dart';
 part 'chat_bloc_event.dart';

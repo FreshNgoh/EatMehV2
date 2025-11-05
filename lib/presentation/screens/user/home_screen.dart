@@ -1,10 +1,8 @@
-import 'package:eatmehv2/presentation/screens/camera_page.dart';
-import 'package:eatmehv2/presentation/screens/friend_page.dart';
-import 'package:eatmehv2/presentation/screens/friend_request_page.dart';
-import 'package:eatmehv2/presentation/screens/profile_page.dart';
-import 'package:eatmehv2/presentation/screens/record_page.dart';
 import 'package:eatmehv2/presentation/screens/user/camera_screen.dart';
 import 'package:eatmehv2/presentation/screens/user/consult_screen.dart';
+import 'package:eatmehv2/presentation/screens/user/dashboard_screen.dart';
+import 'package:eatmehv2/presentation/screens/user/friends_screen.dart';
+import 'package:eatmehv2/presentation/screens/user/record_screen.dart';
 import 'package:eatmehv2/presentation/widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 
@@ -17,14 +15,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
-
-  final List<Widget> _pages = [
-    const FriendPage(),
-    const FriendRequestPage(),
-    const CameraScreen(),
-    const ProfilePage(),
-    const RecordPage(),
-  ];
 
   final List<String> _titles = [
     'Dashboard',
@@ -124,16 +114,16 @@ class _HomeScreenState extends State<HomeScreen> {
 Widget _buildPage(int index) {
   switch (index) {
     case 0:
-      return const FriendPage();
+      return const DashboardScreen();
     case 1:
-      return const FriendRequestPage();
+      return const FriendsScreen();
     case 2:
       return const CameraScreen();
     case 3:
       return const ConsultScreen();
     case 4:
-      return const RecordPage();
+      return const RecordScreen();
     default:
-      return const FriendPage();
+      return const DashboardScreen();
   }
 }
