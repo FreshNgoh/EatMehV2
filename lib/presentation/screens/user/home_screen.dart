@@ -15,7 +15,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
-  int _selectedRecordTab = 0;
+  int _selectedRecordTab = 1;
 
   final List<String> _titles = [
     'Dashboard',
