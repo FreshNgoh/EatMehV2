@@ -1,7 +1,13 @@
 import 'dart:io';
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:eatmehv2/bloc/auth/auth_bloc.dart';
 import 'package:eatmehv2/core/theme/app_colors.dart';
 import 'package:eatmehv2/data/models/chat_message_model.dart';
+import 'package:eatmehv2/data/models/meal/meal_record_model.dart';
+import 'package:eatmehv2/data/models/meal/nutrition_info_model.dart';
+import 'package:eatmehv2/data/repos/meal_records_repo.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:eatmehv2/bloc/chat/chat_bloc_bloc.dart';
@@ -18,6 +24,7 @@ class CameraScreen extends StatefulWidget {
 class _CameraScreenState extends State<CameraScreen> {
   File? _selectedImage;
   bool _isAnalyzing = false;
+  bool _isSaving = false;
   Map<String, dynamic>? _analysisResult;
 
   @override
@@ -28,6 +35,71 @@ class _CameraScreenState extends State<CameraScreen> {
         _showImageSourceDialog();
       }
     });
+  }
+
+  Future<void> _saveMealRecord({
+    required String foodName,
+    required int calories,
+    required num protein,
+    required num carbs,
+    required num fat,
+    required num fiber,
+    required String recommendation,
+  }) async {
+    setState(() => _isSaving = true); // 🟡 start loading
+
+    final authState = context.read<AuthBloc>().state as Authenticated;
+    final userUid = authState.user.uid;
+    final mealRepo = MealRecordsRepository();
+
+    final file = File(_selectedImage!.path);
+
+    try {
+      // 1️⃣ Upload image
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('meal_images')
+          .child('${userUid}_${DateTime.now().millisecondsSinceEpoch}.jpg');
+
+      await storageRef.putFile(file);
+
+      // 2️⃣ Get the download URL
+      final downloadUrl = await storageRef.getDownloadURL();
+
+      // 3️⃣ Save Firestore record
+      final meal = MealRecordModel(
+        uid: FirebaseFirestore.instance.collection('meal_records').doc().id,
+        userUid: userUid,
+        imageUrl: downloadUrl,
+        calories: calories,
+        foodName: foodName,
+        nutritionInfo: NutritionInfo(
+          protein: protein.toDouble(),
+          carbs: carbs.toDouble(),
+          fat: fat.toDouble(),
+          fiber: fiber.toDouble(),
+        ),
+        recommendation: recommendation,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      );
+
+      await mealRepo.saveMealRecord(meal);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('✅ Meal saved successfully!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('❌ Failed to save meal: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false); // 🔵 stop loading
+    }
   }
 
   Future<void> _showImageSourceDialog() async {
@@ -363,13 +435,22 @@ class _CameraScreenState extends State<CameraScreen> {
             // 🟩 Save Button
             Expanded(
               child: CustomButton(
-                text: 'Save',
-                icon: Icons.save,
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Meal saved to records!')),
-                  );
-                },
+                text: _isSaving ? 'Saving...' : 'Save',
+                icon: _isSaving ? null : Icons.save,
+                onPressed:
+                    _isSaving
+                        ? null // 🔒 disable while saving
+                        : () {
+                          _saveMealRecord(
+                            foodName: foodName,
+                            calories: calories,
+                            protein: protein,
+                            carbs: carbs,
+                            fat: fat,
+                            fiber: fiber,
+                            recommendation: recommendation,
+                          );
+                        },
               ),
             ),
             const SizedBox(width: 12),
@@ -382,13 +463,9 @@ class _CameraScreenState extends State<CameraScreen> {
                 backgroundColor: Colors.white,
                 textColor: const Color(0xFF191919),
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        '{ foodName: $foodName ,kcal: $calories, protein: $protein, carbs: $carbs, fat: $fat, fiber: $fiber}',
-                      ),
-                    ),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('Story add!')));
                 },
               ),
             ),

@@ -1,5 +1,7 @@
+import 'package:eatmehv2/bloc/auth/auth_bloc.dart';
 import 'package:eatmehv2/presentation/screens/user/profile_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -21,71 +23,55 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 0,
-      title: Row(
-        children: [
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ProfileScreen()),
-              );
-            },
-            child: const CircleAvatar(
-              radius: 18,
-              backgroundImage: NetworkImage(
-                'https://wallpapers.com/images/hd/chef-minion-in-red-hlpmj9v0kah222pp.jpg',
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          const Text(
-            'Hi, User',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF191919),
-            ),
-          ),
-        ],
-      ),
-      actions: [
-        if (showFriendRequest)
-          Stack(
+      title: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, state) {
+          String displayName = "User";
+          String avatar = "assets/teralero.png";
+
+          if (state is Authenticated) {
+            displayName = state.user.username;
+            avatar = state.user.imageUrl ?? avatar;
+          }
+
+          return Row(
             children: [
-              IconButton(
-                icon: const Icon(Icons.person_add, color: Color(0xFF191919)),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Friend Requests Page')),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ProfileScreen()),
                   );
                 },
-              ),
-              Positioned(
-                right: 8,
-                top: 8,
                 child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(
-                    color: Colors.red,
+                  padding: const EdgeInsets.all(2), // thickness of border
+                  decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                  ),
-                  constraints: const BoxConstraints(
-                    minWidth: 16,
-                    minHeight: 16,
-                  ),
-                  child: const Text(
-                    '2',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
+                    border: Border.all(
+                      color: Colors.black, // border color
+                      width: 1, // border thickness
                     ),
-                    textAlign: TextAlign.center,
+                  ),
+                  child: CircleAvatar(
+                    radius: 20,
+                    backgroundColor: Colors.transparent,
+                    backgroundImage: AssetImage(avatar),
                   ),
                 ),
               ),
+              const SizedBox(width: 12),
+              Text(
+                '$displayName ',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF191919),
+                ),
+              ),
             ],
-          ),
+          );
+        },
+      ),
+      actions: [
         if (showNotification)
           Stack(
             children: [
@@ -109,7 +95,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               ),
             ],
           ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 12),
       ],
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(1),

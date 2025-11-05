@@ -46,6 +46,7 @@ class MealRecordModel {
       'userUid': userUid,
       'imageUrl': imageUrl,
       'calories': calories,
+      'foodName': foodName,
       'nutritionInfo': nutritionInfo.toMap(),
       'recommendation': recommendation,
       'createdAt': createdAt,
