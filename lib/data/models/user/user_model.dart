@@ -16,6 +16,7 @@ class UserModel {
   final UserSettings? settings;
   final TrainerProfile? trainerProfile;
   final bool isFrozen; // Admin control
+  // age, gender, height, weight, diet type (vege?)
 
   UserModel({
     required this.uid,

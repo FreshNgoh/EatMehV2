@@ -27,101 +27,82 @@ class _TrainerInstructionState extends State<TrainerInstruction> {
         curve: Curves.easeInOut,
       );
     } else {
-      Navigator.push(
+      Navigator.of(
         context,
-        MaterialPageRoute(builder: (context) => const TrainerForm()),
-      );
+        rootNavigator: true,
+      ).push(MaterialPageRoute(builder: (context) => const TrainerForm()));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        scaffoldBackgroundColor: Colors.white,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.green,
-          surface: Colors.white,
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios),
+          onPressed: () => Navigator.pop(context),
         ),
-        useMaterial3: true,
+        title: const Text('Trainer Instruction'),
+        titleTextStyle: const TextStyle(
+          color: Colors.black87,
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+        ),
       ),
-      home: Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios),
-            onPressed: () {
-              Navigator.pop(context);
-            },
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const SizedBox(height: 30),
+          SmoothPageIndicator(
+            controller: controller,
+            count: 3,
+            effect: const SlideEffect(
+              spacing: 8.0,
+              radius: 5.0,
+              dotWidth: 15.0,
+              dotHeight: 8.0,
+              paintStyle: PaintingStyle.stroke,
+              strokeWidth: 1.5,
+              dotColor: Colors.grey,
+              activeDotColor: Colors.green,
+            ),
           ),
-          title: const Text('Trainer Instruction'),
-          titleTextStyle: const TextStyle(
-            color: Colors.black87,
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        body: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const SizedBox(height: 40),
-
-            SmoothPageIndicator(
+          Expanded(
+            child: PageView(
               controller: controller,
-              count: 3,
-              effect: const SlideEffect(
-                spacing: 8.0,
-                radius: 5.0,
-                dotWidth: 15.0,
-                dotHeight: 8.0,
-                paintStyle: PaintingStyle.stroke,
-                strokeWidth: 1.5,
-                dotColor: Colors.grey,
-                activeDotColor: Colors.green,
-              ),
+              onPageChanged: (index) => setState(() => currentPage = index),
+              children: [
+                _buildInstruction(
+                  image: 'assets/images/default_face.jpeg',
+                  text:
+                      'Welcome to Trainer Mode! Help users achieve their goals.',
+                ),
+                _buildInstruction(
+                  image: 'assets/images/default_face.jpeg',
+                  text:
+                      'Instruction 1: Set personalized diet goals for each trainee.',
+                ),
+                _buildInstruction(
+                  image: 'assets/images/default_face.jpeg',
+                  text:
+                      'Instruction 2: Monitor progress weekly and adjust plans.',
+                ),
+              ],
             ),
+          ),
 
-            Expanded(
-              child: PageView(
-                controller: controller,
-                onPageChanged: (index) {
-                  setState(() {
-                    currentPage = index;
-                  });
-                },
-                children: [
-                  _buildInstruction(
-                    image: 'assets/images/default_face.jpeg',
-                    text:
-                        'Welcome to Trainer Mode! Help users achieve their goals.',
-                  ),
-                  _buildInstruction(
-                    image: 'assets/images/default_face.jpeg',
-                    text:
-                        'Instruction 1: Set personalized diet goals for each trainee.',
-                  ),
-                  _buildInstruction(
-                    image: 'assets/images/default_face.jpeg',
-                    text:
-                        'Instruction 2: Monitor progress weekly and adjust plans.',
-                  ),
-                ],
-              ),
+          const SizedBox(height: 50),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 60),
+            child: CustomButton(
+              text: currentPage == 2 ? "Finish" : "Next",
+              onPressed: _moveNextPage,
+              backgroundColor: Colors.green.shade600,
+              textColor: Colors.white,
             ),
-
-            const SizedBox(height: 20),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 60),
-              child: CustomButton(
-                text: currentPage == 2 ? "Finish" : "Next",
-                onPressed: _moveNextPage,
-                backgroundColor: Colors.green.shade600,
-                textColor: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 20),
-          ],
-        ),
+          ),
+          const SizedBox(height: 100),
+        ],
       ),
     );
   }
@@ -132,7 +113,6 @@ class _TrainerInstructionState extends State<TrainerInstruction> {
       children: [
         Image.asset(image, height: 400, width: 400, fit: BoxFit.cover),
         const SizedBox(height: 20),
-
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Text(
