@@ -1,5 +1,10 @@
-import 'package:eatmehv2/presentation/widgets/custom_list.dart';
+import 'package:eatmehv2/bloc/auth/auth_bloc.dart';
+import 'package:eatmehv2/data/repos/trainer_profile_repo.dart';
+import 'package:eatmehv2/data/services/trainer_profile_service.dart';
 import 'package:flutter/material.dart';
+import 'package:eatmehv2/presentation/screens/trainer/trainer_chat_room.dart';
+import 'package:eatmehv2/presentation/widgets/custom_list.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class TraineeList extends StatefulWidget {
   const TraineeList({super.key});
@@ -9,64 +14,82 @@ class TraineeList extends StatefulWidget {
 }
 
 class _TraineeListState extends State<TraineeList> {
-  final _trainerNameController = TextEditingController();
+  final trainerProfileRepo = TrainerProfileRepo(TrainerProfileService());
+  bool _loading = true;
+  List<Map<String, dynamic>> _trainees = [];
 
   @override
-  void dispose() {
-    _trainerNameController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _loadTrainees();
+  }
+
+  Future<void> _loadTrainees() async {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is! Authenticated) {
+      return;
+    }
+    final userUid = authState.user.uid;
+
+    final trainerProfile = await trainerProfileRepo.getTrainerProfile(userUid);
+    // print('Trainer profile: ${trainerProfile?.toMap()}');
+
+    if (trainerProfile == null || trainerProfile.trainees.isEmpty) {
+      // print('No trainees found.');
+      setState(() => _loading = false);
+      return;
+    }
+
+    final trainees = await trainerProfileRepo.getTraineesDetails(
+      trainerProfile.trainees,
+    );
+
+    setState(() {
+      _trainees = trainees;
+      _loading = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        title: const Text('Trainee List'),
-        titleTextStyle: const TextStyle(
-          color: Colors.black87,
-          fontSize: 20,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 500),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                CustomList(
-                  value: "Trainee Name", // replace
-                  actionIcons: [
-                    ListActionIcon(
-                      icon: Icons.wechat,
-                      onPressed: () {
-                        // go to chatroom with trainee
-                      },
-                      tooltip: 'Message trainee',
-                    ),
-                  ],
-                  onFieldTap: () {
-                    // Navigator.push(
-                    //   context,
-                    //   MaterialPageRoute(
-                    //     builder: (context) => const TraineeProfileScreen(),
-                    //   ),
-                    // );
-                  },
+      appBar: AppBar(title: const Text('Trainee List')),
+      body:
+          _loading
+              ? const Center(child: CircularProgressIndicator())
+              : _trainees.isEmpty
+              ? const Center(child: Text('No trainees yet.'))
+              : ListView.builder(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 30,
                 ),
-              ],
-            ),
-          ),
-        ),
-      ),
+                itemCount: _trainees.length,
+                itemBuilder: (context, index) {
+                  final trainee = _trainees[index];
+                  return CustomList(
+                    profile: const CircleAvatar(
+                      backgroundImage: AssetImage(
+                        'assets/images/default_face.jpeg',
+                      ),
+                    ),
+                    value: trainee['name'],
+                    onFieldTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => TrainerChatRoom(
+                                receiverUid: trainee['uid'],
+                                receiverName: trainee['name'],
+                                receiverImage: trainee['image'],
+                              ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
     );
   }
 }

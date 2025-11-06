@@ -12,12 +12,16 @@ class ListActionIcon {
 class CustomList extends StatelessWidget {
   final String value;
   final VoidCallback onFieldTap;
+  final VoidCallback? onProfileTap;
+  final Widget? profile;
   final List<ListActionIcon> actionIcons;
 
   const CustomList({
     super.key,
     required this.value,
     required this.onFieldTap,
+    this.onProfileTap,
+    this.profile,
     this.actionIcons = const [],
   });
 
@@ -34,8 +38,11 @@ class CustomList extends StatelessWidget {
           border: Border.all(color: AppColors.border),
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+            if (profile != null) ...[
+              GestureDetector(onTap: onProfileTap, child: profile!),
+              const SizedBox(width: 12),
+            ],
             Expanded(
               child: Text(
                 value,

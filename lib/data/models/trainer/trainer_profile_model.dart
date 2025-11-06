@@ -1,6 +1,6 @@
 class TrainerProfile {
   final List<String> certifications;
-  final int yearsOfExperience;
+  final String yearsOfExperience;
   final double rating;
   final List<String> trainees;
 
@@ -14,7 +14,7 @@ class TrainerProfile {
   factory TrainerProfile.fromMap(Map<String, dynamic> map) {
     return TrainerProfile(
       certifications: List<String>.from(map['certifications'] ?? []),
-      yearsOfExperience: map['yearsOfExperience'] as int,
+      yearsOfExperience: map['yearsOfExperience'] ?? "",
       rating: map['rating']?.toDouble() ?? 0.0,
       trainees: List<String>.from(map['trainees'] ?? []),
     );
