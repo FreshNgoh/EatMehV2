@@ -1,12 +1,11 @@
 import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eatmehv2/data/models/trainer/trainer_application.dart';
 import 'package:eatmehv2/data/services/trainer_application_service.dart';
 
-class TrainerRepository {
+class TrainerApplicationRepository {
   final TrainerApplicationService _trainerService;
-  TrainerRepository(this._trainerService);
+  TrainerApplicationRepository(this._trainerService);
 
   Future<void> applyAsTrainer({
     required String userId,
@@ -59,5 +58,9 @@ class TrainerRepository {
 
   Future<List<TrainerApplication>> fetchAllApplications() async {
     return await _trainerService.getAllApplications();
+  }
+
+  Future<String> fetchApplicationStatus(String userId) async {
+    return await _trainerService.getApplicationStatus(userId);
   }
 }

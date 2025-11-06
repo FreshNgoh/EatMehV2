@@ -1,3 +1,4 @@
+import 'package:eatmehv2/data/services/trainer_profile_service.dart';
 import 'package:eatmehv2/presentation/widgets/custom_list.dart';
 import 'package:flutter/material.dart';
 
@@ -9,12 +10,23 @@ class TrainerList extends StatefulWidget {
 }
 
 class _TrainerListState extends State<TrainerList> {
-  final _trainerNameController = TextEditingController();
+  final trainerProfileService = TrainerProfileService();
+  bool isLoading = true;
+  List<Map<String, dynamic>> trainers = [];
 
   @override
-  void dispose() {
-    _trainerNameController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    fetchTrainers();
+  }
+
+  Future<void> fetchTrainers() async {
+    final result = await trainerProfileService.getAllTrainers();
+    // print('Trainer profile: $result');
+    setState(() {
+      trainers = result;
+      isLoading = false;
+    });
   }
 
   @override
@@ -34,43 +46,52 @@ class _TrainerListState extends State<TrainerList> {
           fontWeight: FontWeight.w700,
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 500),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                CustomList(
-                  value: "John Doe", // replace
-                  actionIcons: [
-                    ListActionIcon(
-                      icon: Icons.add,
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Friend request sent to John Doe'),
-                          ),
-                        );
-                      },
-                      tooltip: 'Add Friend',
-                    ),
-                  ],
-                  onFieldTap: () {
-                    // Navigator.push(
-                    //   context,
-                    //   MaterialPageRoute(
-                    //     builder: (context) => const TraineeList(),
-                    //   ),
-                    // );
-                  },
+      body:
+          isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : trainers.isEmpty
+              ? const Center(child: Text("No trainers available"))
+              : ListView.builder(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 30,
                 ),
-              ],
-            ),
-          ),
-        ),
-      ),
+                itemCount: trainers.length,
+                itemBuilder: (context, index) {
+                  final trainer = trainers[index];
+                  return CustomList(
+                    profile: CircleAvatar(
+                      backgroundImage: AssetImage(
+                        'assets/images/default_face.jpeg',
+                      ),
+                    ),
+                    value: trainer['name'],
+                    actionIcons: [
+                      ListActionIcon(
+                        icon: Icons.add,
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Friend request sent to ${trainer['name']}',
+                              ),
+                            ),
+                          );
+                        },
+                        tooltip: 'Add Friend',
+                      ),
+                    ],
+                    onFieldTap: () {
+                      // Navigator.push(
+                      //   context,
+                      //   MaterialPageRoute(
+                      //     builder: (context) => TrainerProfile(trainerId: trainer['id']),
+                      //   ),
+                      // );
+                    },
+                  );
+                },
+              ),
     );
   }
 }

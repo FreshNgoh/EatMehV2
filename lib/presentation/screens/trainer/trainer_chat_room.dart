@@ -1,5 +1,6 @@
 import 'package:eatmehv2/bloc/auth/auth_bloc.dart';
 import 'package:eatmehv2/data/models/chat/message_model.dart';
+import 'package:eatmehv2/data/repos/chat_room_repo.dart';
 import 'package:eatmehv2/data/services/chat_room_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -22,7 +23,7 @@ class TrainerChatRoom extends StatefulWidget {
 
 class _TrainerChatRoomState extends State<TrainerChatRoom> {
   final TextEditingController _controller = TextEditingController();
-  final chatService = ChatRoomService();
+  final chatRepo = ChatRoomRepo(ChatRoomService());
 
   late String currentUserUid;
   @override
@@ -61,8 +62,10 @@ class _TrainerChatRoomState extends State<TrainerChatRoom> {
           children: [
             IconButton(
               onPressed: () => Navigator.pop(context),
-              icon: const Icon(Icons.arrow_back, color: Colors.black),
+              icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
             ),
+            const SizedBox(width: 12),
+
             CircleAvatar(
               backgroundImage:
                   const AssetImage('assets/images/default_face.jpeg')
@@ -87,7 +90,7 @@ class _TrainerChatRoomState extends State<TrainerChatRoom> {
             // Message list
             Expanded(
               child: StreamBuilder<List<MessageModel>>(
-                stream: chatService.getMessages(
+                stream: chatRepo.getMessages(
                   currentUserUid,
                   widget.receiverUid,
                 ),
@@ -96,9 +99,21 @@ class _TrainerChatRoomState extends State<TrainerChatRoom> {
                     return const Center(child: CircularProgressIndicator());
                   }
 
-                  final messages = snapshot.data ?? [];
+                  // Handle errors
+                  if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  }
 
-                  if (messages.isEmpty) {
+                  // Check if have data
+                  if (!snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  final messages = snapshot.data!;
+
+                  // Only show "Say hi" if we're connected AND truly have no messages
+                  if (messages.isEmpty &&
+                      snapshot.connectionState == ConnectionState.active) {
                     return const Center(child: Text("Say hi 👋"));
                   }
 
@@ -113,6 +128,7 @@ class _TrainerChatRoomState extends State<TrainerChatRoom> {
                       final isMe = message.senderUid == currentUserUid;
 
                       return Align(
+                        key: ValueKey(message.id),
                         alignment:
                             isMe ? Alignment.centerRight : Alignment.centerLeft,
                         child: Container(
@@ -162,7 +178,7 @@ class _TrainerChatRoomState extends State<TrainerChatRoom> {
                       icon: const Icon(Icons.send, color: Colors.blue),
                       onPressed: () async {
                         if (_controller.text.trim().isEmpty) return;
-                        await chatService.sendMessage(
+                        await chatRepo.sendMessage(
                           currentUserUid,
                           widget.receiverUid,
                           _controller.text.trim(),

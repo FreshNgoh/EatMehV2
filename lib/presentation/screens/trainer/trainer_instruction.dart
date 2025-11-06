@@ -27,10 +27,10 @@ class _TrainerInstructionState extends State<TrainerInstruction> {
         curve: Curves.easeInOut,
       );
     } else {
-      Navigator.of(
+      Navigator.push(
         context,
-        rootNavigator: true,
-      ).push(MaterialPageRoute(builder: (context) => const TrainerForm()));
+        MaterialPageRoute(builder: (context) => const TrainerForm()),
+      );
     }
   }
 

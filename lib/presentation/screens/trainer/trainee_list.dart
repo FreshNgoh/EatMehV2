@@ -1,4 +1,5 @@
 import 'package:eatmehv2/bloc/auth/auth_bloc.dart';
+import 'package:eatmehv2/data/repos/trainer_profile_repo.dart';
 import 'package:eatmehv2/data/services/trainer_profile_service.dart';
 import 'package:flutter/material.dart';
 import 'package:eatmehv2/presentation/screens/trainer/trainer_chat_room.dart';
@@ -13,7 +14,7 @@ class TraineeList extends StatefulWidget {
 }
 
 class _TraineeListState extends State<TraineeList> {
-  final trainerService = TrainerProfileService();
+  final trainerProfileRepo = TrainerProfileRepo(TrainerProfileService());
   bool _loading = true;
   List<Map<String, dynamic>> _trainees = [];
 
@@ -26,14 +27,11 @@ class _TraineeListState extends State<TraineeList> {
   Future<void> _loadTrainees() async {
     final authState = context.read<AuthBloc>().state;
     if (authState is! Authenticated) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('You must be logged in to apply.')),
-      );
       return;
     }
     final userUid = authState.user.uid;
 
-    final trainerProfile = await trainerService.getTrainerProfile(userUid);
+    final trainerProfile = await trainerProfileRepo.getTrainerProfile(userUid);
     // print('Trainer profile: ${trainerProfile?.toMap()}');
 
     if (trainerProfile == null || trainerProfile.trainees.isEmpty) {
@@ -42,7 +40,7 @@ class _TraineeListState extends State<TraineeList> {
       return;
     }
 
-    final trainees = await trainerService.getTraineesDetails(
+    final trainees = await trainerProfileRepo.getTraineesDetails(
       trainerProfile.trainees,
     );
 
@@ -70,27 +68,25 @@ class _TraineeListState extends State<TraineeList> {
                 itemBuilder: (context, index) {
                   final trainee = _trainees[index];
                   return CustomList(
-                    value: trainee['name'] ?? 'No Name',
-                    actionIcons: [
-                      ListActionIcon(
-                        icon: Icons.wechat,
-                        tooltip: 'Message trainee',
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder:
-                                  (context) => TrainerChatRoom(
-                                    receiverUid: trainee['uid'],
-                                    receiverName: trainee['name'],
-                                    receiverImage: trainee['image'],
-                                  ),
-                            ),
-                          );
-                        },
+                    profile: const CircleAvatar(
+                      backgroundImage: AssetImage(
+                        'assets/images/default_face.jpeg',
                       ),
-                    ],
-                    onFieldTap: () {},
+                    ),
+                    value: trainee['name'],
+                    onFieldTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => TrainerChatRoom(
+                                receiverUid: trainee['uid'],
+                                receiverName: trainee['name'],
+                                receiverImage: trainee['image'],
+                              ),
+                        ),
+                      );
+                    },
                   );
                 },
               ),

@@ -18,8 +18,7 @@ class ChatRoomService {
 
   // create unique room id
   String _generateRoomId(String uid1, String uid2) {
-    final ids = [uid1, uid2]..sort();
-    return ids.join('_');
+    return uid1.hashCode <= uid2.hashCode ? '${uid1}_$uid2' : '${uid2}_$uid1';
   }
 
   // Send a new message
@@ -32,6 +31,7 @@ class ChatRoomService {
     final chatRoomRef = _chatRoomsCollection.doc(roomId);
 
     final newMessage = MessageModel(
+      id: chatRoomRef.id,
       senderUid: senderUid,
       receiverUid: receiverUid,
       message: message,
@@ -62,11 +62,10 @@ class ChatRoomService {
         .collection('messages')
         .orderBy('timestamp', descending: false)
         .snapshots()
-        .map(
-          (snapshot) =>
-              snapshot.docs
-                  .map((doc) => MessageModel.fromMap(doc.data()))
-                  .toList(),
-        );
+        .map((snapshot) {
+          return snapshot.docs.map((doc) {
+            return MessageModel.fromMap(doc.data());
+          }).toList();
+        });
   }
 }

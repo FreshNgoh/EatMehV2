@@ -82,12 +82,25 @@ class TrainerProfileService {
   }
 
   // Get all trainers
-  Future<List<TrainerProfile>> getAllTrainers() async {
+  Future<List<Map<String, dynamic>>> getAllTrainers() async {
     try {
-      final snapshot = await _trainerProfilesCollection.get();
-      return snapshot.docs.map((doc) => doc.data()).toList();
+      final snapshot =
+          await _firestore
+              .collection(FirebaseConstants.usersCollection)
+              .where('role', isEqualTo: 'trainer')
+              .get();
+
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        return {
+          'uid': doc.id,
+          'name': data['username'] ?? 'Unknown',
+          'image': data['imageUrl'] ?? 'https://via.placeholder.com/150',
+          'trainerProfile': data['trainerProfile'], // optional
+        };
+      }).toList();
     } catch (e) {
-      print('Error fetching all trainers: $e');
+      print('Error fetching trainers: $e');
       return [];
     }
   }
