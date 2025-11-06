@@ -15,6 +15,11 @@ class TrainerProfileService {
         );
   }
 
+  // generate unique room id to get lastest message and timestamp
+  String _generateRoomId(String uid1, String uid2) {
+    return uid1.hashCode <= uid2.hashCode ? '${uid1}_$uid2' : '${uid2}_$uid1';
+  }
+
   // Create a new trainer profile document
   Future<void> createTrainerProfile(
     String trainerUid,
@@ -55,6 +60,7 @@ class TrainerProfileService {
   // Get trainees' details
   Future<List<Map<String, dynamic>>> getTraineesDetails(
     List<String> traineeUids,
+    String trainerUid,
   ) async {
     final List<Map<String, dynamic>> trainees = [];
 
@@ -67,11 +73,31 @@ class TrainerProfileService {
                 .get();
         if (doc.exists) {
           final data = doc.data()!;
-          trainees.add({
+          final trainee = {
             'uid': uid,
             'name': data['username'] ?? 'Unknown',
             'image': data['imageUrl'] ?? 'https://via.placeholder.com/150',
-          });
+          };
+
+          // Generate chat room ID between trainer and this trainee
+          final roomId = _generateRoomId(trainerUid, uid);
+
+          // Fetch chat room metadata (if exists)
+          final chatDoc =
+              await _firestore
+                  .collection(FirebaseConstants.chatRoomsCollection)
+                  .doc(roomId)
+                  .get();
+
+          if (chatDoc.exists) {
+            final chatData = chatDoc.data() as Map<String, dynamic>;
+            trainee['lastMessage'] = chatData['lastMessage'] ?? '';
+            trainee['lastUpdated'] = chatData['lastUpdated'] ?? Timestamp.now();
+          } else {
+            trainee['lastMessage'] = '';
+            trainee['lastUpdated'] = Timestamp.now();
+          }
+          trainees.add(trainee);
         }
       }
     } catch (e) {

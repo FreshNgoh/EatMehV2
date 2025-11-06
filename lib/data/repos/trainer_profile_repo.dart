@@ -35,7 +35,11 @@ class TrainerProfileRepo {
 
   Future<List<Map<String, dynamic>>> getTraineesDetails(
     List<String> traineeUids,
+    trainerUid,
   ) async {
-    return await _trainerProfileService.getTraineesDetails(traineeUids);
+    return await _trainerProfileService.getTraineesDetails(
+      traineeUids,
+      trainerUid,
+    );
   }
 }
