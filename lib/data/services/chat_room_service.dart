@@ -54,11 +54,27 @@ class ChatRoomService {
   }
 
   // Get real time messages
-  Stream<List<MessageModel>> getMessages(String senderUid, String receiverUid) {
+  Stream<List<MessageModel>> getMessages(
+    String senderUid,
+    String receiverUid,
+  ) async* {
     final roomId = _generateRoomId(senderUid, receiverUid);
+    final chatRoomRef = _chatRoomsCollection.doc(roomId);
 
-    return _chatRoomsCollection
-        .doc(roomId)
+    // Check if chat room exists, if not create it
+    final chatRoomDoc = await chatRoomRef.get();
+    if (!chatRoomDoc.exists) {
+      await chatRoomRef.set(
+        ChatRoomModel(
+          participants: [senderUid, receiverUid],
+          lastMessage: '',
+          lastUpdated: Timestamp.now(),
+        ),
+      );
+    }
+
+    // Now stream the messages
+    yield* chatRoomRef
         .collection('messages')
         .orderBy('timestamp', descending: false)
         .snapshots()
