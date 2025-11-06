@@ -1,4 +1,6 @@
-import 'package:eatmehv2/data/services/trainer_service.dart';
+import 'package:eatmehv2/data/models/trainer/trainer_profile_model.dart';
+import 'package:eatmehv2/data/services/trainer_application_service.dart';
+import 'package:eatmehv2/data/services/trainer_profile_service.dart';
 import 'package:eatmehv2/presentation/screens/trainer/trainee_list.dart';
 import 'package:eatmehv2/presentation/screens/trainer/trainer_instruction.dart';
 import 'package:eatmehv2/presentation/screens/trainer/trainer_list.dart';
@@ -13,8 +15,29 @@ class CarouselApp extends StatelessWidget {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return 'none';
 
-    final trainerService = TrainerService();
+    final trainerService = TrainerApplicationService();
+    final trainerProfileService = TrainerProfileService();
     final status = await trainerService.getApplicationStatus(user.uid);
+
+    // If approved, ensure trainer profile exists
+    if (status == 'approved') {
+      final existingProfile = await trainerProfileService.getTrainerProfile(
+        user.uid,
+      );
+
+      if (existingProfile == null) {
+        // Create a default TrainerProfile
+        // also need to set the role -> trainer ***
+        final profile = TrainerProfile(
+          certifications: [],
+          rating: 5.0,
+          yearsOfExperience: "",
+          trainees: [],
+        );
+
+        await trainerProfileService.createTrainerProfile(user.uid, profile);
+      }
+    }
     return status;
   }
 

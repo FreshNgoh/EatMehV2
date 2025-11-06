@@ -4,7 +4,7 @@ import 'package:eatmehv2/core/constants/firebase_constants.dart';
 import 'package:eatmehv2/data/models/trainer/trainer_application.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
-class TrainerService {
+class TrainerApplicationService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   CollectionReference<TrainerApplication> get _trainerApplicationsCollection {

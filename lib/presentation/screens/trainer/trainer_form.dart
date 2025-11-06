@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:eatmehv2/bloc/auth/auth_bloc.dart';
 import 'package:eatmehv2/data/repos/trainer_repo.dart';
-import 'package:eatmehv2/data/services/trainer_service.dart';
+import 'package:eatmehv2/data/services/trainer_application_service.dart';
 import 'package:eatmehv2/presentation/screens/user/home_screen.dart';
 import 'package:eatmehv2/presentation/widgets/custom_button.dart';
 import 'package:eatmehv2/presentation/widgets/custom_text_field.dart';
@@ -20,7 +20,7 @@ class TrainerForm extends StatefulWidget {
 class _TrainerFormState extends State<TrainerForm> {
   final _formKey = GlobalKey<FormBuilderState>();
 
-  final TrainerRepository _trainerRepo = TrainerRepository(TrainerService());
+  final trainerRepo = TrainerRepository(TrainerApplicationService());
   final _nameController = TextEditingController();
   final _ageController = TextEditingController();
   final _specializationController = TextEditingController();
@@ -237,7 +237,7 @@ class _TrainerFormState extends State<TrainerForm> {
 
       final userUid = authState.user.uid;
 
-      await _trainerRepo.applyAsTrainer(
+      await trainerRepo.applyAsTrainer(
         userId: userUid,
         name: name,
         age: age,

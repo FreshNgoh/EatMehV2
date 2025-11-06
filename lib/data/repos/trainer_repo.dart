@@ -2,10 +2,10 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eatmehv2/data/models/trainer/trainer_application.dart';
-import 'package:eatmehv2/data/services/trainer_service.dart';
+import 'package:eatmehv2/data/services/trainer_application_service.dart';
 
 class TrainerRepository {
-  final TrainerService _trainerService;
+  final TrainerApplicationService _trainerService;
   TrainerRepository(this._trainerService);
 
   Future<void> applyAsTrainer({
