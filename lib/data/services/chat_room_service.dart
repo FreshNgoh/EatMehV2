@@ -45,6 +45,7 @@ class ChatRoomService {
         participants: [senderUid, receiverUid],
         lastMessage: message,
         lastUpdated: Timestamp.now(),
+        lastSenderUid: senderUid,
       ),
       SetOptions(merge: true),
     );
@@ -67,8 +68,9 @@ class ChatRoomService {
       await chatRoomRef.set(
         ChatRoomModel(
           participants: [senderUid, receiverUid],
-          lastMessage: '',
+          lastMessage: 'Added by',
           lastUpdated: Timestamp.now(),
+          lastSenderUid: senderUid,
         ),
       );
     }

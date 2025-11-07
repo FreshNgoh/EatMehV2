@@ -33,21 +33,28 @@ class TraineeChatPreview extends StatelessWidget {
               .doc(roomId)
               .snapshots(),
       builder: (context, snapshot) {
-        String subtitle = 'No messages yet';
+        String subtitle = 'Added by';
         Timestamp? lastUpdated;
+        String? lastSenderUid;
 
         if (snapshot.hasData && snapshot.data!.exists) {
           final data = snapshot.data!.data() as Map<String, dynamic>;
-          subtitle = data['lastMessage'] ?? 'No messages yet';
+          subtitle = data['lastMessage'] ?? 'Added by';
           lastUpdated = data['lastUpdated'] as Timestamp;
+          lastSenderUid = data['lastSenderUid'] ?? '';
         }
+
+        final displayMessage =
+            (lastSenderUid == currentUserUid && subtitle != 'Added by')
+                ? "You: $subtitle"
+                : subtitle;
 
         return CustomList(
           profile: const CircleAvatar(
             backgroundImage: AssetImage('assets/images/default_face.jpeg'),
           ),
           value: traineeName,
-          lastMessage: subtitle,
+          lastMessage: displayMessage,
           lastUpdated: lastUpdated,
           onFieldTap: () {
             Navigator.push(
