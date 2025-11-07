@@ -1,4 +1,5 @@
 import 'package:eatmehv2/data/services/trainer_profile_service.dart';
+import 'package:eatmehv2/presentation/screens/trainer/trainer_chat_room.dart';
 import 'package:eatmehv2/presentation/widgets/custom_list.dart';
 import 'package:flutter/material.dart';
 
@@ -85,7 +86,12 @@ class _TrainerListState extends State<TrainerList> {
                       // Navigator.push(
                       //   context,
                       //   MaterialPageRoute(
-                      //     builder: (context) => TrainerProfile(trainerId: trainer['id']),
+                      //     builder:
+                      //         (context) => TrainerChatRoom(
+                      //           receiverUid: trainer['uid'],
+                      //           receiverName: trainer['name'],
+                      //           receiverImage: trainer['image'],
+                      //         ),
                       //   ),
                       // );
                     },
