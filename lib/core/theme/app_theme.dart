@@ -66,12 +66,12 @@ class AppTheme {
         ),
         hintStyle: const TextStyle(color: AppColors.textHint),
       ),
-      cardTheme: CardTheme(
-        color: Colors.white,
-        elevation: 2,
-        shadowColor: AppColors.border.withOpacity(0.3),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      ),
+      // cardTheme: CardTheme(
+      //   color: Colors.white,
+      //   elevation: 2,
+      //   shadowColor: AppColors.border.withOpacity(0.3),
+      //   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      // ),
     );
   }
 
