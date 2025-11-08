@@ -1,9 +1,14 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:eatmehv2/bloc/auth/auth_bloc.dart';
 import 'package:eatmehv2/core/constants/app_constants.dart';
+import 'package:eatmehv2/core/constants/firebase_constants.dart';
 import 'package:eatmehv2/core/theme/app_colors.dart';
+import 'package:eatmehv2/data/models/exercise/exercise_model.dart';
+import 'package:eatmehv2/data/repos/exercise_repo.dart';
 import 'package:eatmehv2/presentation/widgets/custom_card.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import 'dart:convert';
 
 class ExerciseScreen extends StatefulWidget {
   const ExerciseScreen({super.key});
@@ -14,6 +19,13 @@ class ExerciseScreen extends StatefulWidget {
 
 class _ExerciseScreenState extends State<ExerciseScreen> {
   DateTime selectedDate = DateTime.now();
+  late ExerciseRepository _exerciseRepo;
+
+  @override
+  void initState() {
+    super.initState();
+    _exerciseRepo = ExerciseRepository();
+  }
 
   void _previousDay() {
     setState(() {
@@ -43,6 +55,10 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authState = context.read<AuthBloc>().state as Authenticated;
+
+    final userUid = authState.user.uid;
+
     return Scaffold(
       body: SingleChildScrollView(
         child: Column(
@@ -103,170 +119,257 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
               ),
             ),
 
-            // Main Stats Circle
-            Container(
-              color: Colors.white,
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
-              child: Column(
-                children: [
-                  SizedBox(
-                    width: 200,
-                    height: 200,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        // Background Circle
-                        SizedBox(
-                          width: 200,
-                          height: 200,
-                          child: CircularProgressIndicator(
-                            value: 1.0,
-                            strokeWidth: 12,
-                            backgroundColor: const Color(0xFFE2E8F0),
-                            valueColor: const AlwaysStoppedAnimation<Color>(
-                              Color(0xFFE2E8F0),
-                            ),
-                          ),
-                        ),
-                        // Progress Circle
-                        SizedBox(
-                          width: 200,
-                          height: 200,
-                          child: CircularProgressIndicator(
-                            value: 0.35, // 35% progress
-                            strokeWidth: 12,
-                            backgroundColor: Colors.transparent,
-                            valueColor: const AlwaysStoppedAnimation<Color>(
-                              Color(0xFFF59E0B),
-                            ),
-                          ),
-                        ),
-                        // Center Content
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF59E0B).withOpacity(0.1),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.local_fire_department,
-                                size: 40,
-                                color: Color(0xFFF59E0B),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            const Text(
-                              '487',
-                              style: TextStyle(
-                                fontSize: 48,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF2D3748),
-                                height: 1,
-                              ),
-                            ),
-                            const Text(
-                              'cal',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Color(0xFF718096),
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+            // === FUTURE BUILDER TO LOAD FIREBASE DATA ===
+            FutureBuilder<List<ExerciseRecordModel>>(
+              future: _exerciseRepo.fetchExercises(
+                userUid: userUid,
+                date: selectedDate,
+              ),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(50),
+                      child: CircularProgressIndicator(),
                     ),
-                  ),
-                  const SizedBox(height: 30),
+                  );
+                }
 
-                  // Total Time Taken Row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Icon(
-                        Icons.access_time_filled_rounded,
-                        color: Color(0xFFF59E0B),
-                        size: 18,
+                if (snapshot.hasError) {
+                  return Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: CustomCard(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image.asset(
+                            'assets/error.png',
+                            height: 200,
+                            width: 200,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Error loading records:\n${snapshot.error}',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
-                      SizedBox(width: 10),
-                      Text(
-                        'Total:',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF2D3748),
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      Text(
-                        '42 mins',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF4A5568),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+                    ),
+                  );
+                }
 
-            // Exercise History Section
-            Container(
-              width: double.infinity,
-              margin: const EdgeInsets.only(top: 2),
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.directions_run,
-                        size: 20,
-                        color: Color(0xFF2D3748),
+                final exercises = snapshot.data ?? [];
+                if (exercises.isEmpty) {
+                  return Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: CustomCard(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image.asset(
+                            'assets/noData.png',
+                            height: 200,
+                            width: 200,
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            "No exercise records found for this date.",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Color(0xFF403D39),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
-                      SizedBox(width: 6),
-                      const Text(
-                        'Exercise History',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF2D3748),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  );
+                }
 
-                  const SizedBox(height: 20),
-                  _buildExerciseHistoryItem(
-                    'Morning Run',
-                    '07:30 AM',
-                    '245 cal',
-                    Icons.directions_run,
-                    const Color(0xFF14B8A6),
-                  ),
-                  _buildExerciseHistoryItem(
-                    'Yoga Session',
-                    '09:15 AM',
-                    '120 cal',
-                    Icons.self_improvement,
-                    const Color(0xFF8B5CF6),
-                  ),
-                  _buildExerciseHistoryItem(
-                    'Evening Walk',
-                    '06:00 PM',
-                    '122 cal',
-                    Icons.directions_walk,
-                    const Color(0xFF3B82F6),
-                  ),
-                  const SizedBox(height: 15),
-                ],
-              ),
+                // === DYNAMIC STATS ===
+                final totalCalories = exercises.fold<int>(
+                  0,
+                  (sum, e) => sum + e.caloriesBurnt,
+                );
+                final totalDuration = exercises.fold<int>(
+                  0,
+                  (sum, e) => sum + e.duration,
+                );
+
+                const calorieGoal = 1500; // dummy goal for now
+                final progress = (totalCalories / calorieGoal).clamp(0.0, 1.0);
+
+                return Column(
+                  children: [
+                    // === MAIN STATS CIRCLE ===
+                    Container(
+                      color: Colors.white,
+                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+                      child: Column(
+                        children: [
+                          SizedBox(
+                            width: 200,
+                            height: 200,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                // Background Circle
+                                SizedBox(
+                                  width: 200,
+                                  height: 200,
+                                  child: CircularProgressIndicator(
+                                    value: 1.0,
+                                    strokeWidth: 12,
+                                    backgroundColor: const Color(0xFFE2E8F0),
+                                    valueColor:
+                                        const AlwaysStoppedAnimation<Color>(
+                                          Color(0xFFE2E8F0),
+                                        ),
+                                  ),
+                                ),
+                                // Progress Circle
+                                SizedBox(
+                                  width: 200,
+                                  height: 200,
+                                  child: CircularProgressIndicator(
+                                    value: progress,
+                                    strokeWidth: 12,
+                                    backgroundColor: Colors.transparent,
+                                    valueColor:
+                                        const AlwaysStoppedAnimation<Color>(
+                                          Color(0xFFF59E0B),
+                                        ),
+                                  ),
+                                ),
+                                // Center Content
+                                Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: const Color(
+                                          0xFFF59E0B,
+                                        ).withOpacity(0.1),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.local_fire_department,
+                                        size: 40,
+                                        color: Color(0xFFF59E0B),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      '$totalCalories',
+                                      style: const TextStyle(
+                                        fontSize: 48,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF2D3748),
+                                        height: 1,
+                                      ),
+                                    ),
+                                    const Text(
+                                      'cal',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Color(0xFF718096),
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 30),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.access_time_filled_rounded,
+                                color: Color(0xFFF59E0B),
+                                size: 18,
+                              ),
+                              const SizedBox(width: 10),
+                              const Text(
+                                'Total:',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF2D3748),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                '$totalDuration mins',
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF4A5568),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // === EXERCISE HISTORY SECTION ===
+                    Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.only(top: 2),
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: const [
+                              Icon(
+                                Icons.directions_run,
+                                size: 20,
+                                color: Color(0xFF2D3748),
+                              ),
+                              SizedBox(width: 6),
+                              Text(
+                                'Exercise History',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF2D3748),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          for (final e in exercises)
+                            _buildExerciseHistoryItem(
+                              e.exerciseName,
+                              DateFormat(
+                                'hh:mm a',
+                              ).format(e.startTime.toDate()),
+                              DateFormat('hh:mm a').format(e.endTime.toDate()),
+                              e.duration,
+                              '${e.caloriesBurnt} cal',
+                              AppColors.exerciseIconData[e
+                                          .exerciseName]?['icon']
+                                      as IconData? ??
+                                  Icons.fitness_center,
+                              AppColors.exerciseIconData[e
+                                          .exerciseName]?['color']
+                                      as Color? ??
+                                  Colors.blue,
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ],
         ),
@@ -287,7 +390,9 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
 
   Widget _buildExerciseHistoryItem(
     String name,
-    String time,
+    String startTime,
+    String endTime,
+    int duration,
     String calories,
     IconData icon,
     Color color,
@@ -295,6 +400,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
     return CustomCard(
       child: Row(
         children: [
+          // Icon container
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -304,6 +410,8 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
             child: Icon(icon, color: color, size: 24),
           ),
           const SizedBox(width: 16),
+
+          // Exercise details
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -317,16 +425,32 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  time,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFF718096),
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      '$startTime - $endTime',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF718096),
+                      ),
+                    ),
+                    // const SizedBox(width: 8),
+                    // const Text('•', style: TextStyle(color: Color(0xFFCBD5E0))),
+                    // const SizedBox(width: 8),
+                    // Text(
+                    //   '$duration min',
+                    //   style: const TextStyle(
+                    //     fontSize: 13,
+                    //     color: Color(0xFF718096),
+                    //   ),
+                    // ),
+                  ],
                 ),
               ],
             ),
           ),
+
+          // Calories tag
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
@@ -366,6 +490,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
 
     final durationTextController = TextEditingController();
     final caloriesTextController = TextEditingController();
+    bool isLoading = false;
 
     showModalBottomSheet(
       context: context,
@@ -432,6 +557,76 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
               }
             }
 
+            Future<void> saveExerciseRecord() async {
+              if (selectedExercise == null ||
+                  startTime == null ||
+                  endTime == null ||
+                  duration == null ||
+                  caloriesBurned == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please fill in all fields')),
+                );
+                return;
+              }
+
+              setModalState(() => isLoading = true);
+
+              try {
+                final authState =
+                    context.read<AuthBloc>().state as Authenticated;
+                final userUid = authState.user.uid;
+
+                final now = DateTime.now();
+                final startDateTime = DateTime(
+                  selectedDate.year,
+                  selectedDate.month,
+                  selectedDate.day,
+                  startTime!.hour,
+                  startTime!.minute,
+                );
+                final endDateTime = DateTime(
+                  selectedDate.year,
+                  selectedDate.month,
+                  selectedDate.day,
+                  endTime!.hour,
+                  endTime!.minute,
+                );
+
+                final exerciseRecord = ExerciseRecordModel(
+                  uid:
+                      FirebaseFirestore.instance
+                          .collection(
+                            FirebaseConstants.exerciseRecordsCollection,
+                          )
+                          .doc()
+                          .id,
+                  userUid: userUid,
+                  exerciseName: selectedExercise!,
+                  duration: duration!.inMinutes,
+                  caloriesBurnt: caloriesBurned!.toInt(),
+                  createdAt: Timestamp.fromDate(now),
+                  startTime: Timestamp.fromDate(startDateTime),
+                  endTime: Timestamp.fromDate(endDateTime),
+                );
+
+                await ExerciseRepository().saveExercise(exerciseRecord);
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('✅ Exercise saved successfully!'),
+                  ),
+                );
+
+                Navigator.pop(context);
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('❌ Failed to save exercise: $e')),
+                );
+              } finally {
+                setModalState(() => isLoading = false);
+              }
+            }
+
             return Container(
               height: MediaQuery.of(context).size.height * 0.7,
               decoration: const BoxDecoration(
@@ -447,7 +642,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Small drag indicator
+                  // Drag indicator
                   Center(
                     child: Container(
                       width: 40,
@@ -501,7 +696,6 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                           final color =
                               AppColors.exerciseIconData[exercise]!['color']
                                   as Color;
-
                           return DropdownMenuItem<String>(
                             value: exercise,
                             child: Row(
@@ -520,7 +714,6 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                       });
                     },
                   ),
-
                   const SizedBox(height: 20),
 
                   // Start Time
@@ -600,32 +793,27 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
 
                   // Save Button
                   ElevatedButton(
-                    onPressed: () {
-                      final Map<String, dynamic> exerciseData = {
-                        'exercise': selectedExercise ?? 'Not selected',
-                        'startTime': startTime?.format(context) ?? 'N/A',
-                        'endTime': endTime?.format(context) ?? 'N/A',
-                        'duration': duration?.inMinutes ?? 0,
-                        'caloriesBurned': caloriesBurned ?? 0,
-                      };
-
-                      print(jsonEncode(exerciseData));
-                      Navigator.pop(context);
-                    },
+                    onPressed: isLoading ? null : saveExerciseRecord,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF14B8A6),
+                      backgroundColor:
+                          isLoading ? Colors.grey : const Color(0xFF14B8A6),
                       minimumSize: const Size(double.infinity, 50),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text(
-                      'Save Exercise',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    child:
+                        isLoading
+                            ? const CircularProgressIndicator(
+                              color: Colors.white,
+                            )
+                            : const Text(
+                              'Saving',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                   ),
                   const SizedBox(height: 20),
                 ],
