@@ -5,6 +5,7 @@ import 'package:eatmehv2/core/localization/app_localizations.dart';
 import 'package:eatmehv2/core/theme/app_theme.dart';
 import 'package:eatmehv2/data/repos/auth_repo.dart';
 import 'package:eatmehv2/data/repos/chat_repo.dart';
+import 'package:eatmehv2/data/repos/meal_records_repo.dart';
 import 'package:eatmehv2/data/repos/user_repo.dart';
 import 'package:eatmehv2/presentation/screens/auth/login_screen.dart';
 import 'package:eatmehv2/routes/app_router.dart';
@@ -43,6 +44,7 @@ class MyApp extends StatelessWidget {
         RepositoryProvider(create: (_) => AuthRepository()),
         RepositoryProvider(create: (_) => UserRepository()),
         RepositoryProvider(create: (_) => ChatRepository()),
+        RepositoryProvider(create: (_) => MealRecordsRepository()),
       ],
       child: MultiBlocProvider(
         providers: [

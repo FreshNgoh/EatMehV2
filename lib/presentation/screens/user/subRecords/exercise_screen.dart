@@ -75,9 +75,29 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                       ],
                     ),
                   ),
+                  // unable to click if selected date is today (can not go to future)
                   IconButton(
                     icon: const Icon(Icons.chevron_right, size: 28),
-                    onPressed: _nextDay,
+                    onPressed:
+                        selectedDate.isBefore(
+                              DateTime(
+                                DateTime.now().year,
+                                DateTime.now().month,
+                                DateTime.now().day,
+                              ),
+                            )
+                            ? _nextDay
+                            : null,
+                    color:
+                        selectedDate.isBefore(
+                              DateTime(
+                                DateTime.now().year,
+                                DateTime.now().month,
+                                DateTime.now().day,
+                              ),
+                            )
+                            ? Colors.black
+                            : Colors.grey.shade400,
                   ),
                 ],
               ),
