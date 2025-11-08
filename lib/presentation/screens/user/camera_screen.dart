@@ -523,7 +523,6 @@ class _CameraScreenState extends State<CameraScreen> {
       for (final part in message.parts) {
         final text = part.text;
         if (text != null && text.toLowerCase() != 'null') {
-          debugPrint('Gemini raw response: $text'); // 👈 Add this line
           try {
             final decoded = jsonDecode(text);
             if (decoded is Map<String, dynamic>) {

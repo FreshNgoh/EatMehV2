@@ -12,5 +12,5 @@ class FirebaseConstants {
   static const String userAnalyticsCollection = 'user_analytics';
 
   // Storage Paths
-  static const String mealRecordFolder = 'meal_records';
+  static const String mealRecordFolder = 'meal_images';
 }
