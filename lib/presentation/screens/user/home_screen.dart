@@ -15,6 +15,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  int _selectedRecordTab = 1;
 
   final List<String> _titles = [
     'Dashboard',
@@ -30,9 +31,15 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: CustomAppBar(
         title: _titles[_selectedIndex],
         showNotification: true,
-        showFriendRequest: _selectedIndex == 0,
+        showFriendRequest: _selectedIndex == 1,
+        selectedRecordTab: _selectedRecordTab,
+        onRecordTabChange: (index) {
+          setState(() {
+            _selectedRecordTab = index;
+          });
+        },
       ),
-      body: _buildPage(_selectedIndex),
+      body: _buildPage(_selectedIndex, _selectedRecordTab),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -111,7 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-Widget _buildPage(int index) {
+Widget _buildPage(int index, int selectedRecordTab) {
   switch (index) {
     case 0:
       return const DashboardScreen();
@@ -122,7 +129,7 @@ Widget _buildPage(int index) {
     case 3:
       return const ConsultScreen();
     case 4:
-      return const RecordScreen();
+      return RecordScreen(selectedTab: selectedRecordTab);
     default:
       return const DashboardScreen();
   }

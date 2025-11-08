@@ -56,7 +56,18 @@ flutter:
     - assets/images/default_face.jpeg
     - assets/logo/logo.png
     - assets/languages/
+    - assets/status/health/health_1.png
+    - assets/status/health/health_2.png
+    - assets/status/health/health_3.png
+    - assets/status/high/high_1.png
+    - assets/status/high/high_2.png
+    - assets/status/high/high_3.png
+    - assets/status/low/low_1.png
+    - assets/status/low/low_2.png
+    - assets/status/low/low_3.png
     - assets/teralero.png
+    - assets/error.png
+    - assets/noData.png
     - .env
 
   fonts:

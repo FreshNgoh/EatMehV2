@@ -7,6 +7,8 @@ class ExerciseRecordModel {
   final int duration; // in minutes
   final int caloriesBurnt;
   final Timestamp createdAt;
+  final Timestamp startTime;
+  final Timestamp endTime;
 
   ExerciseRecordModel({
     required this.uid,
@@ -15,6 +17,8 @@ class ExerciseRecordModel {
     required this.duration,
     required this.caloriesBurnt,
     required this.createdAt,
+    required this.startTime,
+    required this.endTime,
   });
 
   factory ExerciseRecordModel.fromMap(String uid, Map<String, dynamic> map) {
@@ -25,6 +29,8 @@ class ExerciseRecordModel {
       duration: map['duration'] as int,
       caloriesBurnt: map['caloriesBurnt'] as int,
       createdAt: map['createdAt'] as Timestamp,
+      startTime: map['startTime'] as Timestamp,
+      endTime: map['endTime'] as Timestamp,
     );
   }
 
@@ -35,6 +41,8 @@ class ExerciseRecordModel {
       'duration': duration,
       'caloriesBurnt': caloriesBurnt,
       'createdAt': createdAt,
+      'startTime': startTime,
+      'endTime': endTime,
     };
   }
 }

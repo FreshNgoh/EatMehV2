@@ -8,11 +8,17 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool showNotification;
   final bool showFriendRequest;
 
+  // Only used when the title is "Records"
+  final int selectedRecordTab;
+  final ValueChanged<int>? onRecordTabChange;
+
   const CustomAppBar({
     super.key,
     required this.title,
     this.showNotification = false,
     this.showFriendRequest = false,
+    this.selectedRecordTab = 0,
+    this.onRecordTabChange,
   });
 
   @override
@@ -20,22 +26,38 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isRecordPage = title == 'Records';
+
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 0,
-      title: BlocBuilder<AuthBloc, AuthState>(
-        builder: (context, state) {
-          String displayName = "User";
-          String avatar = "assets/teralero.png";
+      centerTitle: true,
+      leadingWidth: 60,
+      // center title
+      title:
+          isRecordPage
+              ? _buildRecordTabs()
+              : Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF191919),
+                ),
+              ),
+      // avatar on the left
+      leading: Padding(
+        padding: const EdgeInsets.only(left: 15.0),
+        child: BlocBuilder<AuthBloc, AuthState>(
+          builder: (context, state) {
+            String avatar = "assets/teralero.png";
+            if (state is Authenticated) {
+              avatar = state.user.imageUrl ?? avatar;
+            }
 
-          if (state is Authenticated) {
-            displayName = state.user.username;
-            avatar = state.user.imageUrl ?? avatar;
-          }
-
-          return Row(
-            children: [
-              GestureDetector(
+            return Align(
+              alignment: Alignment.centerLeft,
+              child: GestureDetector(
                 onTap: () {
                   Navigator.push(
                     context,
@@ -43,63 +65,131 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                   );
                 },
                 child: Container(
-                  padding: const EdgeInsets.all(2), // thickness of border
+                  padding: const EdgeInsets.all(3),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.black, // border color
-                      width: 1, // border thickness
-                    ),
+                    border: Border.all(color: Colors.black, width: 1),
                   ),
                   child: CircleAvatar(
                     radius: 20,
-                    backgroundColor: Colors.transparent,
+                    backgroundColor: Colors.white,
                     backgroundImage: AssetImage(avatar),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
-              Text(
-                '$displayName ',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF191919),
-                ),
-              ),
-            ],
-          );
-        },
+            );
+          },
+        ),
       ),
       actions: [
-        if (showNotification)
-          Stack(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.notifications, color: Color(0xFF191919)),
-                onPressed: () {
-                  _showNotifications(context);
-                },
-              ),
-              Positioned(
-                right: 8,
-                top: 8,
-                child: Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-            ],
-          ),
+        if (showFriendRequest) _showFriendRequestButton(),
+        if (showNotification) _showNotificationsButton(context),
+
         const SizedBox(width: 12),
       ],
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(1),
         child: Container(height: 1, color: Colors.grey.shade200),
+      ),
+    );
+  }
+
+  // Request Button
+  Widget _showFriendRequestButton() {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8.0),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.person_add, color: Color(0xFF191919)),
+            onPressed: () {
+              // Navigate to friend requests
+              // Navigator.pushNamed(context, '/friend-requests');
+            },
+          ),
+          Positioned(
+            right: 0,
+            top: 1,
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: const BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+              ),
+              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+              child: const Center(
+                child: Text(
+                  '2',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Notification Button
+  Widget _showNotificationsButton(BuildContext context) {
+    return Stack(
+      children: [
+        IconButton(
+          icon: const Icon(Icons.notifications, color: Color(0xFF191919)),
+          onPressed: () {
+            _showNotifications(context);
+          },
+        ),
+        Positioned(
+          right: 8,
+          top: 8,
+          child: Container(
+            width: 10,
+            height: 10,
+            decoration: const BoxDecoration(
+              color: Colors.red,
+              shape: BoxShape.circle,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// --- RECORD PAGE TAB SWITCHER ---
+  Widget _buildRecordTabs() {
+    final tabs = ['Diet', 'Overview', 'Exercise'];
+
+    return Padding(
+      padding: const EdgeInsets.only(
+        left: 30.0,
+      ), // add margin manually to make it center
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(tabs.length, (index) {
+          final bool isSelected = index == selectedRecordTab;
+          return GestureDetector(
+            onTap: () => onRecordTabChange?.call(index),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10.0),
+              child: Text(
+                tabs[index],
+                style: TextStyle(
+                  fontSize: isSelected ? 18 : 19,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  color:
+                      isSelected ? const Color(0xFF191919) : Colors.grey[600],
+                ),
+              ),
+            ),
+          );
+        }),
       ),
     );
   }

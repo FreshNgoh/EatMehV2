@@ -4,7 +4,10 @@ import 'package:eatmehv2/bloc/chat/chat_bloc_bloc.dart';
 import 'package:eatmehv2/core/localization/app_localizations.dart';
 import 'package:eatmehv2/core/theme/app_theme.dart';
 import 'package:eatmehv2/data/repos/auth_repo.dart';
+import 'package:eatmehv2/data/repos/calorie_tracker_repo.dart';
 import 'package:eatmehv2/data/repos/chat_repo.dart';
+import 'package:eatmehv2/data/repos/exercise_repo.dart';
+import 'package:eatmehv2/data/repos/meal_records_repo.dart';
 import 'package:eatmehv2/data/repos/user_repo.dart';
 import 'package:eatmehv2/presentation/screens/auth/login_screen.dart';
 import 'package:eatmehv2/routes/app_router.dart';
@@ -43,6 +46,9 @@ class MyApp extends StatelessWidget {
         RepositoryProvider(create: (_) => AuthRepository()),
         RepositoryProvider(create: (_) => UserRepository()),
         RepositoryProvider(create: (_) => ChatRepository()),
+        RepositoryProvider(create: (_) => MealRecordsRepository()),
+        RepositoryProvider(create: (_) => ExerciseRepository()),
+        RepositoryProvider(create: (_) => CalorieTrackerRepository()),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -75,7 +81,7 @@ class MyApp extends StatelessWidget {
             Locale('en', ''), // English
             Locale('zh', ''), // Chinese
           ],
-          locale: const Locale('zh'),
+          locale: const Locale('en'),
           home: BlocBuilder<AuthBloc, AuthState>(
             builder: (context, authState) {
               if (authState is Authenticated) {

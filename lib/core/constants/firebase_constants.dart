@@ -14,11 +14,5 @@ class FirebaseConstants {
   static const String chatRoomsCollection = 'chat_rooms';
 
   // Storage Paths
-  static const String userProfileImages = 'users/{userId}/profile_images';
-  static const String storyMedia = 'users/{userId}/story_media';
-  static const String mealImages = 'users/{userId}/meal_images';
-  static const String trainerCertificates =
-      'trainer_applications/{userId}/certificates';
-  static const String trainerIdDocuments =
-      'trainer_applications/{userId}/id_documents';
+  static const String mealRecordFolder = 'meal_images';
 }
