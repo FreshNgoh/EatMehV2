@@ -1,6 +1,6 @@
 import 'package:eatmehv2/presentation/screens/user/subRecords/diet_screen.dart';
 import 'package:eatmehv2/presentation/screens/user/subRecords/exercise_screen.dart';
-import 'package:eatmehv2/presentation/screens/user/subRecords/overview_screen.dart';
+import 'package:eatmehv2/presentation/screens/user/subRecords/calories_tracker_screen.dart';
 import 'package:flutter/material.dart';
 
 class RecordScreen extends StatelessWidget {
@@ -14,7 +14,7 @@ class RecordScreen extends StatelessWidget {
       case 0:
         return const DietScreen();
       case 1:
-        return const OverviewScreen();
+        return const CaloriesTrackerPage();
       case 2:
         return const ExerciseScreen();
       default:

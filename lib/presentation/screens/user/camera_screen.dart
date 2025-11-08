@@ -381,28 +381,28 @@ class _CameraScreenState extends State<CameraScreen> {
           child: Column(
             children: [
               _buildNutrientRow(
-                Icons.egg_alt_outlined,
+                AppColors.proteinIcon,
                 "Protein",
                 "$protein g",
-                AppColors.protein,
+                AppColors.proteinColor,
               ),
               _buildNutrientRow(
-                Icons.grain,
+                AppColors.carbsIcon,
                 "Carbs",
                 "$carbs g",
-                AppColors.carbs,
+                AppColors.carbsColor,
               ),
               _buildNutrientRow(
-                Icons.water_drop_sharp,
+                AppColors.fatIcon,
                 "Fat",
                 "$fat g",
-                AppColors.fat,
+                AppColors.fatColor,
               ),
               _buildNutrientRow(
-                Icons.eco,
+                AppColors.fiberIcon,
                 "Fiber",
                 "$fiber g",
-                AppColors.fiber,
+                AppColors.fiberColor,
               ),
             ],
           ),

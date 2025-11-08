@@ -34,14 +34,20 @@ class AppColors {
   ];
 
   // 🔥 Nutrition Colors
-  static const Color caloriesHigh = Color(0xFFE57373); // red
+  static const Color caloriesHigh = Color(0xFFE53E3E); // red
   static const Color caloriesMedium = Color(0xFF66BB6A); // green
   static const Color caloriesLow = Color.fromARGB(255, 252, 154, 6); // orange
 
-  static const Color protein = Color(0xFF42A5F5); // blue
-  static const Color carbs = Color.fromARGB(255, 245, 199, 48); // yellow
-  static const Color fat = Color(0xFFFF8A65); // orange-red
-  static const Color fiber = Color(0xFF81C784); // light green
+  static const Color proteinColor = Color(0xFFE2C415);
+  static const Color carbsColor = Color(0xFFDD6B20); // yellow
+  static const Color fatColor = Color(0xFFD69E2E); // orange-red
+  static const Color fiberColor = Color(0xFF38A169); // light green
+
+  // Nutrition Icon
+  static const IconData proteinIcon = Icons.egg_alt_outlined;
+  static const IconData carbsIcon = Icons.bakery_dining_outlined;
+  static const IconData fatIcon = Icons.water_drop_sharp;
+  static const IconData fiberIcon = Icons.eco;
 
   /// Helper for calorie color selection
   static Color getCalorieColor(int calories) {
@@ -49,4 +55,14 @@ class AppColors {
     if (calories >= 300) return caloriesMedium;
     return caloriesLow;
   }
+
+  // Exercise Icons & Colors
+  static const Map<String, Map<String, dynamic>> exerciseIconData = {
+    'Running': {'icon': Icons.directions_run, 'color': Color(0xFF8B5CF6)},
+    'Walking': {'icon': Icons.directions_walk, 'color': Color(0xFF3B82F6)},
+    'Cycling': {'icon': Icons.directions_bike, 'color': Color(0xFF10B981)},
+    'Yoga': {'icon': Icons.self_improvement, 'color': Color(0xFFF59E0B)},
+    'Swimming': {'icon': Icons.pool, 'color': Color(0xFF0EA5E9)},
+    'Gym': {'icon': Icons.fitness_center, 'color': Color(0xFF353535)},
+  };
 }

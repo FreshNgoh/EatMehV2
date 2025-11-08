@@ -25,4 +25,14 @@ class AppConstants {
 
   // Pagination
   static const int itemsPerPage = 20;
+
+  // Exercise Calorie Rates (calories per minute)
+  static const Map<String, double> calorieRatePerMinute = {
+    'Running': 10.0,
+    'Walking': 4.0,
+    'Cycling': 8.5,
+    'Yoga': 3.5,
+    'Swimming': 9.5,
+    'Gym': 7.0,
+  };
 }
