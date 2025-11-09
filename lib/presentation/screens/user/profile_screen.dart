@@ -1,10 +1,68 @@
+import 'dart:async';
 import 'package:eatmehv2/presentation/screens/user/edit_profile.dart';
 import 'package:eatmehv2/presentation/screens/user/setting_screen.dart';
+import 'package:eatmehv2/utils/calorie_utils.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  Timer? _imageTimer;
+  String _currentImagePath = '';
+
+  @override
+  void initState() {
+    super.initState();
+
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
+    );
+
+    _updateImage();
+    _animationController.forward();
+
+    // Automatically change image every few seconds
+    _imageTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      _updateImage();
+      _animationController
+        ..reset()
+        ..forward();
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    _imageTimer?.cancel();
+    super.dispose();
+  }
+
+  void _updateImage() {
+    // Get calorie status based on current net calories
+    const int caloriesTaken = 1850;
+    const int caloriesBurnt = 450;
+    final netCalories = CalorieUtils.calculateNetCalories(
+      caloriesTaken.toDouble(),
+      caloriesBurnt.toDouble(),
+    );
+    final calorieStatus = CalorieUtils.getCalorieStatus(netCalories);
+    _currentImagePath = CalorieUtils.getRandomStatusImage(calorieStatus);
+  }
 
   void _showSettings(BuildContext context) {
     Navigator.push(
@@ -38,21 +96,15 @@ class ProfileScreen extends StatelessWidget {
     const bool hasBio = false;
     const int caloriesTaken = 1850;
     const int caloriesBurnt = 450;
-    final int netCalories = caloriesTaken - caloriesBurnt;
+    final double netCalories = CalorieUtils.calculateNetCalories(
+      caloriesTaken.toDouble(),
+      caloriesBurnt.toDouble(),
+    );
 
-    // Calculate status
-    Color netCaloriesColor;
-    String statusText;
-    if (netCalories < 1200) {
-      netCaloriesColor = Colors.orange;
-      statusText = 'Under Goal';
-    } else if (netCalories <= 2000) {
-      netCaloriesColor = Colors.green;
-      statusText = 'On Track';
-    } else {
-      netCaloriesColor = Colors.red;
-      statusText = 'Over Goal';
-    }
+    // Calculate status using utils
+    final calorieStatus = CalorieUtils.getCalorieStatus(netCalories);
+    final netCaloriesColor = CalorieUtils.getStatusColor(netCalories);
+    final statusText = CalorieUtils.getStatusText(calorieStatus);
 
     return Scaffold(
       appBar: AppBar(
@@ -74,119 +126,140 @@ class ProfileScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Section 1: User Info
-            Container(
-              width: double.infinity,
-              color: Colors.white,
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const CircleAvatar(
-                          radius: 50,
-                          backgroundColor: Colors.white,
-                          backgroundImage: AssetImage("assets/teralero.png"),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+      body: CustomScrollView(
+        slivers: [
+          // Section 1: User Info
+          SliverAppBar(
+            expandedHeight: 230,
+            pinned: false,
+            backgroundColor: Colors.white,
+            automaticallyImplyLeading: false,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // Section 1: User Info
+                  Container(
+                    width: double.infinity,
+                    color: Colors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
                             children: [
-                              Text(
-                                userName,
-                                style: const TextStyle(
-                                  fontSize: 25,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF2D3748),
+                              const CircleAvatar(
+                                radius: 50,
+                                backgroundColor: Colors.white,
+                                backgroundImage: AssetImage(
+                                  "assets/teralero.png",
                                 ),
                               ),
-                              const SizedBox(height: 4),
-                              GestureDetector(
-                                onLongPress: () {
-                                  Clipboard.setData(
-                                    ClipboardData(text: userId),
-                                  );
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'User ID copied to clipboard!',
-                                      ),
-                                      duration: Duration(seconds: 1),
-                                    ),
-                                  );
-                                },
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      userId,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey[600],
+                                      userName,
+                                      style: const TextStyle(
+                                        fontSize: 25,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF2D3748),
                                       ),
                                     ),
-                                    const SizedBox(width: 4),
-                                    const Icon(
-                                      Icons.copy,
-                                      size: 14,
-                                      color: Colors.grey,
+                                    const SizedBox(height: 4),
+                                    GestureDetector(
+                                      onLongPress: () {
+                                        Clipboard.setData(
+                                          ClipboardData(text: userId),
+                                        );
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'User ID copied to clipboard!',
+                                            ),
+                                            duration: Duration(seconds: 1),
+                                          ),
+                                        );
+                                      },
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            userId,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey[600],
+                                            ),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          const Icon(
+                                            Icons.copy,
+                                            size: 14,
+                                            color: Colors.grey,
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ],
                                 ),
                               ),
                             ],
                           ),
-                        ),
-                      ],
-                    ),
 
-                    const SizedBox(height: 20),
+                          const SizedBox(height: 20),
 
-                    // User Bio
-                    GestureDetector(
-                      onTap: () => _showBioEditor(context),
-                      child: Text(
-                        userBio,
-                        style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                          // User Bio
+                          GestureDetector(
+                            onTap: () => _showBioEditor(context),
+                            child: Text(
+                              userBio,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[500],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+
+                          // Badges
+                          Wrap(
+                            spacing: 10,
+                            runSpacing: 8,
+                            children: [
+                              _buildBadge(Icons.male, 'Male', Colors.blue),
+                              _buildBadge(
+                                Icons.monitor_weight,
+                                'BMI 22.5',
+                                Colors.green,
+                              ),
+                              _buildBadge(
+                                Icons.fitness_center,
+                                'Trainer',
+                                Colors.orange,
+                              ),
+                              _buildBadge(Icons.eco, 'Vegan', Colors.teal),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 20),
-
-                    // Badges
-                    Wrap(
-                      spacing: 10, // horizontal space between badges
-                      runSpacing: 8, // vertical space between lines
-                      children: [
-                        _buildBadge(Icons.male, 'Male', Colors.blue),
-                        _buildBadge(
-                          Icons.monitor_weight,
-                          'BMI 22.5',
-                          Colors.green,
-                        ),
-                        _buildBadge(
-                          Icons.fitness_center,
-                          'Trainer',
-                          Colors.orange,
-                        ),
-                        _buildBadge(Icons.eco, 'Vegan', Colors.teal),
-                      ],
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
+          ),
 
-            // Section 2: User Activities
-            Container(
+          // Section 2: User Activities (with expandable height on scroll)
+          SliverToBoxAdapter(
+            child: Container(
+              margin: const EdgeInsets.only(top: 20),
               decoration: BoxDecoration(
                 color: Colors.grey[50],
-                // change to top have color only
                 border: Border.all(color: Colors.grey[100]!, width: 2),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(40),
@@ -214,7 +287,7 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 20),
 
-                    // Calorie Status Card
+                    // Calorie Status Card with Animated Image
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
@@ -230,12 +303,52 @@ class ProfileScreen extends StatelessWidget {
                       ),
                       child: Column(
                         children: [
-                          Icon(
-                            Icons.local_fire_department,
-                            size: 48,
-                            color: netCaloriesColor,
+                          // Animated Image instead of Icon
+                          AnimatedBuilder(
+                            animation: _animationController,
+                            builder: (context, child) {
+                              return FadeTransition(
+                                opacity: _fadeAnimation,
+                                child: Container(
+                                  width: 120,
+                                  height: 120,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: netCaloriesColor.withOpacity(
+                                          0.2,
+                                        ),
+                                        blurRadius: 15,
+                                        spreadRadius: 8,
+                                      ),
+                                    ],
+                                  ),
+                                  child: ClipOval(
+                                    child: Image.asset(
+                                      _currentImagePath,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (
+                                        context,
+                                        error,
+                                        stackTrace,
+                                      ) {
+                                        return Icon(
+                                          CalorieUtils.getStatusIcon(
+                                            calorieStatus,
+                                          ),
+                                          size: 60,
+                                          color: netCaloriesColor,
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 16),
                           Text(
                             '${netCalories.toInt()}',
                             style: TextStyle(
@@ -278,7 +391,7 @@ class ProfileScreen extends StatelessWidget {
                             children: [
                               _buildCalorieInfo(
                                 'Taken',
-                                caloriesBurnt,
+                                caloriesTaken,
                                 Colors.orange,
                                 Icons.local_fire_department,
                               ),
@@ -288,8 +401,8 @@ class ProfileScreen extends StatelessWidget {
                                 color: Colors.grey[300],
                               ),
                               _buildCalorieInfo(
-                                'burnt',
-                                caloriesTaken,
+                                'Burnt',
+                                caloriesBurnt,
                                 Colors.blue,
                                 Icons.directions_run,
                               ),
@@ -384,8 +497,8 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -395,7 +508,7 @@ class ProfileScreen extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20), // pill-shaped corners
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Row(
@@ -496,7 +609,6 @@ class _BioEditorSheetState extends State<BioEditorSheet> {
               children: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-
                   child: const Text(
                     'Cancel',
                     style: TextStyle(color: Colors.grey, fontSize: 16),
