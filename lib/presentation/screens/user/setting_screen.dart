@@ -1,4 +1,6 @@
+import 'package:eatmehv2/presentation/screens/auth/login_screen.dart';
 import 'package:eatmehv2/presentation/widgets/custom_card.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class SettingScreen extends StatefulWidget {
@@ -12,6 +14,20 @@ class _SettingScreenState extends State<SettingScreen> {
   bool _isDarkTheme = false;
   bool _notificationsEnabled = true;
   String _selectedLanguage = 'English';
+
+  Future<void> _signOut(BuildContext context) async {
+    try {
+      await FirebaseAuth.instance.signOut(); // Sign out user
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Logout failed: $e')));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -212,6 +228,30 @@ class _SettingScreenState extends State<SettingScreen> {
                       Icon(Icons.menu_book, color: Colors.indigo),
                       SizedBox(width: 12),
                       Text("User Manual", style: TextStyle(fontSize: 16)),
+                      Spacer(),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        size: 16,
+                        color: Colors.grey,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              // Sign out
+              GestureDetector(
+                onTap: () {
+                  _signOut(context);
+                },
+                child: CustomCard(
+                  child: Row(
+                    children: const [
+                      Icon(Icons.exit_to_app, color: Colors.red),
+                      SizedBox(width: 12),
+                      Text("Sign Out", style: TextStyle(fontSize: 16)),
                       Spacer(),
                       Icon(
                         Icons.arrow_forward_ios,
