@@ -1,4 +1,7 @@
 import 'package:eatmehv2/bloc/auth/auth_bloc.dart';
+import 'package:eatmehv2/data/models/notification/notification_model.dart';
+import 'package:eatmehv2/data/repos/notification_repo.dart';
+import 'package:eatmehv2/data/services/notification_service.dart';
 import 'package:eatmehv2/presentation/screens/user/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -137,28 +140,60 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   // Notification Button
+  // Widget _showNotificationsButton(BuildContext context) {
+  //   return Stack(
+  //     children: [
+  //       IconButton(
+  //         icon: const Icon(Icons.notifications, color: Color(0xFF191919)),
+  //         onPressed: () {
+  //           _showNotifications(context);
+  //         },
+  //       ),
+  //       Positioned(
+  //         right: 8,
+  //         top: 8,
+  //         child: Container(
+  //           width: 10,
+  //           height: 10,
+  //           decoration: const BoxDecoration(
+  //             color: Colors.red,
+  //             shape: BoxShape.circle,
+  //           ),
+  //         ),
+  //       ),
+  //     ],
+  //   );
+  // }
+
   Widget _showNotificationsButton(BuildContext context) {
-    return Stack(
-      children: [
-        IconButton(
-          icon: const Icon(Icons.notifications, color: Color(0xFF191919)),
-          onPressed: () {
-            _showNotifications(context);
-          },
-        ),
-        Positioned(
-          right: 8,
-          top: 8,
-          child: Container(
-            width: 10,
-            height: 10,
-            decoration: const BoxDecoration(
-              color: Colors.red,
-              shape: BoxShape.circle,
+    final notificationRepo = NotificationRepo(NotificationService());
+    final authState = context.read<AuthBloc>().state as Authenticated;
+    final userUid = authState.user.uid;
+
+    return StreamBuilder<List<NotificationModel>>(
+      stream: notificationRepo.getNotifications(userUid),
+      builder: (context, snapshot) {
+        final hasUnread =
+            snapshot.hasData &&
+            snapshot.data!.any((notif) => notif.isRead == false);
+
+        return Stack(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.notifications, color: Color(0xFF191919)),
+              onPressed: () {
+                _showNotifications(context, snapshot.data ?? []);
+              },
             ),
-          ),
-        ),
-      ],
+            if (hasUnread)
+              const Positioned(
+                right: 8,
+                top: 8,
+                child: CircleAvatar(radius: 5, backgroundColor: Colors.red),
+              ),
+          ],
+        );
+      },
     );
   }
 
@@ -194,32 +229,92 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
-  void _showNotifications(BuildContext context) {
-    // 🔹 Static dummy notifications list
-    final List<Map<String, dynamic>> notifications = [
-      {
-        'type': 'friend_request',
-        'title': 'New friend request',
-        'body': 'John Doe sent you a friend request.',
-        'read': false,
-        'createdAt': DateTime.now().subtract(const Duration(minutes: 10)),
-      },
-      {
-        'type': 'meal_reminder',
-        'title': 'Lunch time!',
-        'body': 'Don’t forget your healthy meal today 🍱',
-        'read': true,
-        'createdAt': DateTime.now().subtract(const Duration(hours: 3)),
-      },
-      {
-        'type': 'story_view',
-        'title': 'Your story was viewed',
-        'body': 'Emily viewed your latest story.',
-        'read': false,
-        'createdAt': DateTime.now().subtract(const Duration(days: 1)),
-      },
-    ];
+  // void _showNotifications(BuildContext context) {
+  //   // 🔹 Static dummy notifications list
+  //   final List<Map<String, dynamic>> notifications = [
+  //     {
+  //       'type': 'friend_request',
+  //       'title': 'New friend request',
+  //       'body': 'John Doe sent you a friend request.',
+  //       'read': false,
+  //       'createdAt': DateTime.now().subtract(const Duration(minutes: 10)),
+  //     },
+  //     {
+  //       'type': 'meal_reminder',
+  //       'title': 'Lunch time!',
+  //       'body': 'Don’t forget your healthy meal today 🍱',
+  //       'read': true,
+  //       'createdAt': DateTime.now().subtract(const Duration(hours: 3)),
+  //     },
+  //     {
+  //       'type': 'story_view',
+  //       'title': 'Your story was viewed',
+  //       'body': 'Emily viewed your latest story.',
+  //       'read': false,
+  //       'createdAt': DateTime.now().subtract(const Duration(days: 1)),
+  //     },
+  //   ];
 
+  //   showModalBottomSheet(
+  //     context: context,
+  //     backgroundColor: Colors.white,
+  //     shape: const RoundedRectangleBorder(
+  //       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+  //     ),
+  //     builder: (context) {
+  //       return Container(
+  //         padding: const EdgeInsets.all(20),
+  //         child: Column(
+  //           crossAxisAlignment: CrossAxisAlignment.start,
+  //           mainAxisSize: MainAxisSize.min,
+  //           children: [
+  //             const Text(
+  //               'Notifications',
+  //               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+  //             ),
+  //             const SizedBox(height: 16),
+  //             ...notifications.map((notif) {
+  //               return ListTile(
+  //                 leading: Container(
+  //                   padding: const EdgeInsets.all(8),
+  //                   decoration: BoxDecoration(
+  //                     color:
+  //                         notif['read']
+  //                             ? Colors.grey.shade200
+  //                             : const Color(0xFF191919).withOpacity(0.1),
+  //                     shape: BoxShape.circle,
+  //                   ),
+  //                   child: Icon(
+  //                     _getNotificationIcon(notif['type']),
+  //                     color:
+  //                         notif['read'] ? Colors.grey : const Color(0xFF191919),
+  //                   ),
+  //                 ),
+  //                 title: Text(
+  //                   notif['title'],
+  //                   style: TextStyle(
+  //                     fontWeight:
+  //                         notif['read'] ? FontWeight.normal : FontWeight.bold,
+  //                   ),
+  //                 ),
+  //                 subtitle: Text(notif['body']),
+  //                 trailing: Text(
+  //                   _getTimeAgo(notif['createdAt']),
+  //                   style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+  //                 ),
+  //               );
+  //             }).toList(),
+  //           ],
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
+
+  void _showNotifications(
+    BuildContext context,
+    List<NotificationModel> notifications,
+  ) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
@@ -227,6 +322,13 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
+        if (notifications.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.all(20),
+            child: Center(child: Text("No notifications yet")),
+          );
+        }
+
         return Container(
           padding: const EdgeInsets.all(20),
           child: Column(
@@ -244,31 +346,31 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color:
-                          notif['read']
+                          notif.isRead
                               ? Colors.grey.shade200
                               : const Color(0xFF191919).withOpacity(0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
-                      _getNotificationIcon(notif['type']),
+                      _getNotificationIcon(notif.type),
                       color:
-                          notif['read'] ? Colors.grey : const Color(0xFF191919),
+                          notif.isRead ? Colors.grey : const Color(0xFF191919),
                     ),
                   ),
                   title: Text(
-                    notif['title'],
+                    notif.title,
                     style: TextStyle(
                       fontWeight:
-                          notif['read'] ? FontWeight.normal : FontWeight.bold,
+                          notif.isRead ? FontWeight.normal : FontWeight.bold,
                     ),
                   ),
-                  subtitle: Text(notif['body']),
+                  subtitle: Text(notif.message),
                   trailing: Text(
-                    _getTimeAgo(notif['createdAt']),
+                    _getTimeAgo(notif.createdAt.toDate()),
                     style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                   ),
                 );
-              }).toList(),
+              }),
             ],
           ),
         );
@@ -278,6 +380,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   IconData _getNotificationIcon(String type) {
     switch (type) {
+      case 'trainer_request':
+        return Icons.fitness_center;
       case 'friend_request':
         return Icons.person_add;
       case 'story_view':
