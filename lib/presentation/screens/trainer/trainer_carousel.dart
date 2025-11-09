@@ -6,12 +6,27 @@ import 'package:eatmehv2/data/services/trainer_profile_service.dart';
 import 'package:eatmehv2/presentation/screens/trainer/trainee_list.dart';
 import 'package:eatmehv2/presentation/screens/trainer/trainer_instruction.dart';
 import 'package:eatmehv2/presentation/screens/trainer/trainer_list.dart';
+import 'package:eatmehv2/presentation/screens/user/onBoarding/user_goals.dart';
 import 'package:eatmehv2/presentation/widgets/custom_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class CarouselApp extends StatelessWidget {
+class CarouselApp extends StatefulWidget {
   const CarouselApp({super.key});
+
+  @override
+  State<CarouselApp> createState() => _CarouselAppState();
+}
+
+class _CarouselAppState extends State<CarouselApp> {
+  late Future<String> _statusFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _statusFuture = _getApplicationStatus();
+  }
 
   Future<String> _getApplicationStatus() async {
     final user = FirebaseAuth.instance.currentUser;
@@ -30,8 +45,6 @@ class CarouselApp extends StatelessWidget {
       );
 
       if (existingProfile == null) {
-        // Create a default TrainerProfile
-        // also need to set the role -> trainer ***
         final profile = TrainerProfile(
           certifications: [],
           rating: 5.0,
@@ -45,10 +58,17 @@ class CarouselApp extends StatelessWidget {
     return status;
   }
 
+  Future<void> _refreshStatus() async {
+    final newStatus = await _getApplicationStatus();
+    setState(() {
+      _statusFuture = Future.value(newStatus);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<String>(
-      future: _getApplicationStatus(),
+      future: _statusFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
@@ -67,7 +87,7 @@ class CarouselApp extends StatelessWidget {
         if (status == 'approved') {
           return const TraineeList();
         } else {
-          return Carousel(applicationStatus: status);
+          return Carousel(applicationStatus: status, onRefresh: _refreshStatus);
         }
       },
     );
@@ -76,21 +96,41 @@ class CarouselApp extends StatelessWidget {
 
 class Carousel extends StatefulWidget {
   final String applicationStatus;
-  const Carousel({super.key, required this.applicationStatus});
+  final Future<void> Function() onRefresh;
+
+  const Carousel({
+    super.key,
+    required this.applicationStatus,
+    required this.onRefresh,
+  });
 
   @override
   State<Carousel> createState() => _CarouselState();
 }
 
-class _CarouselState extends State<Carousel> {
-  final CarouselController controller = CarouselController(initialItem: 1);
+Future<void> _navigateBasedOnGoal(BuildContext context) async {
+  final prefs = await SharedPreferences.getInstance();
+  final user = FirebaseAuth.instance.currentUser;
+  bool hasSetGoals = false;
 
-  @override
-  void dispose() {
-    controller.dispose();
-    super.dispose();
+  if (user != null) {
+    hasSetGoals = prefs.getBool('hasSetGoals_${user.uid}') ?? false;
   }
 
+  if (hasSetGoals) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const TrainerList()),
+    );
+  } else {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const UserGoals()),
+    );
+  }
+}
+
+class _CarouselState extends State<Carousel> {
   @override
   Widget build(BuildContext context) {
     final double height = MediaQuery.sizeOf(context).height;
@@ -102,7 +142,6 @@ class _CarouselState extends State<Carousel> {
           ConstrainedBox(
             constraints: BoxConstraints(maxHeight: height / 2),
             child: CarouselView.weighted(
-              controller: controller,
               itemSnapping: true,
               flexWeights: const <int>[1, 7, 1],
               children:
@@ -150,13 +189,17 @@ class _CarouselState extends State<Carousel> {
               onPressed:
                   widget.applicationStatus == 'pending'
                       ? null
-                      : () {
-                        Navigator.push(
+                      : () async {
+                        final result = await Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (_) => const TrainerInstruction(),
                           ),
                         );
+
+                        if (result == 'submitted') {
+                          await widget.onRefresh();
+                        }
                       },
               backgroundColor: Colors.green.shade600,
               textColor: Colors.white,
@@ -170,12 +213,7 @@ class _CarouselState extends State<Carousel> {
               padding: const EdgeInsets.symmetric(horizontal: 50),
               child: CustomButton(
                 text: "Request For Trainer",
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const TrainerList()),
-                  );
-                },
+                onPressed: () => _navigateBasedOnGoal(context),
                 backgroundColor: Colors.white,
                 textColor: Colors.green.shade600,
               ),

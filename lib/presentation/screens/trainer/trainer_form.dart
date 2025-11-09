@@ -251,8 +251,7 @@ class _TrainerFormState extends State<TrainerForm> {
       );
 
       // have bug here
-      Navigator.pop(context);
-      Navigator.pop(context, true);
+      Navigator.pop(context, 'submitted');
     } catch (e) {
       ScaffoldMessenger.of(
         context,
