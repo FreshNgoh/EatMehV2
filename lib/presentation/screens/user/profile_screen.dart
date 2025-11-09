@@ -1,4 +1,5 @@
 import 'package:eatmehv2/presentation/screens/auth/login_screen.dart';
+import 'package:eatmehv2/presentation/screens/user/setting_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -7,7 +8,7 @@ class ProfileScreen extends StatelessWidget {
 
   Future<void> _signOut(BuildContext context) async {
     try {
-      await FirebaseAuth.instance.signOut(); // Sign out user
+      await FirebaseAuth.instance.signOut();
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -19,10 +20,31 @@ class ProfileScreen extends StatelessWidget {
     }
   }
 
+  void _showSettings(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const SettingScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile Page'), centerTitle: true),
+      appBar: AppBar(
+        elevation: 0,
+        centerTitle: true,
+        leadingWidth: 60,
+        title: const Text('Profile Page'),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 15.0),
+            child: IconButton(
+              icon: const Icon(Icons.settings),
+              onPressed: () => _showSettings(context),
+            ),
+          ),
+        ],
+      ),
       body: Center(
         child: ElevatedButton(
           onPressed: () => _signOut(context),
