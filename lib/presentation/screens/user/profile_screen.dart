@@ -257,7 +257,6 @@ class _ProfileScreenState extends State<ProfileScreen>
           // Section 2: User Activities (with expandable height on scroll)
           SliverToBoxAdapter(
             child: Container(
-              margin: const EdgeInsets.only(top: 20),
               decoration: BoxDecoration(
                 color: Colors.grey[50],
                 border: Border.all(color: Colors.grey[100]!, width: 2),
@@ -288,19 +287,22 @@ class _ProfileScreenState extends State<ProfileScreen>
                     const SizedBox(height: 20),
 
                     // Calorie Status Card with Animated Image
-                    Container(
+                    // Container(
+                    //   padding: const EdgeInsets.all(24),
+                    //   decoration: BoxDecoration(
+                    //     color: Colors.white,
+                    //     borderRadius: BorderRadius.circular(20),
+                    //     boxShadow: [
+                    //       BoxShadow(
+                    //         color: Colors.grey.withOpacity(0.1),
+                    //         blurRadius: 10,
+                    //         offset: const Offset(0, 4),
+                    //       ),
+                    //     ],
+                    //   ),
+                    //   child:
+                    Padding(
                       padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.1),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
                       child: Column(
                         children: [
                           // Animated Image instead of Icon
@@ -310,8 +312,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                               return FadeTransition(
                                 opacity: _fadeAnimation,
                                 child: Container(
-                                  width: 120,
-                                  height: 120,
+                                  width: 180,
+                                  height: 180,
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     shape: BoxShape.circle,
@@ -352,7 +354,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                           Text(
                             '${netCalories.toInt()}',
                             style: TextStyle(
-                              fontSize: 52,
+                              fontSize: 40,
                               fontWeight: FontWeight.bold,
                               color: netCaloriesColor,
                               height: 1,
@@ -379,7 +381,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                             child: Text(
                               statusText,
                               style: TextStyle(
-                                fontSize: 16,
+                                fontSize: 12,
                                 fontWeight: FontWeight.bold,
                                 color: netCaloriesColor,
                               ),
@@ -411,6 +413,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                         ],
                       ),
                     ),
+                    // ),
                     const SizedBox(height: 24),
 
                     // Friends Section
