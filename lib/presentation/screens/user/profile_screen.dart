@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:eatmehv2/presentation/screens/user/edit_profile.dart';
 import 'package:eatmehv2/presentation/screens/user/setting_screen.dart';
+import 'package:eatmehv2/presentation/screens/user/subProfile/profile_consult_tab.dart';
+import 'package:eatmehv2/presentation/screens/user/subProfile/profile_me_tab.dart';
 import 'package:eatmehv2/utils/calorie_utils.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +20,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   late Animation<double> _fadeAnimation;
   Timer? _imageTimer;
   String _currentImagePath = '';
+  int _selectedTabIndex = 0; // 0 = Me, 1 = Consult
 
   @override
   void initState() {
@@ -132,7 +135,6 @@ class _ProfileScreenState extends State<ProfileScreen>
           SliverAppBar(
             expandedHeight: 230,
             pinned: false,
-            backgroundColor: Colors.white,
             automaticallyImplyLeading: false,
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
@@ -254,250 +256,162 @@ class _ProfileScreenState extends State<ProfileScreen>
             ),
           ),
 
-          // Section 2: User Activities (with expandable height on scroll)
+          // Section 2: User Activities with Tabs
           SliverToBoxAdapter(
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.grey[50],
-                border: Border.all(color: Colors.grey[100]!, width: 2),
+                border: Border(
+                  top: BorderSide(color: Colors.grey[200]!, width: 2),
+                ),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(40),
                   topRight: Radius.circular(40),
                 ),
               ),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+              child: Column(
+                children: [
+                  // Tab Header
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+                    child: Row(
                       children: [
-                        Icon(Icons.today, size: 23, color: Color(0xFF2D3748)),
-                        SizedBox(width: 6),
-                        Text(
-                          "Today's Status",
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF2D3748),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
+                        // "Me" Tab
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _selectedTabIndex = 0;
+                              });
+                            },
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Me',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight:
+                                        _selectedTabIndex == 0
+                                            ? FontWeight.w600
+                                            : FontWeight.w200,
 
-                    // Calorie Status Card with Animated Image
-                    // Container(
-                    //   padding: const EdgeInsets.all(24),
-                    //   decoration: BoxDecoration(
-                    //     color: Colors.white,
-                    //     borderRadius: BorderRadius.circular(20),
-                    //     boxShadow: [
-                    //       BoxShadow(
-                    //         color: Colors.grey.withOpacity(0.1),
-                    //         blurRadius: 10,
-                    //         offset: const Offset(0, 4),
-                    //       ),
-                    //     ],
-                    //   ),
-                    //   child:
-                    Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        children: [
-                          // Animated Image instead of Icon
-                          AnimatedBuilder(
-                            animation: _animationController,
-                            builder: (context, child) {
-                              return FadeTransition(
-                                opacity: _fadeAnimation,
-                                child: Container(
-                                  width: 180,
-                                  height: 180,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: netCaloriesColor.withOpacity(
-                                          0.2,
-                                        ),
-                                        blurRadius: 15,
-                                        spreadRadius: 8,
-                                      ),
-                                    ],
-                                  ),
-                                  child: ClipOval(
-                                    child: Image.asset(
-                                      _currentImagePath,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (
-                                        context,
-                                        error,
-                                        stackTrace,
-                                      ) {
-                                        return Icon(
-                                          CalorieUtils.getStatusIcon(
-                                            calorieStatus,
-                                          ),
-                                          size: 60,
-                                          color: netCaloriesColor,
-                                        );
-                                      },
-                                    ),
+                                    color:
+                                        _selectedTabIndex == 0
+                                            ? Colors.black
+                                            : Colors.grey[500],
                                   ),
                                 ),
-                              );
+                                const SizedBox(height: 4),
+                                // Underline indicator
+                                Container(
+                                  height: 3,
+                                  width: 30,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(1.5),
+                                    gradient:
+                                        _selectedTabIndex == 0
+                                            ? const LinearGradient(
+                                              colors: [
+                                                Colors.lightGreen,
+                                                Colors.green,
+                                              ],
+                                            )
+                                            : const LinearGradient(
+                                              colors: [
+                                                Colors.transparent,
+                                                Colors.transparent,
+                                              ],
+                                            ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        // "Consult" Tab
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _selectedTabIndex = 1;
+                              });
                             },
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            '${netCalories.toInt()}',
-                            style: TextStyle(
-                              fontSize: 40,
-                              fontWeight: FontWeight.bold,
-                              color: netCaloriesColor,
-                              height: 1,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Consult',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight:
+                                        _selectedTabIndex == 1
+                                            ? FontWeight.w600
+                                            : FontWeight.w200,
+
+                                    color:
+                                        _selectedTabIndex == 1
+                                            ? Colors.black
+                                            : Colors.grey[500],
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                // Underline indicator
+                                Container(
+                                  height: 3,
+                                  width: 30,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(1.5),
+                                    gradient:
+                                        _selectedTabIndex == 1
+                                            ? const LinearGradient(
+                                              colors: [
+                                                Colors.lightGreen,
+                                                Colors.green,
+                                              ],
+                                            )
+                                            : const LinearGradient(
+                                              colors: [
+                                                Colors.transparent,
+                                                Colors.transparent,
+                                              ],
+                                            ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          Text(
-                            'Cal',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: netCaloriesColor.withOpacity(0.7),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: netCaloriesColor.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              statusText,
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Tab Content
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
+                    child:
+                        _selectedTabIndex == 0
+                            ? ProfileMeTab(
+                              caloriesTaken: caloriesTaken,
+                              caloriesBurnt: caloriesBurnt,
+                              netCalories: netCalories,
+                              netCaloriesColor: netCaloriesColor,
+                              statusText: statusText,
+                              currentImagePath: _currentImagePath,
+                              fadeAnimation: _fadeAnimation,
+                              calorieStatusIcon: Icon(
+                                CalorieUtils.getStatusIcon(calorieStatus),
+                                size: 60,
                                 color: netCaloriesColor,
                               ),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              _buildCalorieInfo(
-                                'Taken',
-                                caloriesTaken,
-                                Colors.orange,
-                                Icons.local_fire_department,
-                              ),
-                              Container(
-                                height: 40,
-                                width: 1,
-                                color: Colors.grey[300],
-                              ),
-                              _buildCalorieInfo(
-                                'Burnt',
-                                caloriesBurnt,
-                                Colors.blue,
-                                Icons.directions_run,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    // ),
-                    const SizedBox(height: 24),
-
-                    // Friends Section
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.people_alt_rounded,
-                          size: 23,
-                          color: Color(0xFF2D3748),
-                        ),
-                        SizedBox(width: 6),
-                        Text(
-                          "Friends",
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF2D3748),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      height: 60,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: 5,
-                        itemBuilder: (context, index) {
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 12.0),
-                            child: const CircleAvatar(
-                              radius: 30,
-                              backgroundColor: Colors.white,
-                              backgroundImage: AssetImage(
-                                "assets/images/default_face.jpeg",
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Trainer Section
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.fitness_center,
-                          size: 23,
-                          color: Color(0xFF2D3748),
-                        ),
-                        SizedBox(width: 6),
-                        Text(
-                          "Trainers",
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF2D3748),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      height: 60,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: 2,
-                        itemBuilder: (context, index) {
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 12.0),
-                            child: const CircleAvatar(
-                              radius: 30,
-                              backgroundColor: Colors.white,
-                              backgroundImage: AssetImage(
-                                "assets/images/default_face.jpeg",
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
+                              onStatusIconError: () {
+                                // Handle error if needed
+                              },
+                            )
+                            : const ProfileConsultTab(),
+                  ),
+                ],
               ),
             ),
           ),
@@ -529,37 +443,6 @@ class _ProfileScreenState extends State<ProfileScreen>
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildCalorieInfo(
-    String label,
-    int value,
-    Color color,
-    IconData icon,
-  ) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Icon(icon, size: 16, color: color),
-            const SizedBox(width: 4),
-            Text(
-              label,
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          '$value kcal',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
-      ],
     );
   }
 }
