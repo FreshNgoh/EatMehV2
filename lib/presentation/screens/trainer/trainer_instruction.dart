@@ -20,17 +20,21 @@ class _TrainerInstructionState extends State<TrainerInstruction> {
     super.dispose();
   }
 
-  void _moveNextPage() {
+  void _moveNextPage() async {
     if (currentPage < 2) {
       controller.nextPage(
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOut,
       );
     } else {
-      Navigator.push(
+      final result = await Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => const TrainerForm()),
       );
+
+      if (result == 'submitted') {
+        Navigator.pop(context, 'submitted');
+      }
     }
   }
 

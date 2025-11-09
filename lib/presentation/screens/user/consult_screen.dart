@@ -11,6 +11,6 @@ class ConsultScreen extends StatefulWidget {
 class _ConsultScreenState extends State<ConsultScreen> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(body: const Center(child: CarouselApp()));
+    return Scaffold(body: Center(child: CarouselApp()));
   }
 }

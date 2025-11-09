@@ -55,7 +55,6 @@ class _TraineeListState extends State<TraineeList> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Trainee List')),
       body:
           _loading
               ? const Center(child: CircularProgressIndicator())
