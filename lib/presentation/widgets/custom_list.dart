@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:eatmehv2/presentation/widgets/custom_card.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../../core/theme/app_colors.dart';
 
 class ListActionIcon {
   final IconData icon;
@@ -53,14 +53,7 @@ class CustomList extends StatelessWidget {
 
     return GestureDetector(
       onTap: onFieldTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-        margin: const EdgeInsets.symmetric(vertical: 6),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
-        ),
+      child: CustomCard(
         child: Row(
           crossAxisAlignment:
               hasSubText ? CrossAxisAlignment.start : CrossAxisAlignment.center,
@@ -119,7 +112,6 @@ class CustomList extends StatelessWidget {
                       ),
             ),
             if (actionIcons.isNotEmpty) ...[
-              const SizedBox(width: 8),
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children:

@@ -142,4 +142,31 @@ class TrainerProfileService {
       print('Error saving trainer profile: $e');
     }
   }
+
+  // Accept trainee request and add to trainer's trainee list
+  Future<void> acceptTraineeRequest(
+    String trainerUid,
+    String traineeUid,
+  ) async {
+    try {
+      final trainerDocRef = _firestore
+          .collection(FirebaseConstants.usersCollection)
+          .doc(trainerUid);
+
+      await trainerDocRef.update({
+        'trainerProfile.trainees': FieldValue.arrayUnion([traineeUid]),
+      });
+    } catch (e) {
+      print('Error accepting trainee request: $e');
+    }
+  }
+
+  // Reject trainee request
+  Future<void> rejectTraineeRequest(
+    String trainerUid,
+    String traineeUid,
+  ) async {
+    // as it is handled by updating the notification status.
+    print('Trainee request from $traineeUid rejected by trainer $trainerUid');
+  }
 }

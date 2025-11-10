@@ -23,7 +23,8 @@ class NotificationService {
   Stream<List<NotificationModel>> getNotifications(String userUid) {
     return _getNotificationCollection
         .where('receiverUid', isEqualTo: userUid)
-        // .where('status', isEqualTo: 'pending')
+        .where('type', isEqualTo: 'trainer_request')
+        .where('status', isEqualTo: 'pending')
         .orderBy('createdAt', descending: true)
         .snapshots()
         .asyncMap((snapshot) async {
