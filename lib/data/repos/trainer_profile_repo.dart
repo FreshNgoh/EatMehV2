@@ -42,4 +42,24 @@ class TrainerProfileRepo {
       trainerUid,
     );
   }
+
+  Future<void> acceptTraineeRequest(
+    String trainerUid,
+    String traineeUid,
+  ) async {
+    return await _trainerProfileService.acceptTraineeRequest(
+      trainerUid,
+      traineeUid,
+    );
+  }
+
+  Future<void> declineTraineeRequest(
+    String trainerUid,
+    String traineeUid,
+  ) async {
+    return await _trainerProfileService.rejectTraineeRequest(
+      trainerUid,
+      traineeUid,
+    );
+  }
 }

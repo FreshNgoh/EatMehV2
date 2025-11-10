@@ -1,12 +1,15 @@
 import 'package:eatmehv2/data/models/notification/notification_model.dart';
 import 'package:eatmehv2/data/repos/notification_repo.dart';
+import 'package:eatmehv2/data/repos/trainer_profile_repo.dart';
 import 'package:eatmehv2/data/services/notification_service.dart';
+import 'package:eatmehv2/data/services/trainer_profile_service.dart';
 import 'package:eatmehv2/presentation/widgets/custom_list.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class TrainerRequestsScreen extends StatelessWidget {
   final notificationRepo = NotificationRepo(NotificationService());
+  final trainerProfileRepo = TrainerProfileRepo(TrainerProfileService());
   final String trainerUid = FirebaseAuth.instance.currentUser!.uid;
 
   TrainerRequestsScreen({super.key});
@@ -51,6 +54,11 @@ class TrainerRequestsScreen extends StatelessWidget {
                         req.uid!,
                         'accepted',
                       );
+
+                      await trainerProfileRepo.acceptTraineeRequest(
+                        trainerUid,
+                        req.senderUid,
+                      );
                     },
                     tooltip: 'Accept',
                   ),
@@ -60,6 +68,11 @@ class TrainerRequestsScreen extends StatelessWidget {
                       await notificationRepo.updateNotificationStatus(
                         req.uid!,
                         'rejected',
+                      );
+
+                      await trainerProfileRepo.declineTraineeRequest(
+                        trainerUid,
+                        req.senderUid,
                       );
                     },
                     tooltip: 'Reject',

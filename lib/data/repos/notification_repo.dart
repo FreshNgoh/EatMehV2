@@ -13,13 +13,7 @@ class NotificationRepo {
     return _notificationService.getNotifications(userUid);
   }
 
-  Future<void> updateNotificationStatus(
-    String notificationId,
-    String status,
-  ) async {
-    await _notificationService.updateTrainerRequestStatus(
-      notificationId,
-      status,
-    );
+  Future<void> updateNotificationStatus(String requestId, String status) async {
+    await _notificationService.updateTrainerRequestStatus(requestId, status);
   }
 }
