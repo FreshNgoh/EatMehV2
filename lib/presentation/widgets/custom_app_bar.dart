@@ -50,10 +50,20 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         padding: const EdgeInsets.only(left: 15.0),
         child: BlocBuilder<AuthBloc, AuthState>(
           builder: (context, state) {
-            String avatar = "assets/teralero.png";
-            if (state is Authenticated) {
-              avatar = state.user.imageUrl ?? avatar;
+            if (state is! Authenticated) {
+              // Fallback: show default avatar without navigation
+              return Align(
+                alignment: Alignment.centerLeft,
+                child: CircleAvatar(
+                  radius: 20,
+                  backgroundColor: Colors.white,
+                  backgroundImage: const AssetImage("assets/teralero.png"),
+                ),
+              );
             }
+
+            final avatar = state.user.imageUrl ?? "assets/teralero.png";
+            final currentUserUid = state.user.uid;
 
             return Align(
               alignment: Alignment.centerLeft,
@@ -61,7 +71,13 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                    MaterialPageRoute(
+                      builder:
+                          (_) => ProfileScreen(
+                            userUid: "OIkVfmfrRlVOdInLSdpEFwQcy4B3",
+                          ),
+                      // (_) => ProfileScreen(userUid: currentUserUid),
+                    ),
                   );
                 },
                 child: Container(

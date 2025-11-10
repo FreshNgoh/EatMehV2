@@ -1,14 +1,22 @@
 import 'dart:async';
+
+import 'package:eatmehv2/data/models/user/user_model.dart';
+import 'package:eatmehv2/data/repos/calorie_tracker_repo.dart';
+import 'package:eatmehv2/data/repos/user_repo.dart';
 import 'package:eatmehv2/presentation/screens/user/edit_profile.dart';
 import 'package:eatmehv2/presentation/screens/user/setting_screen.dart';
 import 'package:eatmehv2/presentation/screens/user/subProfile/profile_consult_tab.dart';
 import 'package:eatmehv2/presentation/screens/user/subProfile/profile_me_tab.dart';
+import 'package:eatmehv2/presentation/widgets/custom_card.dart';
 import 'package:eatmehv2/utils/calorie_utils.dart';
-import 'package:flutter/services.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final String userUid;
+
+  const ProfileScreen({super.key, required this.userUid});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -21,6 +29,16 @@ class _ProfileScreenState extends State<ProfileScreen>
   Timer? _imageTimer;
   String _currentImagePath = '';
   int _selectedTabIndex = 0; // 0 = Me, 1 = Consult
+
+  final UserRepository _userRepo = UserRepository();
+  final CalorieTrackerRepository _calorieRepo = CalorieTrackerRepository();
+
+  UserModel? _user;
+  Map<String, double>? _calorieData;
+  bool _isLoading = true;
+  String _errorMessage = '';
+  bool get isOwnProfile =>
+      FirebaseAuth.instance.currentUser?.uid == widget.userUid;
 
   @override
   void initState() {
@@ -35,17 +53,56 @@ class _ProfileScreenState extends State<ProfileScreen>
       CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
     );
 
-    _updateImage();
-    _animationController.forward();
+    _loadUserData();
+  }
 
-    // Automatically change image every few seconds
-    _imageTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+  Future<void> _loadUserData() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = '';
+      });
+
+      // Fetch user data
+      final user = await _userRepo.getUser(widget.userUid);
+      if (user == null) {
+        setState(() {
+          _errorMessage = 'User not found';
+          _isLoading = false;
+        });
+        return;
+      }
+
+      // Fetch calorie data for today
+      final calorieData = await _calorieRepo.fetchCaloriesByPeriod(
+        userUid: widget.userUid,
+        date: DateTime.now(),
+        period: 'daily',
+      );
+
+      setState(() {
+        _user = user;
+        _calorieData = calorieData;
+        _isLoading = false;
+      });
+
       _updateImage();
-      _animationController
-        ..reset()
-        ..forward();
-      setState(() {});
-    });
+      _animationController.forward();
+
+      // Automatically change image every few seconds
+      _imageTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+        _updateImage();
+        _animationController
+          ..reset()
+          ..forward();
+        setState(() {});
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Failed to load user data: $e';
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -56,12 +113,13 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   void _updateImage() {
-    // Get calorie status based on current net calories
-    const int caloriesTaken = 1850;
-    const int caloriesBurnt = 450;
+    if (_calorieData == null) return;
+
+    final caloriesTaken = _calorieData!['taken'] ?? 0.0;
+    final caloriesBurnt = _calorieData!['burnt'] ?? 0.0;
     final netCalories = CalorieUtils.calculateNetCalories(
-      caloriesTaken.toDouble(),
-      caloriesBurnt.toDouble(),
+      caloriesTaken,
+      caloriesBurnt,
     );
     final calorieStatus = CalorieUtils.getCalorieStatus(netCalories);
     _currentImagePath = CalorieUtils.getRandomStatusImage(calorieStatus);
@@ -82,29 +140,97 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   void _showBioEditor(BuildContext context) {
+    if (!isOwnProfile) return; // Only allow editing own bio
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => const BioEditorSheet(),
+      builder:
+          (context) => BioEditorSheet(
+            currentBio: _user?.bio ?? '',
+            onSave: (newBio) async {
+              try {
+                await _userRepo.updateUser(widget.userUid, {'bio': newBio});
+                await _loadUserData(); // Reload data
+                if (mounted) {
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(const SnackBar(content: Text('Bio updated!')));
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to update bio: $e')),
+                  );
+                }
+              }
+            },
+          ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    // Dummy data
-    const String userName = 'John Doe';
-    const String userId = '@johndoe123';
-    const String userBio = 'Tap here to fill in your bio';
-    const bool hasBio = false;
-    const int caloriesTaken = 1850;
-    const int caloriesBurnt = 450;
-    final double netCalories = CalorieUtils.calculateNetCalories(
+    if (_isLoading) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Profile'),
+          centerTitle: true,
+          leadingWidth: 60,
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_errorMessage.isNotEmpty || _user == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Profile'), centerTitle: true),
+        body: Center(
+          child: CustomCard(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset('assets/error.png', height: 200, width: 200),
+                const SizedBox(height: 12),
+                Text(
+                  'Error loading records:\n $_errorMessage',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: _loadUserData,
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Extract data from user model
+    final userName = _user!.username;
+    final userId = '@${_user!.uid.substring(0, 10)}...'; // Shortened UID
+    final userBio =
+        _user!.bio != null && _user!.bio!.isNotEmpty
+            ? _user!.bio! // user has a bio, show it
+            : isOwnProfile
+            ? 'Tap here to fill in your bio' // own profile, no bio yet
+            : 'This user hasn\'t written a bio yet'; // someone else's profile, no bio
+
+    final hasBio = _user!.bio != null && _user!.bio!.isNotEmpty;
+    final caloriesTaken = _calorieData?['taken']?.toInt() ?? 0;
+    final caloriesBurnt = _calorieData?['burnt']?.toInt() ?? 0;
+    final netCalories = CalorieUtils.calculateNetCalories(
       caloriesTaken.toDouble(),
       caloriesBurnt.toDouble(),
     );
 
-    // Calculate status using utils
     final calorieStatus = CalorieUtils.getCalorieStatus(netCalories);
     final netCaloriesColor = CalorieUtils.getStatusColor(netCalories);
     final statusText = CalorieUtils.getStatusText(calorieStatus);
@@ -114,19 +240,21 @@ class _ProfileScreenState extends State<ProfileScreen>
         elevation: 0,
         centerTitle: true,
         leadingWidth: 60,
-        title: const Text('Profile Page'),
+        title: Text(isOwnProfile ? 'Profile' : userName),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.edit_outlined),
-            onPressed: () => _showEditProfile(context),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 15.0),
-            child: IconButton(
-              icon: const Icon(Icons.settings),
-              onPressed: () => _showSettings(context),
+          if (isOwnProfile) ...[
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              onPressed: () => _showEditProfile(context),
             ),
-          ),
+            Padding(
+              padding: const EdgeInsets.only(right: 15.0),
+              child: IconButton(
+                icon: const Icon(Icons.settings),
+                onPressed: () => _showSettings(context),
+              ),
+            ),
+          ],
         ],
       ),
       body: CustomScrollView(
@@ -140,7 +268,6 @@ class _ProfileScreenState extends State<ProfileScreen>
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  // Section 1: User Info
                   Container(
                     width: double.infinity,
                     color: Colors.white,
@@ -151,12 +278,16 @@ class _ProfileScreenState extends State<ProfileScreen>
                         children: [
                           Row(
                             children: [
-                              const CircleAvatar(
+                              CircleAvatar(
                                 radius: 50,
                                 backgroundColor: Colors.white,
-                                backgroundImage: AssetImage(
-                                  "assets/teralero.png",
-                                ),
+                                backgroundImage:
+                                    _user!.imageUrl != null
+                                        ? NetworkImage(_user!.imageUrl!)
+                                        : const AssetImage(
+                                              "assets/teralero.png",
+                                            )
+                                            as ImageProvider,
                               ),
                               const SizedBox(width: 16),
                               Expanded(
@@ -175,7 +306,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                                     GestureDetector(
                                       onLongPress: () {
                                         Clipboard.setData(
-                                          ClipboardData(text: userId),
+                                          ClipboardData(text: _user!.uid),
                                         );
                                         ScaffoldMessenger.of(
                                           context,
@@ -212,17 +343,26 @@ class _ProfileScreenState extends State<ProfileScreen>
                               ),
                             ],
                           ),
-
                           const SizedBox(height: 20),
 
                           // User Bio
                           GestureDetector(
-                            onTap: () => _showBioEditor(context),
+                            onTap:
+                                isOwnProfile && !hasBio
+                                    ? () => _showBioEditor(context)
+                                    : null,
                             child: Text(
                               userBio,
                               style: TextStyle(
                                 fontSize: 14,
-                                color: Colors.grey[500],
+                                color:
+                                    hasBio
+                                        ? Colors.grey[700]
+                                        : Colors.grey[500],
+                                fontStyle:
+                                    hasBio
+                                        ? FontStyle.normal
+                                        : FontStyle.italic,
                               ),
                             ),
                           ),
@@ -233,18 +373,34 @@ class _ProfileScreenState extends State<ProfileScreen>
                             spacing: 10,
                             runSpacing: 8,
                             children: [
-                              _buildBadge(Icons.male, 'Male', Colors.blue),
-                              _buildBadge(
-                                Icons.monitor_weight,
-                                'BMI 22.5',
-                                Colors.green,
-                              ),
-                              _buildBadge(
-                                Icons.fitness_center,
-                                'Trainer',
-                                Colors.orange,
-                              ),
-                              _buildBadge(Icons.eco, 'Vegan', Colors.teal),
+                              if (_user!.gender != null)
+                                _buildBadge(
+                                  _user!.gender == 'male'
+                                      ? Icons.male
+                                      : Icons.female,
+                                  _user!.gender!,
+                                  _user!.gender == 'male'
+                                      ? Colors.blue
+                                      : Colors.pink,
+                                ),
+                              if (_user!.bmi != null)
+                                _buildBadge(
+                                  Icons.monitor_weight,
+                                  'BMI ${_user!.bmi!.toStringAsFixed(1)}',
+                                  Colors.green,
+                                ),
+                              if (_user!.role == 'trainer')
+                                _buildBadge(
+                                  Icons.fitness_center,
+                                  'Trainer',
+                                  Colors.orange,
+                                ),
+                              if (_user!.dietType != null)
+                                _buildBadge(
+                                  Icons.restaurant_menu,
+                                  _user!.dietType!,
+                                  Colors.teal,
+                                ),
                             ],
                           ),
                         ],
@@ -295,7 +451,6 @@ class _ProfileScreenState extends State<ProfileScreen>
                                         _selectedTabIndex == 0
                                             ? FontWeight.w600
                                             : FontWeight.w200,
-
                                     color:
                                         _selectedTabIndex == 0
                                             ? Colors.black
@@ -303,7 +458,6 @@ class _ProfileScreenState extends State<ProfileScreen>
                                   ),
                                 ),
                                 const SizedBox(height: 4),
-                                // Underline indicator
                                 Container(
                                   height: 3,
                                   width: 30,
@@ -349,7 +503,6 @@ class _ProfileScreenState extends State<ProfileScreen>
                                         _selectedTabIndex == 1
                                             ? FontWeight.w600
                                             : FontWeight.w200,
-
                                     color:
                                         _selectedTabIndex == 1
                                             ? Colors.black
@@ -357,7 +510,6 @@ class _ProfileScreenState extends State<ProfileScreen>
                                   ),
                                 ),
                                 const SizedBox(height: 4),
-                                // Underline indicator
                                 Container(
                                   height: 3,
                                   width: 30,
@@ -393,6 +545,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                     child:
                         _selectedTabIndex == 0
                             ? ProfileMeTab(
+                              user: _user!,
                               caloriesTaken: caloriesTaken,
                               caloriesBurnt: caloriesBurnt,
                               netCalories: netCalories,
@@ -405,11 +558,27 @@ class _ProfileScreenState extends State<ProfileScreen>
                                 size: 60,
                                 color: netCaloriesColor,
                               ),
-                              onStatusIconError: () {
-                                // Handle error if needed
-                              },
+                              onStatusIconError: () {},
                             )
-                            : const ProfileConsultTab(),
+                            : (_user!.trainerProfile != null
+                                ? ProfileConsultTab(
+                                  trainerProfile: _user!.trainerProfile!,
+                                )
+                                : Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(40.0),
+                                    child: Text(
+                                      isOwnProfile
+                                          ? "Apply as trainer!"
+                                          : 'He/She has no trainer profile yet.',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ),
+                                )),
                   ),
                 ],
               ),
@@ -449,14 +618,27 @@ class _ProfileScreenState extends State<ProfileScreen>
 
 // Bio Editor Bottom Sheet
 class BioEditorSheet extends StatefulWidget {
-  const BioEditorSheet({super.key});
+  final String currentBio;
+  final Function(String) onSave;
+
+  const BioEditorSheet({
+    super.key,
+    required this.currentBio,
+    required this.onSave,
+  });
 
   @override
   State<BioEditorSheet> createState() => _BioEditorSheetState();
 }
 
 class _BioEditorSheetState extends State<BioEditorSheet> {
-  final TextEditingController _bioController = TextEditingController();
+  late TextEditingController _bioController;
+
+  @override
+  void initState() {
+    super.initState();
+    _bioController = TextEditingController(text: widget.currentBio);
+  }
 
   @override
   void dispose() {
@@ -477,7 +659,6 @@ class _BioEditorSheetState extends State<BioEditorSheet> {
       ),
       child: Column(
         children: [
-          // Handle bar
           Container(
             margin: const EdgeInsets.only(top: 12),
             width: 40,
@@ -487,7 +668,6 @@ class _BioEditorSheetState extends State<BioEditorSheet> {
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          // Header
           Padding(
             padding: const EdgeInsets.all(20.0),
             child: Row(
@@ -510,18 +690,14 @@ class _BioEditorSheetState extends State<BioEditorSheet> {
                 ),
                 TextButton(
                   onPressed: () {
-                    // TODO: Save bio
+                    widget.onSave(_bioController.text);
                     Navigator.pop(context);
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(const SnackBar(content: Text('Bio saved!')));
                   },
                   child: const Text('Save', style: TextStyle(fontSize: 18)),
                 ),
               ],
             ),
           ),
-          // Text field
           SizedBox(
             height: 120,
             child: Padding(

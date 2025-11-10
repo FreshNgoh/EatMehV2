@@ -1,7 +1,9 @@
+import 'package:eatmehv2/data/models/trainer/trainer_profile_model.dart';
 import 'package:flutter/material.dart';
 
 class ProfileConsultTab extends StatelessWidget {
-  const ProfileConsultTab({super.key});
+  final TrainerProfile trainerProfile;
+  const ProfileConsultTab({super.key, required this.trainerProfile});
 
   @override
   Widget build(BuildContext context) {

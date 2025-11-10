@@ -1,3 +1,4 @@
+import 'package:eatmehv2/data/models/user/user_model.dart';
 import 'package:flutter/material.dart';
 
 class ProfileMeTab extends StatelessWidget {
@@ -10,6 +11,7 @@ class ProfileMeTab extends StatelessWidget {
   final Animation<double> fadeAnimation;
   final VoidCallback onStatusIconError;
   final Widget calorieStatusIcon;
+  final UserModel user;
 
   const ProfileMeTab({
     super.key,
@@ -22,6 +24,7 @@ class ProfileMeTab extends StatelessWidget {
     required this.fadeAnimation,
     required this.onStatusIconError,
     required this.calorieStatusIcon,
+    required this.user,
   });
 
   @override
