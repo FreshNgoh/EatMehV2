@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:eatmehv2/bloc/auth/auth_bloc.dart';
 import 'package:eatmehv2/presentation/widgets/custom_card.dart';
@@ -31,7 +30,6 @@ class _CaloriesTrackerPageState extends State<CaloriesTrackerPage>
   String? _errorMessage;
 
   String _currentImagePath = '';
-  int _currentImageIndex = 0;
 
   @override
   void initState() {
@@ -116,7 +114,8 @@ class _CaloriesTrackerPageState extends State<CaloriesTrackerPage>
 
   double get _avgTaken => _data['taken']!;
   double get _avgBurnt => _data['burnt']!;
-  double get _netCalories => _avgTaken - _avgBurnt;
+  double get _netCalories =>
+      CalorieUtils.calculateNetCalories(_avgTaken, _avgBurnt);
 
   // utils
   CalorieStatus get _calorieStatus =>
@@ -136,22 +135,7 @@ class _CaloriesTrackerPageState extends State<CaloriesTrackerPage>
   }
 
   void _updateImage() {
-    String folder;
-    switch (_calorieStatus) {
-      case CalorieStatus.low:
-        folder = 'assets/status/low';
-        break;
-      case CalorieStatus.balanced:
-        folder = 'assets/status/health';
-        break;
-      case CalorieStatus.high:
-        folder = 'assets/status/high';
-        break;
-    }
-
-    _currentImageIndex = Random().nextInt(3) + 1; // 1–3
-    final folderName = folder.split('/').last;
-    _currentImagePath = '$folder/${folderName}_$_currentImageIndex.png';
+    _currentImagePath = CalorieUtils.getRandomStatusImage(_calorieStatus);
   }
 
   void _showPeriodSelector() {
@@ -405,14 +389,9 @@ class _CaloriesTrackerPageState extends State<CaloriesTrackerPage>
                                             stackTrace,
                                           ) {
                                             return Icon(
-                                              _calorieStatus ==
-                                                      CalorieStatus.low
-                                                  ? Icons.sentiment_dissatisfied
-                                                  : _calorieStatus ==
-                                                      CalorieStatus.balanced
-                                                  ? Icons.sentiment_satisfied
-                                                  : Icons
-                                                      .sentiment_very_dissatisfied,
+                                              CalorieUtils.getStatusIcon(
+                                                _calorieStatus,
+                                              ),
                                               size: 120,
                                               color: _netCaloriesColor,
                                             );

@@ -242,7 +242,7 @@ class _CameraScreenState extends State<CameraScreen> {
                   // ======= Collapsible image header =======
                   SliverAppBar(
                     expandedHeight: 350,
-                    pinned: true,
+                    pinned: false,
                     backgroundColor: Colors.white,
                     automaticallyImplyLeading: false,
                     flexibleSpace: FlexibleSpaceBar(
