@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eatmehv2/core/constants/firebase_constants.dart';
 import 'package:eatmehv2/data/models/trainer/trainer_profile_model.dart';
+import 'package:eatmehv2/data/models/user/goal_model.dart';
 
 class TrainerProfileService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -153,9 +154,15 @@ class TrainerProfileService {
           .collection(FirebaseConstants.usersCollection)
           .doc(trainerUid);
 
+      final traineeDocRef = _firestore
+          .collection(FirebaseConstants.usersCollection)
+          .doc(traineeUid);
+
       await trainerDocRef.update({
         'trainerProfile.trainees': FieldValue.arrayUnion([traineeUid]),
       });
+
+      await traineeDocRef.update({'currentTrainerUid': trainerUid});
     } catch (e) {
       print('Error accepting trainee request: $e');
     }
@@ -168,5 +175,18 @@ class TrainerProfileService {
   ) async {
     // as it is handled by updating the notification status.
     print('Trainee request from $traineeUid rejected by trainer $trainerUid');
+  }
+
+  // Save goals for user
+  Future<void> saveUserGoals(String userUid, Goal goals) async {
+    try {
+      final goalsData = goals.toMap();
+      await _firestore
+          .collection(FirebaseConstants.usersCollection)
+          .doc(userUid)
+          .update({'goal': goalsData});
+    } catch (e) {
+      print('Error saving goals for user: $e');
+    }
   }
 }

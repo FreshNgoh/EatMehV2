@@ -1,14 +1,12 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eatmehv2/presentation/widgets/custom_card.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 class ListActionIcon {
   final IconData icon;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final String? tooltip;
 
-  ListActionIcon({required this.icon, required this.onPressed, this.tooltip});
+  ListActionIcon({required this.icon, this.onPressed, this.tooltip});
 }
 
 class CustomList extends StatelessWidget {
@@ -17,7 +15,6 @@ class CustomList extends StatelessWidget {
   final VoidCallback? onProfileTap;
   final Widget? profile;
   final String? lastMessage;
-  final Timestamp? lastUpdated;
   final List<ListActionIcon> actionIcons;
 
   const CustomList({
@@ -27,29 +24,12 @@ class CustomList extends StatelessWidget {
     this.onProfileTap,
     this.profile,
     this.lastMessage,
-    this.lastUpdated,
     this.actionIcons = const [],
   });
 
-  String _formatTimestamp(Timestamp? timestamp) {
-    if (timestamp == null) return '';
-    final date = timestamp.toDate();
-    final now = DateTime.now();
-
-    if (date.year == now.year &&
-        date.month == now.month &&
-        date.day == now.day) {
-      // same day → show only 24-hour time
-      return DateFormat('HH:mm').format(date);
-    }
-    // different day → show short date
-    return DateFormat('dd/MM/yyyy').format(date);
-  }
-
   @override
   Widget build(BuildContext context) {
-    final hasSubText =
-        (lastMessage != null && lastMessage!.isNotEmpty) || lastUpdated != null;
+    final hasSubText = (lastMessage != null && lastMessage!.isNotEmpty);
 
     return GestureDetector(
       onTap: onFieldTap,
@@ -91,13 +71,6 @@ class CustomList extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              Text(
-                                _formatTimestamp(lastUpdated),
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.grey[500],
-                                ),
-                              ),
                             ],
                           ),
                         ],
@@ -113,7 +86,7 @@ class CustomList extends StatelessWidget {
             ),
             if (actionIcons.isNotEmpty) ...[
               Row(
-                mainAxisSize: MainAxisSize.min,
+                // mainAxisSize: MainAxisSize.min,
                 children:
                     actionIcons
                         .map(
