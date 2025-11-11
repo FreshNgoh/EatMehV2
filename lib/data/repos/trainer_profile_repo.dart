@@ -1,4 +1,5 @@
 import 'package:eatmehv2/data/models/trainer/trainer_profile_model.dart';
+import 'package:eatmehv2/data/models/user/goal_model.dart';
 import 'package:eatmehv2/data/services/trainer_profile_service.dart';
 
 class TrainerProfileRepo {
@@ -61,5 +62,9 @@ class TrainerProfileRepo {
       trainerUid,
       traineeUid,
     );
+  }
+
+  Future<void> saveUserGoals(String traineeUid, Goal goals) async {
+    return await _trainerProfileService.saveUserGoals(traineeUid, goals);
   }
 }

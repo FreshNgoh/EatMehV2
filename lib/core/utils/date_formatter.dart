@@ -13,6 +13,14 @@ class DateFormatter {
     return DateFormat('MMM dd, yyyy - hh:mm a').format(dateTime);
   }
 
+  static DateTime parseDate(String date) {
+    try {
+      return DateFormat('MMM dd, yyyy').parse(date);
+    } catch (e) {
+      throw FormatException("Invalid date format: $date");
+    }
+  }
+
   static String getTimeAgo(DateTime dateTime) {
     final now = DateTime.now();
     final difference = now.difference(dateTime);
