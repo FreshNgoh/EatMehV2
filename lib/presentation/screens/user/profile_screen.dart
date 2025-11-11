@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:eatmehv2/core/theme/app_colors.dart';
 import 'package:eatmehv2/data/models/user/user_model.dart';
 import 'package:eatmehv2/data/repos/calorie_tracker_repo.dart';
 import 'package:eatmehv2/data/repos/user_repo.dart';
@@ -135,7 +136,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   void _showEditProfile(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const EditProfile()),
+      MaterialPageRoute(builder: (_) => EditProfile(user: _user!)),
     );
   }
 
@@ -235,6 +236,12 @@ class _ProfileScreenState extends State<ProfileScreen>
     final netCaloriesColor = CalorieUtils.getStatusColor(netCalories);
     final statusText = CalorieUtils.getStatusText(calorieStatus);
 
+    // user image
+    final ImageProvider avatarImage =
+        (_user!.imageUrl != null && _user!.imageUrl!.isNotEmpty)
+            ? NetworkImage(_user!.imageUrl!)
+            : const AssetImage("assets/teralero.png");
+
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
@@ -281,13 +288,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                               CircleAvatar(
                                 radius: 50,
                                 backgroundColor: Colors.white,
-                                backgroundImage:
-                                    _user!.imageUrl != null
-                                        ? NetworkImage(_user!.imageUrl!)
-                                        : const AssetImage(
-                                              "assets/teralero.png",
-                                            )
-                                            as ImageProvider,
+                                backgroundImage: avatarImage,
                               ),
                               const SizedBox(width: 16),
                               Expanded(
@@ -387,7 +388,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                                 _buildBadge(
                                   Icons.monitor_weight,
                                   'BMI ${_user!.bmi!.toStringAsFixed(1)}',
-                                  Colors.green,
+                                  Colors.deepOrange,
                                 ),
                               if (_user!.role == 'trainer')
                                 _buildBadge(
@@ -399,7 +400,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                                 _buildBadge(
                                   Icons.restaurant_menu,
                                   _user!.dietType!,
-                                  Colors.teal,
+                                  AppColors.getDietColor(_user!.dietType!),
                                 ),
                             ],
                           ),

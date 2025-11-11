@@ -56,6 +56,21 @@ class AppColors {
     return caloriesLow;
   }
 
+  static Color getDietColor(String diet) {
+    switch (diet) {
+      case 'Vegetarian':
+        return Colors.green; // soft green
+      case 'Vegan':
+        return Colors.teal; // soft teal
+      case 'Omnivore':
+        return Colors.cyan; // soft orange
+      case 'Pescatarian':
+        return Colors.indigo; // soft blue
+      default:
+        return Colors.grey[200]!; // fallback
+    }
+  }
+
   // Exercise Icons & Colors
   static const Map<String, Map<String, dynamic>> exerciseIconData = {
     'Running': {'icon': Icons.directions_run, 'color': Color(0xFF8B5CF6)},
