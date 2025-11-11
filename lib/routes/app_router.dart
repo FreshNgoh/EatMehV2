@@ -1,5 +1,5 @@
 import 'package:eatmehv2/presentation/screens/admin/admin_screen.dart';
-import 'package:eatmehv2/presentation/screens/onboarding/user_manual.dart';
+import 'package:eatmehv2/presentation/screens/onboarding/user_manual_screen.dart';
 import 'package:eatmehv2/presentation/screens/user/home_screen.dart';
 import 'package:flutter/material.dart';
 
