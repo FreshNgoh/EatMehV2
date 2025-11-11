@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 
 class ListActionIcon {
   final IconData icon;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final String? tooltip;
 
-  ListActionIcon({required this.icon, required this.onPressed, this.tooltip});
+  ListActionIcon({required this.icon, this.onPressed, this.tooltip});
 }
 
 class CustomList extends StatelessWidget {
@@ -86,7 +86,7 @@ class CustomList extends StatelessWidget {
             ),
             if (actionIcons.isNotEmpty) ...[
               Row(
-                mainAxisSize: MainAxisSize.min,
+                // mainAxisSize: MainAxisSize.min,
                 children:
                     actionIcons
                         .map(

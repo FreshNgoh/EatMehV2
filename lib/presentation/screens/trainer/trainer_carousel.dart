@@ -1,15 +1,19 @@
+import 'package:eatmehv2/bloc/auth/auth_bloc.dart';
 import 'package:eatmehv2/data/models/trainer/trainer_profile_model.dart';
 import 'package:eatmehv2/data/repos/trainer_application_repo.dart';
 import 'package:eatmehv2/data/repos/trainer_profile_repo.dart';
+import 'package:eatmehv2/data/repos/user_repo.dart';
 import 'package:eatmehv2/data/services/trainer_application_service.dart';
 import 'package:eatmehv2/data/services/trainer_profile_service.dart';
 import 'package:eatmehv2/presentation/screens/trainer/trainee_list.dart';
+import 'package:eatmehv2/presentation/screens/trainer/trainer_chat_room.dart';
 import 'package:eatmehv2/presentation/screens/trainer/trainer_instruction.dart';
 import 'package:eatmehv2/presentation/screens/trainer/trainer_list.dart';
 import 'package:eatmehv2/presentation/screens/user/onBoarding/user_goals.dart';
 import 'package:eatmehv2/presentation/widgets/custom_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CarouselApp extends StatefulWidget {
@@ -21,13 +25,18 @@ class CarouselApp extends StatefulWidget {
 
 class _CarouselAppState extends State<CarouselApp> {
   late Future<String> _statusFuture;
+  final userRepo = UserRepository();
+  bool hasTrainer = false;
+  bool isCheckingTrainer = true;
 
   @override
   void initState() {
     super.initState();
     _statusFuture = _getApplicationStatus();
+    checkCurrentTrainer();
   }
 
+  // check if apply as trainer
   Future<String> _getApplicationStatus() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return 'none';
@@ -58,6 +67,18 @@ class _CarouselAppState extends State<CarouselApp> {
     return status;
   }
 
+  // check have trainer
+  Future<void> checkCurrentTrainer() async {
+    final authState = context.read<AuthBloc>().state as Authenticated;
+    final currentUserUid = authState.user.uid;
+    final currentTrainer = await userRepo.getCurrentTrainer(currentUserUid);
+
+    setState(() {
+      hasTrainer = currentTrainer != null;
+      isCheckingTrainer = false;
+    });
+  }
+
   Future<void> _refreshStatus() async {
     final newStatus = await _getApplicationStatus();
     setState(() {
@@ -67,6 +88,10 @@ class _CarouselAppState extends State<CarouselApp> {
 
   @override
   Widget build(BuildContext context) {
+    if (isCheckingTrainer) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     return FutureBuilder<String>(
       future: _statusFuture,
       builder: (context, snapshot) {
@@ -87,7 +112,11 @@ class _CarouselAppState extends State<CarouselApp> {
         if (status == 'approved') {
           return const TraineeList();
         } else {
-          return Carousel(applicationStatus: status, onRefresh: _refreshStatus);
+          return Carousel(
+            applicationStatus: status,
+            hasTrainer: hasTrainer,
+            onRefresh: _refreshStatus,
+          );
         }
       },
     );
@@ -97,11 +126,13 @@ class _CarouselAppState extends State<CarouselApp> {
 class Carousel extends StatefulWidget {
   final String applicationStatus;
   final Future<void> Function() onRefresh;
+  final bool hasTrainer;
 
   const Carousel({
     super.key,
     required this.applicationStatus,
     required this.onRefresh,
+    this.hasTrainer = false,
   });
 
   @override
@@ -131,6 +162,28 @@ Future<void> _navigateBasedOnGoal(BuildContext context) async {
 }
 
 class _CarouselState extends State<Carousel> {
+  final userRepo = UserRepository();
+
+  Future<void> _navigateToTrainerChat(BuildContext context) async {
+    final authState = context.read<AuthBloc>().state as Authenticated;
+    final currentUserUid = authState.user.uid;
+    final trainer = await userRepo.getCurrentTrainer(currentUserUid);
+
+    if (trainer != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder:
+              (_) => TrainerChatRoom(
+                receiverUid: trainer.uid,
+                receiverName: trainer.username,
+                receiverImage: trainer.imageUrl ?? '',
+              ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final double height = MediaQuery.sizeOf(context).height;
@@ -212,8 +265,14 @@ class _CarouselState extends State<Carousel> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 50),
               child: CustomButton(
-                text: "Request For Trainer",
-                onPressed: () => _navigateBasedOnGoal(context),
+                text:
+                    widget.hasTrainer
+                        ? "Chat with Your Trainer"
+                        : "Request For Trainer",
+                onPressed:
+                    widget.hasTrainer
+                        ? () => _navigateToTrainerChat(context)
+                        : () => _navigateBasedOnGoal(context),
                 backgroundColor: Colors.white,
                 textColor: Colors.green.shade600,
               ),

@@ -75,7 +75,6 @@ class _TrainerSetGoalState extends State<TrainerSetGoal> {
 
     final userName = _user!.username;
     final userId = '@${_user!.uid.substring(0, 10)}...';
-    // final goal = _goal!.goalType ?? 'achieve their goal';
     final isCreatingNewGoal = _goal == null;
 
     return Scaffold(

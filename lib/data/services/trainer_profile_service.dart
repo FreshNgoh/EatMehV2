@@ -154,9 +154,15 @@ class TrainerProfileService {
           .collection(FirebaseConstants.usersCollection)
           .doc(trainerUid);
 
+      final traineeDocRef = _firestore
+          .collection(FirebaseConstants.usersCollection)
+          .doc(traineeUid);
+
       await trainerDocRef.update({
         'trainerProfile.trainees': FieldValue.arrayUnion([traineeUid]),
       });
+
+      await traineeDocRef.update({'currentTrainerUid': trainerUid});
     } catch (e) {
       print('Error accepting trainee request: $e');
     }

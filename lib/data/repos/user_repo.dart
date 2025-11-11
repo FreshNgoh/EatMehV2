@@ -128,4 +128,45 @@ class UserRepository {
 
     return getUsersByUids(user.friendRequests);
   }
+
+  // Get current trainer from user
+  Future<UserModel?> getCurrentTrainer(String userId) async {
+    final user = await getUser(userId);
+    if (user == null || user.currentTrainerUid == null) return null;
+
+    return getUser(user.currentTrainerUid!);
+  }
+
+  // Submit rating for trainer
+  Future<void> submitTrainerRating(String trainerUid, double rating) async {
+    final trainer = await getUser(trainerUid);
+    if (trainer == null) return;
+
+    final trainerRating = trainer.trainerProfile?.rating ?? 0.0;
+
+    final newTotalRatings = trainerRating + 1;
+    final newAverageRating =
+        ((trainerRating * trainerRating) + rating) / newTotalRatings;
+
+    await updateUser(trainerUid, {
+      'averageRating': newAverageRating,
+      'totalRatings': newTotalRatings,
+    });
+  }
+
+  // Delete user from trainer's trainee list
+  Future<void> changeTrainer(String trainerUid, String traineeUid) async {
+    try {
+      final trainerDocRef = _usersCollection.doc(trainerUid);
+      final traineeDocRef = _usersCollection.doc(traineeUid);
+
+      await trainerDocRef.update({
+        'trainerProfile.trainees': FieldValue.arrayRemove([traineeUid]),
+      });
+
+      await traineeDocRef.update({'currentTrainerUid': null});
+    } catch (e) {
+      print('Error removing trainee: $e');
+    }
+  }
 }
