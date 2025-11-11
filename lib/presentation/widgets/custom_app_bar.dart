@@ -65,7 +65,11 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               );
             }
 
-            final avatar = state.user.imageUrl ?? "assets/teralero.png";
+            final ImageProvider avatarImage =
+                (state.user.imageUrl != null && state.user.imageUrl!.isNotEmpty)
+                    ? NetworkImage(state.user.imageUrl!)
+                    : const AssetImage("assets/teralero.png");
+
             final currentUserUid = state.user.uid;
 
             return Align(
@@ -75,11 +79,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder:
-                          (_) => ProfileScreen(
-                            userUid: "OIkVfmfrRlVOdInLSdpEFwQcy4B3",
-                          ),
-                      // (_) => ProfileScreen(userUid: currentUserUid),
+                      builder: (_) => ProfileScreen(userUid: currentUserUid),
                     ),
                   );
                 },
@@ -92,7 +92,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                   child: CircleAvatar(
                     radius: 20,
                     backgroundColor: Colors.white,
-                    backgroundImage: AssetImage(avatar),
+                    backgroundImage: avatarImage,
                   ),
                 ),
               ),
@@ -154,32 +154,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
     );
   }
-
-  // Notification Button
-  // Widget _showNotificationsButton(BuildContext context) {
-  //   return Stack(
-  //     children: [
-  //       IconButton(
-  //         icon: const Icon(Icons.notifications, color: Color(0xFF191919)),
-  //         onPressed: () {
-  //           _showNotifications(context);
-  //         },
-  //       ),
-  //       Positioned(
-  //         right: 8,
-  //         top: 8,
-  //         child: Container(
-  //           width: 10,
-  //           height: 10,
-  //           decoration: const BoxDecoration(
-  //             color: Colors.red,
-  //             shape: BoxShape.circle,
-  //           ),
-  //         ),
-  //       ),
-  //     ],
-  //   );
-  // }
 
   Widget _showNotificationsButton(BuildContext context) {
     final notificationRepo = NotificationRepo(NotificationService());
