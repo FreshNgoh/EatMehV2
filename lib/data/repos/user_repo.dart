@@ -142,16 +142,16 @@ class UserRepository {
     final trainer = await getUser(trainerUid);
     if (trainer == null) return;
 
-    final trainerRating = trainer.trainerProfile?.rating ?? 0.0;
+    final currentProfile = trainer.trainerProfile;
+    if (currentProfile == null) return;
 
-    final newTotalRatings = trainerRating + 1;
-    final newAverageRating =
-        ((trainerRating * trainerRating) + rating) / newTotalRatings;
+    final totalRating = currentProfile.rating;
+    final ratingCount = currentProfile.trainees.length;
 
-    await updateUser(trainerUid, {
-      'averageRating': newAverageRating,
-      'totalRatings': newTotalRatings,
-    });
+    final newTotalRating = totalRating + rating;
+    final averageRatings = newTotalRating / (ratingCount + 1);
+
+    await updateUser(trainerUid, {'rating': averageRatings});
   }
 
   // Delete user from trainer's trainee list

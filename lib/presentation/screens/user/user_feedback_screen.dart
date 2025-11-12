@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eatmehv2/bloc/auth/auth_bloc.dart';
 import 'package:eatmehv2/data/models/user/user_model.dart';
 import 'package:eatmehv2/data/repos/trainer_profile_repo.dart';
@@ -24,7 +23,7 @@ class _UserFeedbackScreenState extends State<UserFeedbackScreen> {
   final trainerRepo = TrainerProfileRepo(TrainerProfileService());
 
   UserModel? _trainer;
-  int _rating = 0;
+  double _rating = 0;
   int? _existingRating;
   bool isLoading = true;
   bool isSaving = false;
@@ -33,8 +32,6 @@ class _UserFeedbackScreenState extends State<UserFeedbackScreen> {
   Future<void> loadTrainerProfile() async {
     final trainer = await userRepo.getUser(widget.trainerUid);
 
-    // Load existing rating
-
     setState(() {
       _trainer = trainer;
       isLoading = false;
@@ -42,7 +39,7 @@ class _UserFeedbackScreenState extends State<UserFeedbackScreen> {
   }
 
   Future<void> _submitRating() async {
-    if (_rating == 0) {
+    if (_rating == 0.0) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Please select a rating')));
@@ -52,21 +49,9 @@ class _UserFeedbackScreenState extends State<UserFeedbackScreen> {
     setState(() => isSaving = true);
 
     try {
-      final authState = context.read<AuthBloc>().state as Authenticated;
-      final currentUserUid = authState.user.uid;
+      final double rating = _rating;
 
-      final ratingData = {
-        'trainerUid': widget.trainerUid,
-        'userUid': currentUserUid,
-        'rating': _rating,
-        'createdAt': _existingRating == null ? Timestamp.now() : null,
-        'updatedAt': Timestamp.now(),
-      };
-
-      // Remove null values
-      ratingData.removeWhere((key, value) => value == null);
-
-      // await userRepo.submitTrainerRating(widget.trainerUid, ratingData);
+      await userRepo.submitTrainerRating(widget.trainerUid, rating);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -82,7 +67,7 @@ class _UserFeedbackScreenState extends State<UserFeedbackScreen> {
         Navigator.pop(context);
       }
     } catch (e) {
-      print('Error submitting rating: $e');
+      Exception('Error submitting rating: $e');
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -397,7 +382,7 @@ class _UserFeedbackScreenState extends State<UserFeedbackScreen> {
     );
   }
 
-  String _getRatingText(int rating) {
+  String _getRatingText(double rating) {
     switch (rating) {
       case 1:
         return 'Poor';
@@ -414,7 +399,7 @@ class _UserFeedbackScreenState extends State<UserFeedbackScreen> {
     }
   }
 
-  Color _getRatingColor(int rating) {
+  Color _getRatingColor(double rating) {
     if (rating <= 2) return Colors.red;
     if (rating == 3) return Colors.orange;
     return Colors.green;

@@ -71,4 +71,15 @@ class TrainerApplicationService {
     await ref.putFile(file);
     return await ref.getDownloadURL();
   }
+
+  // Get existing trainer profile from application form
+  Future<Map<String, dynamic>?> getTrainerApplicationData(String userId) async {
+    final application = await getApplicationByUser(userId);
+    if (application == null) return null;
+
+    return {
+      'certifications': application.certificateUrls,
+      'yearsOfExperience': application.experience,
+    };
+  }
 }

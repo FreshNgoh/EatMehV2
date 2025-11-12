@@ -63,4 +63,8 @@ class TrainerApplicationRepository {
   Future<String> fetchApplicationStatus(String userId) async {
     return await _trainerService.getApplicationStatus(userId);
   }
+
+  Future<Map<String, dynamic>?> getTrainerApplicationData(String userId) async {
+    return await _trainerService.getTrainerApplicationData(userId);
+  }
 }
