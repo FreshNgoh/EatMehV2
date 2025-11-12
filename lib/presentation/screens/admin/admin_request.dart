@@ -1,43 +1,28 @@
+//
+// request_screen.dart (Final)
+//
 import 'package:flutter/material.dart';
-import 'admin_request_details.dart'; // <-- 1. ADD THIS IMPORT
+// Adjust these paths
+import 'package:eatmehv2/data/models/trainer/trainer_application.dart';
+import 'package:eatmehv2/data/repos/trainer_application_repo.dart';
+import 'package:eatmehv2/data/services/trainer_application_service.dart';
+import 'admin_request_details.dart';
 
-// --- Data Model (Reused from UserScreen concept) ---
+class RequestScreen extends StatefulWidget {
+  const RequestScreen({super.key});
 
-/// Represents a request profile in the list.
-class Request {
-  final String name;
-  final String description;
-
-  const Request({
-    required this.name,
-    required this.description,
-  });
+  @override
+  State<RequestScreen> createState() => _RequestScreenState();
 }
 
-// --- Sample Data ---
-
-final List<Request> sampleRequests = [
-  // ... your sample data remains the same ...
-  const Request(name: 'John Doe', description: 'Requesting personal training'),
-  const Request(name: 'Jane Smith', description: 'Interested in group fitness'),
-  const Request(name: 'Mike Ross', description: 'Looking for a cardio coach'),
-  const Request(name: 'Rachel Zane', description: 'Seeking nutritional guidance'),
-  const Request(name: 'Harvey Specter', description: 'Advanced weight lifting'),
-  const Request(name: 'Donna Paulsen', description: 'Yoga and flexibility class'),
-  const Request(name: 'Louis Litt', description: 'Marathon training plan'),
-  const Request(name: 'Jessica Pearson', description: 'Corporate wellness inquiry'),
-  const Request(name: 'Katrina Bennett', description: 'Pilates instructor needed'),
-];
-
-// --- Main Screen Widget ---
-
-class RequestScreen extends StatelessWidget {
-  const RequestScreen({super.key});
+class _RequestScreenState extends State<RequestScreen> {
+  // Use your repository and service
+  final TrainerApplicationRepository _repository =
+      TrainerApplicationRepository(TrainerApplicationService());
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // 1. App Bar
       appBar: AppBar(
         title: const Text(
           'Trainer Request',
@@ -47,46 +32,60 @@ class RequestScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 0.5,
       ),
+      // Use StreamBuilder to get live data from your repository
+      body: StreamBuilder<List<TrainerApplication>>(
+        stream: _repository.getPendingApplications(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(
+              child: Text(
+                'No pending applications.',
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+            );
+          }
 
-      // 2. Body: Request List
-      body: ListView.builder(
-        padding: const EdgeInsets.only(bottom: 80.0),
-        itemCount: sampleRequests.length,
-        itemBuilder: (context, index) {
-          final request = sampleRequests[index];
-          return RequestListItem(
-            request: request,
-            onTap: () {
-              // --- 2. MODIFY THIS ---
-              // Old SnackBar code removed
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      AdminRequestDetailsScreen(request: request),
-                ),
+          final applications = snapshot.data!;
+          return ListView.builder(
+            padding: const EdgeInsets.only(bottom: 80.0),
+            itemCount: applications.length,
+            itemBuilder: (context, index) {
+              final application = applications[index];
+              return RequestListItem(
+                application: application, // Use your model
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AdminRequestDetailsScreen(
+                        application: application, // Pass your model
+                      ),
+                    ),
+                  );
+                },
               );
-              // --- END OF MODIFICATION ---
             },
           );
         },
       ),
-
-      // 3. Bottom Navigation Bar (Assuming this is part of the application structure)
     );
   }
 }
 
-// --- Custom List Item Widget ---
-// (This widget remains exactly the same)
-
+// --- List Item Widget (Updated) ---
 class RequestListItem extends StatelessWidget {
-  final Request request;
+  final TrainerApplication application; // Use your model
   final VoidCallback onTap;
 
   const RequestListItem({
     super.key,
-    required this.request,
+    required this.application,
     required this.onTap,
   });
 
@@ -96,22 +95,20 @@ class RequestListItem extends StatelessWidget {
       onTap: onTap,
       contentPadding:
           const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-      // Placeholder Profile Icon (Circle Avatar)
       leading: CircleAvatar(
         radius: 28,
         backgroundColor: Colors.grey[200],
         child: Icon(Icons.person, color: Colors.grey[600]),
       ),
-      // Name and Description Text
       title: Padding(
         padding: const EdgeInsets.only(bottom: 4.0),
         child: Text(
-          request.name,
+          application.name, // Use data from your model
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
       subtitle: Text(
-        request.description,
+        "Specialization: ${application.specialization}", // Use data from your model
         style: TextStyle(color: Colors.grey[600]),
       ),
     );

@@ -82,4 +82,11 @@ class TrainerApplicationService {
       'yearsOfExperience': application.experience,
     };
   }
+  Stream<List<TrainerApplication>> getPendingApplications() {
+    return _trainerApplicationsCollection
+        .where('status', isEqualTo: 'pending')
+        .snapshots()
+        .map((snapshot) =>
+            snapshot.docs.map((doc) => doc.data()).toList());
+  }
 }

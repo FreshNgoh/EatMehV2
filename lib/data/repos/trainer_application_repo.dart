@@ -43,6 +43,10 @@ class TrainerApplicationRepository {
   Future<TrainerApplication?> fetchApplicationByTrainer(String userId) async {
     return await _trainerService.getApplicationByUser(userId);
   }
+  
+  Stream<List<TrainerApplication>> getPendingApplications() {
+    return _trainerService.getPendingApplications();
+  }
 
   Future<void> approveApplication(String uid) async {
     await _trainerService.updateStatus(uid, 'approved');
