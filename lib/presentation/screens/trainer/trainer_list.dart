@@ -1,7 +1,14 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:eatmehv2/bloc/auth/auth_bloc.dart';
+import 'package:eatmehv2/data/models/notification/notification_model.dart';
+import 'package:eatmehv2/data/repos/notification_repo.dart';
+import 'package:eatmehv2/data/repos/trainer_profile_repo.dart';
+import 'package:eatmehv2/data/services/notification_service.dart';
 import 'package:eatmehv2/data/services/trainer_profile_service.dart';
 import 'package:eatmehv2/presentation/screens/trainer/trainer_chat_room.dart';
 import 'package:eatmehv2/presentation/widgets/custom_list.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class TrainerList extends StatefulWidget {
   const TrainerList({super.key});
@@ -11,7 +18,9 @@ class TrainerList extends StatefulWidget {
 }
 
 class _TrainerListState extends State<TrainerList> {
-  final trainerProfileService = TrainerProfileService();
+  final trainerProfileRepo = TrainerProfileRepo(TrainerProfileService());
+  final notificationRepo = NotificationRepo(NotificationService());
+
   bool isLoading = true;
   List<Map<String, dynamic>> trainers = [];
 
@@ -22,7 +31,7 @@ class _TrainerListState extends State<TrainerList> {
   }
 
   Future<void> fetchTrainers() async {
-    final result = await trainerProfileService.getAllTrainers();
+    final result = await trainerProfileRepo.getAllTrainers();
     // print('Trainer profile: $result');
     setState(() {
       trainers = result;
@@ -70,16 +79,31 @@ class _TrainerListState extends State<TrainerList> {
                     actionIcons: [
                       ListActionIcon(
                         icon: Icons.add,
-                        onPressed: () {
+                        onPressed: () async {
+                          final authState =
+                              context.read<AuthBloc>().state as Authenticated;
+                          final currentUser = authState.user.uid;
+
+                          final request = NotificationModel(
+                            senderUid: currentUser,
+                            receiverUid: trainer['uid'],
+                            title: "New trainee request",
+                            message: 'A user has requested to be your trainee.',
+                            type: 'trainer_request',
+                            status: 'pending',
+                            createdAt: Timestamp.now(),
+                          );
+                          await notificationRepo.sendNotification(request);
+
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                'Friend request sent to ${trainer['name']}',
+                                'Trainer request sent to ${trainer['name']}',
                               ),
                             ),
                           );
                         },
-                        tooltip: 'Add Friend',
+                        tooltip: 'Request Trainer',
                       ),
                     ],
                     onFieldTap: () {

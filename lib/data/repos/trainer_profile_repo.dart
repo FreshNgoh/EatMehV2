@@ -1,4 +1,5 @@
 import 'package:eatmehv2/data/models/trainer/trainer_profile_model.dart';
+import 'package:eatmehv2/data/models/user/goal_model.dart';
 import 'package:eatmehv2/data/services/trainer_profile_service.dart';
 
 class TrainerProfileRepo {
@@ -41,5 +42,29 @@ class TrainerProfileRepo {
       traineeUids,
       trainerUid,
     );
+  }
+
+  Future<void> acceptTraineeRequest(
+    String trainerUid,
+    String traineeUid,
+  ) async {
+    return await _trainerProfileService.acceptTraineeRequest(
+      trainerUid,
+      traineeUid,
+    );
+  }
+
+  Future<void> declineTraineeRequest(
+    String trainerUid,
+    String traineeUid,
+  ) async {
+    return await _trainerProfileService.rejectTraineeRequest(
+      trainerUid,
+      traineeUid,
+    );
+  }
+
+  Future<void> saveUserGoals(String traineeUid, Goal goals) async {
+    return await _trainerProfileService.saveUserGoals(traineeUid, goals);
   }
 }

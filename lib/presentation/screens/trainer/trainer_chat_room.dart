@@ -2,6 +2,10 @@ import 'package:eatmehv2/bloc/auth/auth_bloc.dart';
 import 'package:eatmehv2/data/models/chat/message_model.dart';
 import 'package:eatmehv2/data/repos/chat_room_repo.dart';
 import 'package:eatmehv2/data/services/chat_room_service.dart';
+import 'package:eatmehv2/presentation/screens/trainer/trainer_goal_detail.dart';
+import 'package:eatmehv2/presentation/screens/user/profile_screen.dart';
+import 'package:eatmehv2/presentation/screens/user/user_feedback_screen.dart';
+import 'package:eatmehv2/presentation/widgets/trainer_chat_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -52,36 +56,46 @@ class _TrainerChatRoomState extends State<TrainerChatRoom> {
 
   @override
   Widget build(BuildContext context) {
+    final authState = context.watch<AuthBloc>().state as Authenticated;
+
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
         elevation: 0,
         automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
-        title: Row(
-          children: [
-            IconButton(
-              onPressed: () => Navigator.pop(context),
-              icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
-            ),
-            const SizedBox(width: 12),
-
-            CircleAvatar(
-              backgroundImage:
-                  const AssetImage('assets/images/default_face.jpeg')
-                      as ImageProvider,
-              radius: 20,
-            ),
-            const SizedBox(width: 12),
-            Text(
-              widget.receiverName,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Colors.black,
+        title: TrainerChatAppBar(
+          receiverName: widget.receiverName,
+          receiverImage: widget.receiverImage,
+          isTrainer: authState.user.role == 'trainer',
+          onBack: () {
+            Navigator.pop(context);
+          },
+          onProfileTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ProfileScreen(userUid: widget.receiverUid),
               ),
-            ),
-          ],
+            );
+          },
+          onFeedbackTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder:
+                    (_) => UserFeedbackScreen(trainerUid: widget.receiverUid),
+              ),
+            );
+          },
+          onAgendaTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => TrainerGoalDetail(traineeUid: currentUserUid),
+              ),
+            );
+          },
         ),
       ),
       body: SafeArea(

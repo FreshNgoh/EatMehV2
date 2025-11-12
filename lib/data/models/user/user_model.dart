@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../trainer/trainer_profile_model.dart';
-import 'user_settings_model.dart';
+import './user_settings_model.dart';
+import './goal_model.dart';
 
 class UserModel {
   final String uid;
@@ -16,7 +17,14 @@ class UserModel {
   final UserSettings? settings;
   final TrainerProfile? trainerProfile;
   final bool isFrozen; // Admin control
-  // age, gender, height, weight, diet type (vege?)
+  final int? age;
+  final String? gender;
+  final double? height; // in cm
+  final double? weight; // in kg
+  final double? bmi;
+  final String? dietType; // "vegetarian", "vegan", "omnivore", etc.
+  final Goal? goal;
+  final String? currentTrainerUid;
 
   UserModel({
     required this.uid,
@@ -32,6 +40,14 @@ class UserModel {
     this.settings,
     this.trainerProfile,
     this.isFrozen = false,
+    this.age,
+    this.gender,
+    this.height,
+    this.weight,
+    this.bmi,
+    this.dietType,
+    this.goal,
+    this.currentTrainerUid,
   });
 
   factory UserModel.fromMap(Map<String, dynamic> map) {
@@ -57,6 +73,17 @@ class UserModel {
               )
               : null,
       isFrozen: map['isFrozen'] as bool? ?? false,
+      age: map['age'] as int?,
+      gender: map['gender'] as String?,
+      height: map['height'] != null ? (map['height'] as num).toDouble() : null,
+      weight: map['weight'] != null ? (map['weight'] as num).toDouble() : null,
+      bmi: map['bmi'] != null ? (map['bmi'] as num).toDouble() : null,
+      dietType: map['dietType'] as String?,
+      goal:
+          map['goal'] != null
+              ? Goal.fromMap(map['goal'] as Map<String, dynamic>)
+              : null,
+      currentTrainerUid: map['currentTrainerUid'] as String?,
     );
   }
 
@@ -75,6 +102,14 @@ class UserModel {
       'settings': settings?.toMap(),
       'trainerProfile': trainerProfile?.toMap(),
       'isFrozen': isFrozen,
+      'age': age,
+      'gender': gender,
+      'height': height,
+      'weight': weight,
+      'bmi': bmi,
+      'dietType': dietType,
+      'goal': goal?.toMap(),
+      'currentTrainerUid': currentTrainerUid,
     };
   }
 
@@ -92,6 +127,14 @@ class UserModel {
     UserSettings? settings,
     TrainerProfile? trainerProfile,
     bool? isFrozen,
+    int? age,
+    String? gender,
+    double? height,
+    double? weight,
+    double? bmi,
+    String? dietType,
+    Goal? goal,
+    String? currentTrainerUid,
   }) {
     return UserModel(
       uid: uid ?? this.uid,
@@ -107,6 +150,14 @@ class UserModel {
       settings: settings ?? this.settings,
       trainerProfile: trainerProfile ?? this.trainerProfile,
       isFrozen: isFrozen ?? this.isFrozen,
+      age: age ?? this.age,
+      gender: gender ?? this.gender,
+      height: height ?? this.height,
+      weight: weight ?? this.weight,
+      bmi: bmi ?? this.bmi,
+      dietType: dietType ?? this.dietType,
+      goal: goal ?? this.goal,
+      currentTrainerUid: currentTrainerUid ?? this.currentTrainerUid,
     );
   }
 }
