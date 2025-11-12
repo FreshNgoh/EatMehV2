@@ -9,6 +9,7 @@ import 'package:eatmehv2/presentation/widgets/custom_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:eatmehv2/core/localization/app_localizations.dart';
 
 class ExerciseScreen extends StatefulWidget {
   const ExerciseScreen({super.key});
@@ -55,11 +56,12 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = context.loc;
     final authState = context.read<AuthBloc>().state as Authenticated;
-
     final userUid = authState.user.uid;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF9F9F9), // Set background
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -79,7 +81,8 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                     child: Row(
                       children: [
                         Text(
-                          DateFormat('EEE, MMM d').format(selectedDate),
+                          DateFormat('EEE, MMM d', loc.locale.languageCode)
+                              .format(selectedDate),
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
@@ -91,27 +94,26 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                       ],
                     ),
                   ),
-                  // unable to click if selected date is today (can not go to future)
                   IconButton(
                     icon: const Icon(Icons.chevron_right, size: 28),
                     onPressed:
                         selectedDate.isBefore(
-                              DateTime(
-                                DateTime.now().year,
-                                DateTime.now().month,
-                                DateTime.now().day,
-                              ),
-                            )
+                                DateTime(
+                                  DateTime.now().year,
+                                  DateTime.now().month,
+                                  DateTime.now().day,
+                                ),
+                              )
                             ? _nextDay
                             : null,
                     color:
                         selectedDate.isBefore(
-                              DateTime(
-                                DateTime.now().year,
-                                DateTime.now().month,
-                                DateTime.now().day,
-                              ),
-                            )
+                                DateTime(
+                                  DateTime.now().year,
+                                  DateTime.now().month,
+                                  DateTime.now().day,
+                                ),
+                              )
                             ? Colors.black
                             : Colors.grey.shade400,
                   ),
@@ -149,7 +151,8 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            'Error loading records:\n${snapshot.error}',
+                            loc.recordError.replaceFirst(
+                                '{error}', snapshot.error.toString()),
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               color: Colors.red,
@@ -176,10 +179,10 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                             width: 200,
                           ),
                           const SizedBox(height: 12),
-                          const Text(
-                            "No exercise records found for this date.",
+                          Text(
+                            loc.exerciseNoData,
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: Color(0xFF403D39),
                               fontWeight: FontWeight.w500,
                             ),
@@ -227,8 +230,8 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                                     backgroundColor: const Color(0xFFE2E8F0),
                                     valueColor:
                                         const AlwaysStoppedAnimation<Color>(
-                                          Color(0xFFE2E8F0),
-                                        ),
+                                      Color(0xFFE2E8F0),
+                                    ),
                                   ),
                                 ),
                                 // Progress Circle
@@ -241,8 +244,8 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                                     backgroundColor: Colors.transparent,
                                     valueColor:
                                         const AlwaysStoppedAnimation<Color>(
-                                          Color(0xFFF59E0B),
-                                        ),
+                                      Color(0xFFF59E0B),
+                                    ),
                                   ),
                                 ),
                                 // Center Content
@@ -273,9 +276,9 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                                         height: 1,
                                       ),
                                     ),
-                                    const Text(
-                                      'cal',
-                                      style: TextStyle(
+                                    Text(
+                                      loc.exerciseCal,
+                                      style: const TextStyle(
                                         fontSize: 16,
                                         color: Color(0xFF718096),
                                         fontWeight: FontWeight.w500,
@@ -296,9 +299,9 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                                 size: 18,
                               ),
                               const SizedBox(width: 10),
-                              const Text(
-                                'Total:',
-                                style: TextStyle(
+                              Text(
+                                loc.exerciseTotal,
+                                style: const TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
                                   color: Color(0xFF2D3748),
@@ -306,7 +309,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                               ),
                               const SizedBox(width: 12),
                               Text(
-                                '$totalDuration mins',
+                                '$totalDuration ${loc.exerciseMins}',
                                 style: const TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
@@ -328,16 +331,16 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
-                            children: const [
-                              Icon(
+                            children: [
+                              const Icon(
                                 Icons.directions_run,
                                 size: 20,
                                 color: Color(0xFF2D3748),
                               ),
-                              SizedBox(width: 6),
+                              const SizedBox(width: 6),
                               Text(
-                                'Exercise History',
-                                style: TextStyle(
+                                loc.exerciseHistory,
+                                style: const TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w600,
                                   color: Color(0xFF2D3748),
@@ -348,20 +351,22 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                           const SizedBox(height: 20),
                           for (final e in exercises)
                             _buildExerciseHistoryItem(
-                              e.exerciseName,
-                              DateFormat(
-                                'hh:mm a',
-                              ).format(e.startTime.toDate()),
-                              DateFormat('hh:mm a').format(e.endTime.toDate()),
-                              e.duration,
-                              '${e.caloriesBurnt} cal',
-                              AppColors.exerciseIconData[e
-                                          .exerciseName]?['icon']
-                                      as IconData? ??
+                              loc: loc,
+                              // 'e.exerciseName' is the key, e.g., "exercise_running"
+                              name: e.exerciseName, 
+                              startTime:
+                                  DateFormat('hh:mm a').format(e.startTime.toDate()),
+                              endTime:
+                                  DateFormat('hh:mm a').format(e.endTime.toDate()),
+                              duration: e.duration,
+                              calories: e.caloriesBurnt,
+                              icon: AppColors.exerciseIconData[
+                                      e.exerciseName]?['icon']
+                                  as IconData? ??
                                   Icons.fitness_center,
-                              AppColors.exerciseIconData[e
-                                          .exerciseName]?['color']
-                                      as Color? ??
+                              color: AppColors.exerciseIconData[
+                                      e.exerciseName]?['color']
+                                  as Color? ??
                                   Colors.blue,
                             ),
                         ],
@@ -376,27 +381,28 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          _showAddExerciseDialog();
+          _showAddExerciseDialog(loc);
         },
         backgroundColor: const Color(0xFF14B8A6),
         icon: const Icon(Icons.add, size: 20),
-        label: const Text(
-          'Add Exercise',
-          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+        label: Text(
+          loc.exerciseAdd,
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
         ),
       ),
     );
   }
 
-  Widget _buildExerciseHistoryItem(
-    String name,
-    String startTime,
-    String endTime,
-    int duration,
-    String calories,
-    IconData icon,
-    Color color,
-  ) {
+  Widget _buildExerciseHistoryItem({
+    required AppLocalizations loc,
+    required String name,
+    required String startTime,
+    required String endTime,
+    required int duration,
+    required int calories,
+    required IconData icon,
+    required Color color,
+  }) {
     return CustomCard(
       child: Row(
         children: [
@@ -417,7 +423,8 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  name,
+                  // --- FIX #1: Translate the key ---
+                  loc.translate(name),
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -434,16 +441,6 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                         color: Color(0xFF718096),
                       ),
                     ),
-                    // const SizedBox(width: 8),
-                    // const Text('•', style: TextStyle(color: Color(0xFFCBD5E0))),
-                    // const SizedBox(width: 8),
-                    // Text(
-                    //   '$duration min',
-                    //   style: const TextStyle(
-                    //     fontSize: 13,
-                    //     color: Color(0xFF718096),
-                    //   ),
-                    // ),
                   ],
                 ),
               ],
@@ -466,7 +463,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  calories,
+                  '$calories ${loc.exerciseCal}',
                   style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -481,7 +478,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
     );
   }
 
-  void _showAddExerciseDialog() {
+  void _showAddExerciseDialog(AppLocalizations loc) {
     String? selectedExercise;
     TimeOfDay? startTime;
     TimeOfDay? endTime;
@@ -518,14 +515,14 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                 duration = calculateDuration(startTime!, endTime!);
                 if (duration != null) {
                   durationTextController.text =
-                      '${duration!.inMinutes.toString()} minutes';
+                      '${duration!.inMinutes.toString()} ${loc.exerciseMins}';
                   if (selectedExercise != null) {
                     caloriesBurned = calculateCalories(
                       selectedExercise!,
                       duration!,
                     );
                     caloriesTextController.text =
-                        '${caloriesBurned!.toStringAsFixed(1)} cal';
+                        '${caloriesBurned!.toStringAsFixed(1)} ${loc.exerciseCal}';
                   }
                 }
               }
@@ -564,7 +561,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                   duration == null ||
                   caloriesBurned == null) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Please fill in all fields')),
+                  SnackBar(content: Text(loc.exerciseErrorFillFields)),
                 );
                 return;
               }
@@ -612,15 +609,17 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                 await ExerciseRepository().saveExercise(exerciseRecord);
 
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('✅ Exercise saved successfully!'),
+                  SnackBar(
+                    content: Text(loc.exerciseSaveSuccess),
                   ),
                 );
 
                 Navigator.pop(context);
               } catch (e) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('❌ Failed to save exercise: $e')),
+                  SnackBar(content: Text(
+                    loc.exerciseSaveError.replaceFirst('{error}', e.toString())
+                  )),
                 );
               } finally {
                 setModalState(() => isLoading = false);
@@ -654,10 +653,10 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  const Center(
+                  Center(
                     child: Text(
-                      'Add Exercise',
-                      style: TextStyle(
+                      loc.exerciseAdd,
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF2D3748),
@@ -667,9 +666,9 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                   const SizedBox(height: 24),
 
                   // Exercise Type Dropdown
-                  const Text(
-                    'Exercise Type',
-                    style: TextStyle(
+                  Text(
+                    loc.exerciseType,
+                    style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: Color(0xFF2D3748),
@@ -686,27 +685,31 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                         vertical: 10,
                       ),
                     ),
-                    hint: const Text('Select exercise type'),
+                    hint: Text(loc.exerciseSelectType),
                     value: selectedExercise,
                     items:
-                        AppConstants.calorieRatePerMinute.keys.map((exercise) {
-                          final iconData =
-                              AppColors.exerciseIconData[exercise]!['icon']
-                                  as IconData;
-                          final color =
-                              AppColors.exerciseIconData[exercise]!['color']
-                                  as Color;
-                          return DropdownMenuItem<String>(
-                            value: exercise,
-                            child: Row(
-                              children: [
-                                Icon(iconData, color: color, size: 22),
-                                const SizedBox(width: 12),
-                                Text(exercise),
-                              ],
-                            ),
-                          );
-                        }).toList(),
+                        AppConstants.calorieRatePerMinute.keys.map((exerciseKey) {
+                      final iconData =
+                          AppColors.exerciseIconData[exerciseKey]!['icon']
+                              as IconData;
+                      final color =
+                          AppColors.exerciseIconData[exerciseKey]!['color']
+                              as Color;
+                      
+                      // --- FIX #2: Translate the key ---
+                      final translatedName = loc.translate(exerciseKey);
+
+                      return DropdownMenuItem<String>(
+                        value: exerciseKey, // The value is the key
+                        child: Row(
+                          children: [
+                            Icon(iconData, color: color, size: 22),
+                            const SizedBox(width: 12),
+                            Text(translatedName), // Show the translated name
+                          ],
+                        ),
+                      );
+                    }).toList(),
                     onChanged: (value) {
                       setModalState(() {
                         selectedExercise = value;
@@ -717,9 +720,9 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                   const SizedBox(height: 20),
 
                   // Start Time
-                  const Text(
-                    'Start Time',
-                    style: TextStyle(
+                  Text(
+                    loc.exerciseStartTime,
+                    style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: Color(0xFF2D3748),
@@ -729,7 +732,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                   _buildTimePickerTile(
                     label:
                         startTime == null
-                            ? 'Select start time'
+                            ? loc.exerciseSelectStart
                             : startTime!.format(context),
                     onTap: pickStartTime,
                   ),
@@ -737,9 +740,9 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                   const SizedBox(height: 16),
 
                   // End Time
-                  const Text(
-                    'End Time',
-                    style: TextStyle(
+                  Text(
+                    loc.exerciseEndTime,
+                    style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: Color(0xFF2D3748),
@@ -749,7 +752,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                   _buildTimePickerTile(
                     label:
                         endTime == null
-                            ? 'Select end time'
+                            ? loc.exerciseSelectEnd
                             : endTime!.format(context),
                     onTap: pickEndTime,
                   ),
@@ -762,7 +765,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                     readOnly: true,
                     enabled: false,
                     decoration: InputDecoration(
-                      labelText: 'Duration (minutes)',
+                      labelText: loc.exerciseDuration,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -778,7 +781,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                     readOnly: true,
                     enabled: false,
                     decoration: InputDecoration(
-                      labelText: 'Calories Burned',
+                      labelText: loc.exerciseCaloriesBurned,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -805,15 +808,15 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                     child:
                         isLoading
                             ? const CircularProgressIndicator(
-                              color: Colors.white,
-                            )
-                            : const Text(
-                              'Save',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              )
+                            : Text(
+                                loc.exerciseSaving,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
-                            ),
                   ),
                   const SizedBox(height: 20),
                 ],

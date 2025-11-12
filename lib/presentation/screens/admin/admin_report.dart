@@ -15,15 +15,6 @@ class DataScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: scaffoldBackgroundColor, // Use the light grey background
-      appBar: AppBar(
-        title: const Text(
-          'User Data',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 1.0, // A subtle shadow
-      ),
       body: SingleChildScrollView(
         // Add padding around the whole screen
         padding: const EdgeInsets.all(16.0),
