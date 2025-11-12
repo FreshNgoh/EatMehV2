@@ -6,6 +6,7 @@ import 'package:eatmehv2/presentation/widgets/custom_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:eatmehv2/core/localization/app_localizations.dart';
 
 class DietScreen extends StatefulWidget {
   const DietScreen({super.key});
@@ -46,11 +47,14 @@ class _DietScreenState extends State<DietScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // --- 2. GET LOCALIZATION ---
+    final loc = context.loc;
     final authState = context.read<AuthBloc>().state as Authenticated;
-
     final userUid = authState.user.uid;
 
     return Scaffold(
+      // Use the scaffold's background color from your theme
+      backgroundColor: const Color(0xFFF9F9F9), 
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -70,7 +74,8 @@ class _DietScreenState extends State<DietScreen> {
                     child: Row(
                       children: [
                         Text(
-                          DateFormat('EEE, MMM d').format(selectedDate),
+                          DateFormat('EEE, MMM d', loc.locale.languageCode)
+                              .format(selectedDate),
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
@@ -87,22 +92,22 @@ class _DietScreenState extends State<DietScreen> {
                     icon: const Icon(Icons.chevron_right, size: 28),
                     onPressed:
                         selectedDate.isBefore(
-                              DateTime(
-                                DateTime.now().year,
-                                DateTime.now().month,
-                                DateTime.now().day,
-                              ),
-                            )
+                                DateTime(
+                                  DateTime.now().year,
+                                  DateTime.now().month,
+                                  DateTime.now().day,
+                                ),
+                              )
                             ? _nextDay
                             : null,
                     color:
                         selectedDate.isBefore(
-                              DateTime(
-                                DateTime.now().year,
-                                DateTime.now().month,
-                                DateTime.now().day,
-                              ),
-                            )
+                                DateTime(
+                                  DateTime.now().year,
+                                  DateTime.now().month,
+                                  DateTime.now().day,
+                                ),
+                              )
                             ? Colors.black
                             : Colors.grey.shade400,
                   ),
@@ -136,13 +141,15 @@ class _DietScreenState extends State<DietScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Image.asset(
-                            'assets/error.png',
+                            'assets/error.png', // Make sure this asset path is correct
                             height: 200,
                             width: 200,
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            'Error loading records:\n${snapshot.error}',
+                            // --- 3. USE LOCALIZED STRING ---
+                            loc.recordError.replaceFirst(
+                                '{error}', snapshot.error.toString()),
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               color: Colors.red,
@@ -158,21 +165,22 @@ class _DietScreenState extends State<DietScreen> {
                 final meals = snapshot.data ?? [];
                 if (meals.isEmpty) {
                   return Padding(
-                    padding: EdgeInsets.fromLTRB(20, 12, 20, 12),
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
                     child: CustomCard(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Image.asset(
-                            'assets/noData.png',
+                            'assets/noData.png', // Make sure this asset path is correct
                             height: 200,
                             width: 200,
                           ),
-                          SizedBox(height: 12),
+                          const SizedBox(height: 12),
                           Text(
-                            "No meal records found for this date.",
+                            // --- 4. USE LOCALIZED STRING ---
+                            loc.recordNoData,
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: Color(0xFF403D39),
                               fontWeight: FontWeight.w500,
                             ),
@@ -203,30 +211,34 @@ class _DietScreenState extends State<DietScreen> {
 
                 final nutritionData = [
                   _NutritionData(
-                    'Protein',
+                    // --- 5. USE LOCALIZED STRING ---
+                    loc.recordNutrientProtein,
                     totalProtein,
-                    50,
+                    50, // This goal should probably come from user profile
                     AppColors.proteinIcon,
                     AppColors.proteinColor,
                   ),
                   _NutritionData(
-                    'Carbs',
+                    // --- 6. USE LOCALIZED STRING ---
+                    loc.recordNutrientCarbs,
                     totalCarbs,
-                    250,
+                    250, // This goal should probably come from user profile
                     AppColors.carbsIcon,
                     AppColors.carbsColor,
                   ),
                   _NutritionData(
-                    'Fat',
+                    // --- 7. USE LOCALIZED STRING ---
+                    loc.recordNutrientFat,
                     totalFat,
-                    70,
+                    70, // This goal should probably come from user profile
                     AppColors.fatIcon,
                     AppColors.fatColor,
                   ),
                   _NutritionData(
-                    'Fiber',
+                    // --- 8. USE LOCALIZED STRING ---
+                    loc.recordNutrientFiber,
                     totalFiber,
-                    30,
+                    30, // This goal should probably come from user profile
                     AppColors.fiberIcon,
                     AppColors.fiberColor,
                   ),
@@ -236,19 +248,20 @@ class _DietScreenState extends State<DietScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // === NUTRITION SECTION ===
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(20, 12, 20, 12),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
                       child: Row(
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.apple_rounded,
                             size: 23,
                             color: Color(0xFF2D3748),
                           ),
-                          SizedBox(width: 6),
+                          const SizedBox(width: 6),
                           Text(
-                            'Nutrition',
-                            style: TextStyle(
+                            // --- 9. USE LOCALIZED STRING ---
+                            loc.recordSectionNutrition,
+                            style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w600,
                               color: Color(0xFF2D3748),
@@ -277,17 +290,18 @@ class _DietScreenState extends State<DietScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Row(
+                          Row(
                             children: [
-                              Icon(
+                              const Icon(
                                 Icons.restaurant_menu,
                                 size: 20,
                                 color: Color(0xFF2D3748),
                               ),
-                              SizedBox(width: 6),
+                              const SizedBox(width: 6),
                               Text(
-                                'Meals',
-                                style: TextStyle(
+                                // --- 10. USE LOCALIZED STRING ---
+                                loc.recordSectionMeals,
+                                style: const TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w600,
                                   color: Color(0xFF2D3748),
@@ -372,7 +386,7 @@ class _DietScreenState extends State<DietScreen> {
             ],
           ),
           Text(
-            data.name,
+            data.name, // This is now localized from where it was created
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -412,6 +426,8 @@ class _DietScreenState extends State<DietScreen> {
   }
 
   Widget _buildMealCard(MealRecordModel meal) {
+    // --- 11. GET LOCALIZATION (can also get it from context.loc) ---
+    final loc = AppLocalizations.of(context);
     final calorieColor = AppColors.getCalorieColor(meal.calories);
 
     return CustomCard(
@@ -427,7 +443,7 @@ class _DietScreenState extends State<DietScreen> {
                 fit: BoxFit.cover,
                 errorBuilder:
                     (_, __, ___) => Image.asset(
-                      'assets/images/error.png',
+                      'assets/images/error.png', // This should also be in pubspec.yaml
                       fit: BoxFit.cover,
                     ),
               ),
@@ -452,7 +468,7 @@ class _DietScreenState extends State<DietScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(width: 8),
+                    const SizedBox(width: 8),
                     Text(
                       DateFormat('HH:mm').format(meal.createdAt.toDate()),
                       style: const TextStyle(
@@ -469,7 +485,8 @@ class _DietScreenState extends State<DietScreen> {
                   children: [
                     _buildNutritionChip(
                       Icons.local_fire_department,
-                      '${meal.calories} cal',
+                      // --- 12. USE LOCALIZED STRING ---
+                      '${meal.calories} ${loc.recordNutrientCals}',
                       calorieColor,
                     ),
                     _buildNutritionChip(

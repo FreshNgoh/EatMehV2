@@ -2,6 +2,7 @@ import 'package:eatmehv2/bloc/auth/auth_bloc.dart';
 import 'package:eatmehv2/presentation/screens/user/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/localization/app_localizations.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -36,7 +37,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       // center title
       title:
           isRecordPage
-              ? _buildRecordTabs()
+              ? _buildRecordTabs(context)
               : Text(
                 title,
                 style: const TextStyle(
@@ -163,8 +164,14 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   /// --- RECORD PAGE TAB SWITCHER ---
-  Widget _buildRecordTabs() {
-    final tabs = ['Diet', 'Overview', 'Exercise'];
+  Widget _buildRecordTabs(BuildContext context) {
+  final loc = context.loc; 
+  
+  final tabs = [
+    loc.recordTabDiet,
+    loc.recordTabOverview,
+    loc.recordTabExercise
+  ];
 
     return Padding(
       padding: const EdgeInsets.only(
@@ -194,6 +201,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
+  // No need to localize for now, it is dummy data
   void _showNotifications(BuildContext context) {
     // 🔹 Static dummy notifications list
     final List<Map<String, dynamic>> notifications = [

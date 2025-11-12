@@ -5,6 +5,7 @@ import 'package:eatmehv2/presentation/screens/user/friends_screen.dart';
 import 'package:eatmehv2/presentation/screens/user/record_screen.dart';
 import 'package:eatmehv2/presentation/widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
+import '../../../core/localization/app_localizations.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,16 +18,20 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   int _selectedRecordTab = 1;
 
-  final List<String> _titles = [
-    'Dashboard',
-    'Friends',
-    'Camera',
-    'Consult',
-    'Records',
-  ];
 
   @override
   Widget build(BuildContext context) {
+    
+    final loc = context.loc;
+
+    final List<String> _titles = [
+      loc.navDashboard,
+      loc.navFriends,
+      loc.navCamera,
+      loc.navConsult,
+      'Records',
+    ];
+
     return Scaffold(
       appBar: CustomAppBar(
         title: _titles[_selectedIndex],
@@ -57,11 +62,11 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildNavItem(0, Icons.dashboard, 'Dashboard'),
-                _buildNavItem(1, Icons.people_alt_rounded, 'Friends'),
-                _buildNavItem(2, Icons.camera_alt, 'Camera'),
-                _buildNavItem(3, Icons.chat_bubble_rounded, 'Consult'),
-                _buildNavItem(4, Icons.note_alt_rounded, 'Records'),
+                _buildNavItem(0, Icons.dashboard, loc.navDashboard),
+                _buildNavItem(1, Icons.people_alt_rounded, loc.navFriends),
+                _buildNavItem(2, Icons.camera_alt, loc.navCamera),
+                _buildNavItem(3, Icons.chat_bubble_rounded, loc.navConsult),
+                _buildNavItem(4, Icons.note_alt_rounded, loc.navRecords),
               ],
             ),
           ),
@@ -100,7 +105,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                label,
+                label, // This will now display the localized label
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
@@ -118,6 +123,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
+// This function remains unchanged
 Widget _buildPage(int index, int selectedRecordTab) {
   switch (index) {
     case 0:
