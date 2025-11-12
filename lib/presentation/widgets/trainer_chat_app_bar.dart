@@ -7,6 +7,7 @@ class TrainerChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onProfileTap;
   final VoidCallback? onFeedbackTap;
   final VoidCallback? onAgendaTap;
+  final bool isTrainer;
 
   const TrainerChatAppBar({
     super.key,
@@ -16,6 +17,7 @@ class TrainerChatAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.onProfileTap,
     this.onFeedbackTap,
     this.onAgendaTap,
+    this.isTrainer = false,
   });
 
   @override
@@ -36,10 +38,11 @@ class TrainerChatAppBar extends StatelessWidget implements PreferredSizeWidget {
             onTap: onProfileTap,
             child: CircleAvatar(
               backgroundImage:
-                  receiverImage.isNotEmpty
-                      ? NetworkImage(receiverImage)
-                      : const AssetImage('assets/images/default_face.jpeg')
-                          as ImageProvider,
+              // receiverImage.isNotEmpty
+              //     ? NetworkImage(receiverImage)
+              //     : const AssetImage('assets/teralero.png')
+              //         as ImageProvider,
+              const AssetImage('assets/teralero.png'),
               radius: 20,
             ),
           ),
@@ -58,14 +61,16 @@ class TrainerChatAppBar extends StatelessWidget implements PreferredSizeWidget {
             ),
           ),
 
-          IconButton(
-            icon: const Icon(Icons.feedback, color: Colors.black87),
-            onPressed: onFeedbackTap,
-          ),
-          IconButton(
-            icon: const Icon(Icons.note_alt_rounded, color: Colors.black87),
-            onPressed: onAgendaTap,
-          ),
+          if (!isTrainer) ...[
+            IconButton(
+              icon: const Icon(Icons.feedback, color: Colors.black87),
+              onPressed: onFeedbackTap,
+            ),
+            IconButton(
+              icon: const Icon(Icons.note_alt_rounded, color: Colors.black87),
+              onPressed: onAgendaTap,
+            ),
+          ],
         ],
       ),
     );

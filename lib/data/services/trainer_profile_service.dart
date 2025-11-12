@@ -77,7 +77,7 @@ class TrainerProfileService {
           final trainee = {
             'uid': uid,
             'name': data['username'] ?? 'Unknown',
-            'image': data['imageUrl'] ?? 'https://via.placeholder.com/150',
+            'image': data['imageUrl'] ?? '',
           };
 
           // Generate chat room ID between trainer and this trainee

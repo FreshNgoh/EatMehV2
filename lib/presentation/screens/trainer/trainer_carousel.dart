@@ -10,7 +10,7 @@ import 'package:eatmehv2/presentation/screens/trainer/trainer_chat_room.dart';
 import 'package:eatmehv2/presentation/screens/trainer/trainer_instruction.dart';
 import 'package:eatmehv2/presentation/screens/trainer/trainer_list.dart';
 import 'package:eatmehv2/presentation/screens/user/onBoarding/user_goals.dart';
-import 'package:eatmehv2/presentation/widgets/custom_button.dart';
+import 'package:eatmehv2/presentation/widgets/custom_action_card.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -36,7 +36,6 @@ class _CarouselAppState extends State<CarouselApp> {
     checkCurrentTrainer();
   }
 
-  // check if apply as trainer
   Future<String> _getApplicationStatus() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return 'none';
@@ -47,7 +46,6 @@ class _CarouselAppState extends State<CarouselApp> {
     final trainerProfileRepo = TrainerProfileRepo(TrainerProfileService());
     final status = await trainerAppRepo.fetchApplicationStatus(user.uid);
 
-    // If approved, ensure trainer profile exists
     if (status == 'approved') {
       final existingProfile = await trainerProfileRepo.getTrainerProfile(
         user.uid,
@@ -67,7 +65,6 @@ class _CarouselAppState extends State<CarouselApp> {
     return status;
   }
 
-  // check have trainer
   Future<void> checkCurrentTrainer() async {
     final authState = context.read<AuthBloc>().state as Authenticated;
     final currentUserUid = authState.user.uid;
@@ -163,6 +160,14 @@ Future<void> _navigateBasedOnGoal(BuildContext context) async {
 
 class _CarouselState extends State<Carousel> {
   final userRepo = UserRepository();
+  int _currentPage = 0;
+  final PageController _pageController = PageController(viewportFraction: 0.85);
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   Future<void> _navigateToTrainerChat(BuildContext context) async {
     final authState = context.read<AuthBloc>().state as Authenticated;
@@ -186,105 +191,265 @@ class _CarouselState extends State<Carousel> {
 
   @override
   Widget build(BuildContext context) {
-    final double height = MediaQuery.sizeOf(context).height;
-
     return Scaffold(
-      body: ListView(
-        children: <Widget>[
-          const SizedBox(height: 30),
-          ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: height / 2),
-            child: CarouselView.weighted(
-              itemSnapping: true,
-              flexWeights: const <int>[1, 7, 1],
-              children:
-                  ImageInfo.values
-                      .map(
-                        (ImageInfo image) => HeroLayoutCard(imageInfo: image),
-                      )
-                      .toList(),
-            ),
-          ),
-          const SizedBox(height: 30),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0),
-            child: Column(
-              children: [
-                Text(
-                  "Ready to start your healthy journey?",
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              const SizedBox(height: 40),
+
+              // Header Section
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  children: [
+                    Text(
+                      'Transform Your Life',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade900,
+                        height: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Choose your path to a healthier you',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 40),
+
+              // Carousel Section
+              SizedBox(
+                height: 320,
+                child: PageView.builder(
+                  controller: _pageController,
+                  onPageChanged: (index) {
+                    setState(() {
+                      _currentPage = index % ImageInfo.values.length;
+                    });
+                  },
+                  itemCount: 1000, // Infinite scroll
+                  itemBuilder: (context, index) {
+                    final actualIndex = index % ImageInfo.values.length;
+                    final imageInfo = ImageInfo.values[actualIndex];
+                    return AnimatedBuilder(
+                      animation: _pageController,
+                      builder: (context, child) {
+                        double value = 1.0;
+                        if (_pageController.position.haveDimensions) {
+                          value = _pageController.page! - index;
+                          value = (1 - (value.abs() * 0.3)).clamp(0.0, 1.0);
+                        }
+                        return Center(
+                          child: SizedBox(
+                            height: Curves.easeOut.transform(value) * 320,
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: HeroLayoutCard(imageInfo: imageInfo),
+                    );
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Page Indicators
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  ImageInfo.values.length,
+                  (index) => AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    width: _currentPage == index ? 24 : 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color:
+                          _currentPage == index
+                              ? Colors.green.shade600
+                              : Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 8),
+              ),
+
+              const SizedBox(height: 40),
+
+              // Action Cards Section
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  children: [
+                    // Trainer Card
+                    CustomActionCard(
+                      context: context,
+                      title: 'Become a Trainer',
+                      subtitle: 'Share your expertise and inspire others',
+                      icon: Icons.fitness_center,
+                      gradient: LinearGradient(
+                        colors: [Colors.green.shade600, Colors.green.shade400],
+                      ),
+                      isPending: widget.applicationStatus == 'pending',
+                      onTap:
+                          widget.applicationStatus == 'pending'
+                              ? null
+                              : () async {
+                                final result = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const TrainerInstruction(),
+                                  ),
+                                );
+
+                                if (result == 'submitted') {
+                                  await widget.onRefresh();
+                                }
+                              },
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Trainee Card
+                    if (widget.applicationStatus != 'pending')
+                      CustomActionCard(
+                        context: context,
+                        title:
+                            widget.hasTrainer
+                                ? 'Chat with Trainer'
+                                : 'Get a Trainer',
+                        subtitle:
+                            widget.hasTrainer
+                                ? 'Continue your fitness journey'
+                                : 'Find an expert to guide you',
+                        icon:
+                            widget.hasTrainer
+                                ? Icons.chat_bubble
+                                : Icons.person_search,
+                        gradient: LinearGradient(
+                          colors: [Colors.blue.shade600, Colors.blue.shade400],
+                        ),
+                        isOutlined: true,
+                        onTap:
+                            widget.hasTrainer
+                                ? () => _navigateToTrainerChat(context)
+                                : () => _navigateBasedOnGoal(context),
+                      ),
+
+                    const SizedBox(height: 32),
+
+                    // Features Section
+                    _buildFeaturesSection(),
+
+                    const SizedBox(height: 40),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFeaturesSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Why Choose Us?',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey.shade900,
+          ),
+        ),
+        const SizedBox(height: 16),
+        _buildFeatureItem(
+          icon: Icons.verified_user,
+          title: 'Certified Trainers',
+          subtitle: 'Work with verified fitness professionals',
+          color: Colors.green,
+        ),
+        const SizedBox(height: 12),
+        _buildFeatureItem(
+          icon: Icons.track_changes,
+          title: 'Track Progress',
+          subtitle: 'Monitor your journey with detailed analytics',
+          color: Colors.blue,
+        ),
+        const SizedBox(height: 12),
+        _buildFeatureItem(
+          icon: Icons.people,
+          title: 'Community Support',
+          subtitle: 'Join a community of fitness enthusiasts',
+          color: Colors.orange,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFeatureItem({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: color, size: 24),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Text(
-                  "Choose to guide others as a trainer, or connect with one to reach your goals.",
-                  textAlign: TextAlign.center,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade700),
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 30),
-
-          // Apply Trainer Button
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 50),
-            child: CustomButton(
-              text:
-                  widget.applicationStatus == 'pending'
-                      ? "Application Pending"
-                      : "Apply as Trainer",
-              onPressed:
-                  widget.applicationStatus == 'pending'
-                      ? null
-                      : () async {
-                        final result = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const TrainerInstruction(),
-                          ),
-                        );
-
-                        if (result == 'submitted') {
-                          await widget.onRefresh();
-                        }
-                      },
-              backgroundColor: Colors.green.shade600,
-              textColor: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 25),
-
-          // Request Trainer Button
-          if (widget.applicationStatus != 'pending')
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 50),
-              child: CustomButton(
-                text:
-                    widget.hasTrainer
-                        ? "Chat with Your Trainer"
-                        : "Request For Trainer",
-                onPressed:
-                    widget.hasTrainer
-                        ? () => _navigateToTrainerChat(context)
-                        : () => _navigateBasedOnGoal(context),
-                backgroundColor: Colors.white,
-                textColor: Colors.green.shade600,
-              ),
-            ),
-          const SizedBox(height: 40),
         ],
       ),
     );
   }
 }
 
-// HERO LAYOUT
 class HeroLayoutCard extends StatelessWidget {
   const HeroLayoutCard({super.key, required this.imageInfo});
 
@@ -292,39 +457,108 @@ class HeroLayoutCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double width = MediaQuery.sizeOf(context).width;
-    return Stack(
-      alignment: AlignmentDirectional.bottomStart,
-      children: <Widget>[
-        ClipRect(
-          child: OverflowBox(
-            maxWidth: width * 7 / 8,
-            minWidth: width * 7 / 8,
-            child: Image(
-              fit: BoxFit.cover,
-              image: AssetImage('assets/images/default_face.jpeg'),
-            ),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(18.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Text(
-                imageInfo.title,
-                overflow: TextOverflow.clip,
-                softWrap: false,
-                style: Theme.of(
-                  context,
-                ).textTheme.headlineLarge?.copyWith(color: Colors.white),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Image with gradient overlay
+            Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: const AssetImage('assets/images/default_face.jpeg'),
+                  fit: BoxFit.cover,
+                ),
               ),
-              const SizedBox(height: 40),
-            ],
-          ),
+            ),
+
+            // Gradient Overlay
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.transparent, Colors.black.withOpacity(0.8)],
+                ),
+              ),
+            ),
+
+            // Content
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white.withOpacity(0.3)),
+                    ),
+                    child: const Text(
+                      'Success Story',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    imageInfo.title,
+                    style: const TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(Icons.star, color: Colors.amber, size: 20),
+                      const SizedBox(width: 4),
+                      Icon(Icons.star, color: Colors.amber, size: 20),
+                      const SizedBox(width: 4),
+                      Icon(Icons.star, color: Colors.amber, size: 20),
+                      const SizedBox(width: 4),
+                      Icon(Icons.star, color: Colors.amber, size: 20),
+                      const SizedBox(width: 4),
+                      Icon(Icons.star, color: Colors.amber, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        '5.0',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

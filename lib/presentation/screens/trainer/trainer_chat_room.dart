@@ -56,6 +56,8 @@ class _TrainerChatRoomState extends State<TrainerChatRoom> {
 
   @override
   Widget build(BuildContext context) {
+    final authState = context.watch<AuthBloc>().state as Authenticated;
+
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
@@ -65,6 +67,7 @@ class _TrainerChatRoomState extends State<TrainerChatRoom> {
         title: TrainerChatAppBar(
           receiverName: widget.receiverName,
           receiverImage: widget.receiverImage,
+          isTrainer: authState.user.role == 'trainer',
           onBack: () {
             Navigator.pop(context);
           },
