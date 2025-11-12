@@ -564,6 +564,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                             : (_user!.trainerProfile != null
                                 ? ProfileConsultTab(
                                   trainerProfile: _user!.trainerProfile!,
+                                  trainerUid: _user!.uid,
                                 )
                                 : Center(
                                   child: Padding(

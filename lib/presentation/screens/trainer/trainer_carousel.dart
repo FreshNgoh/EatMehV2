@@ -38,24 +38,26 @@ class _CarouselAppState extends State<CarouselApp> {
 
   Future<String> _getApplicationStatus() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return 'none';
 
     final trainerAppRepo = TrainerApplicationRepository(
       TrainerApplicationService(),
     );
     final trainerProfileRepo = TrainerProfileRepo(TrainerProfileService());
-    final status = await trainerAppRepo.fetchApplicationStatus(user.uid);
+    final status = await trainerAppRepo.fetchApplicationStatus(user!.uid);
 
     if (status == 'approved') {
       final existingProfile = await trainerProfileRepo.getTrainerProfile(
         user.uid,
       );
+      final data = await trainerAppRepo.getTrainerApplicationData(user.uid);
+      final certifications = data?['certifications'] as List<String>;
+      final yearsOfExperience = data?['yearsOfExperience'] as String;
 
       if (existingProfile == null) {
         final profile = TrainerProfile(
-          certifications: [],
-          rating: 5.0,
-          yearsOfExperience: "",
+          certifications: certifications,
+          rating: 0.0,
+          yearsOfExperience: yearsOfExperience,
           trainees: [],
         );
 
