@@ -85,7 +85,7 @@ class MyApp extends StatelessWidget {
           home: BlocBuilder<AuthBloc, AuthState>(
             builder: (context, authState) {
               if (authState is Authenticated) {
-                return AppRouter.getHomeScreen(authState.user.role);
+                return AppRouter.getHomeScreen(authState.user);
               }
 
               return const LoginScreen();
