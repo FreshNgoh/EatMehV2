@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:math';
+import 'package:eatmehv2/presentation/screens/user/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eatmehv2/data/models/story/story_model.dart';
@@ -35,6 +37,9 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
   bool _showComments = false;
   final TextEditingController _commentController = TextEditingController();
 
+  // Local state to show comments immediately
+  final Map<int, List<CommentModel>> _localComments = {};
+
   @override
   void initState() {
     super.initState();
@@ -45,12 +50,18 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
       duration: const Duration(seconds: 5),
     );
 
+    // Initialize local comments with existing comments
+    for (int i = 0; i < widget.stories.length; i++) {
+      _localComments[i] = List.from(widget.stories[i].comments);
+    }
+
     _markAsViewed(widget.stories[_currentIndex]);
     _startProgress();
   }
 
   void _startProgress() {
     _progressController.forward(from: 0).then((_) {
+      if (!mounted) return;
       if (_currentIndex < widget.stories.length - 1) {
         _nextStory();
       } else {
@@ -62,6 +73,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
   void _nextStory() {
     if (_currentIndex < widget.stories.length - 1) {
       _progressController.reset();
+      if (!mounted) return;
       setState(() => _currentIndex++);
       _pageController.animateToPage(
         _currentIndex,
@@ -71,13 +83,14 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
       _markAsViewed(widget.stories[_currentIndex]);
       _startProgress();
     } else {
-      Navigator.pop(context);
+      if (mounted) Navigator.pop(context);
     }
   }
 
   void _previousStory() {
     if (_currentIndex > 0) {
       _progressController.reset();
+      if (!mounted) return;
       setState(() => _currentIndex--);
       _pageController.animateToPage(
         _currentIndex,
@@ -116,23 +129,45 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
   Future<void> _addComment(String text) async {
     if (text.trim().isEmpty) return;
 
+    // Fix: Handle empty string as null for userImageUrl
+    final userImageUrl =
+        _hasValidImageUrl(widget.currentUserImageUrl)
+            ? widget.currentUserImageUrl
+            : '';
+
     final comment = CommentModel(
       uid: DateTime.now().millisecondsSinceEpoch.toString(),
       userId: widget.currentUserId,
       username: widget.currentUsername,
-      userImageUrl: widget.currentUserImageUrl,
+      userImageUrl: userImageUrl,
       text: text.trim(),
       createdAt: Timestamp.now(),
     );
 
-    await _storyRepo.addComment(widget.stories[_currentIndex].uid, comment);
+    // Add comment to local state immediately for instant UI update
+    setState(() {
+      _localComments[_currentIndex]?.add(comment);
+    });
+
     _commentController.clear();
 
-    if (mounted) {
+    // Save to Firebase in background
+    try {
+      await _storyRepo.addComment(widget.stories[_currentIndex].uid, comment);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _localComments[_currentIndex]?.removeLast();
+      });
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Comment added!')));
+      ).showSnackBar(SnackBar(content: Text('Failed to post comment: $e')));
     }
+  }
+
+  // Helper function to safely check if image URL is valid
+  bool _hasValidImageUrl(String? url) {
+    return url != null && url.isNotEmpty && url != '';
   }
 
   @override
@@ -147,6 +182,8 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
   @override
   Widget build(BuildContext context) {
     final currentStory = widget.stories[_currentIndex];
+    final displayComments = _localComments[_currentIndex] ?? [];
+    final commentCount = displayComments.length;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -240,45 +277,80 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                     ),
                     child: Row(
                       children: [
-                        CircleAvatar(
-                          radius: 20,
-                          backgroundImage:
-                              currentStory.userImageUrl.isNotEmpty
-                                  ? NetworkImage(currentStory.userImageUrl)
-                                  : null,
-                          child:
-                              currentStory.userImageUrl.isEmpty
-                                  ? Image.asset(
-                                    "assets/teralero.png",
-                                    width: 40,
-                                    height: 40,
-                                    fit: BoxFit.cover,
-                                  )
-                                  : null,
+                        // Wrap avatar in GestureDetector
+
+                        // navigate to profile
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => ProfileScreen(
+                                      userUid: currentStory.userId,
+                                    ),
+                              ),
+                            );
+                          },
+                          child: CircleAvatar(
+                            radius: 20,
+                            backgroundColor: Colors.transparent,
+                            backgroundImage:
+                                _hasValidImageUrl(currentStory.userImageUrl)
+                                    ? NetworkImage(currentStory.userImageUrl)
+                                    : null,
+                            child:
+                                !_hasValidImageUrl(currentStory.userImageUrl)
+                                    ? ClipOval(
+                                      child: Image.asset(
+                                        "assets/teralero.png",
+                                        width: 40,
+                                        height: 40,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    )
+                                    : null,
+                          ),
                         ),
 
                         const SizedBox(width: 12),
+
+                        // Wrap the username + timestamp in GestureDetector too
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                currentStory.username,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => ProfileScreen(
+                                        userUid: currentStory.userId,
+                                      ),
                                 ),
-                              ),
-                              Text(
-                                _formatTimestamp(currentStory.createdAt),
-                                style: TextStyle(
-                                  color: Colors.white.withOpacity(0.7),
-                                  fontSize: 12,
+                              );
+                            },
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  currentStory.username,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              ),
-                            ],
+                                Text(
+                                  _formatTimestamp(currentStory.createdAt),
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.7),
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
+
                         IconButton(
                           icon: const Icon(Icons.close, color: Colors.white),
                           onPressed: () => Navigator.pop(context),
@@ -290,7 +362,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
               ),
             ),
 
-            // Comment button at bottom
+            // Comment button at bottom with count badge
             if (!_showComments)
               Positioned(
                 bottom: 40,
@@ -306,20 +378,70 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                     decoration: BoxDecoration(
                       color: Colors.black.withOpacity(0.5),
                       borderRadius: BorderRadius.circular(25),
-                      border: Border.all(color: Colors.white.withOpacity(0.5)),
+                      border: Border.all(
+                        color:
+                            commentCount > 0
+                                ? Colors.blue.withOpacity(0.8)
+                                : Colors.white.withOpacity(0.5),
+                        width: commentCount > 0 ? 2 : 1,
+                      ),
                     ),
                     child: Row(
                       children: [
-                        const Icon(
-                          Icons.mode_comment,
-                          color: Colors.white,
-                          size: 20,
+                        Stack(
+                          children: [
+                            Icon(
+                              commentCount > 0
+                                  ? Icons.mode_comment
+                                  : Icons.mode_comment_outlined,
+                              color:
+                                  commentCount > 0
+                                      ? Colors.blue.shade300
+                                      : Colors.white,
+                              size: 22,
+                            ),
+                            // Comment count badge
+                            if (commentCount > 0)
+                              Positioned(
+                                right: -2,
+                                top: -2,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.blue,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  constraints: const BoxConstraints(
+                                    minWidth: 18,
+                                    minHeight: 18,
+                                  ),
+                                  child: Text(
+                                    commentCount > 99 ? '99+' : '$commentCount',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                         const SizedBox(width: 12),
                         Text(
-                          'Send message',
+                          commentCount > 0
+                              ? 'View $commentCount ${commentCount == 1 ? "comment" : "comments"}'
+                              : 'Send message',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.8),
+                            color:
+                                commentCount > 0
+                                    ? Colors.blue.shade300
+                                    : Colors.white.withOpacity(0.8),
+                            fontWeight:
+                                commentCount > 0
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
                           ),
                         ),
                       ],
@@ -364,12 +486,37 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              'Comments',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
+                            Row(
+                              children: [
+                                const Text(
+                                  'Comments',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                if (commentCount > 0) ...[
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue.shade100,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      '$commentCount',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.blue.shade700,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
                             IconButton(
                               icon: const Icon(Icons.close),
@@ -379,26 +526,49 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                         ),
                       ),
 
-                      const Divider(height: 1),
+                      const Divider(
+                        height: 1,
+                        thickness: sqrt1_2,
+                        color: Colors.black45,
+                      ),
 
                       // Comments list
                       Expanded(
                         child:
-                            currentStory.comments.isEmpty
+                            displayComments.isEmpty
                                 ? Center(
-                                  child: Text(
-                                    'No comments yet',
-                                    style: TextStyle(
-                                      color: Colors.grey.shade500,
-                                    ),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.chat_bubble_outline,
+                                        size: 48,
+                                        color: Colors.grey.shade300,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        'No comments yet',
+                                        style: TextStyle(
+                                          color: Colors.grey.shade500,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Be the first to comment!',
+                                        style: TextStyle(
+                                          color: Colors.grey.shade400,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 )
                                 : ListView.builder(
                                   padding: const EdgeInsets.all(16),
-                                  itemCount: currentStory.comments.length,
+                                  itemCount: displayComments.length,
                                   itemBuilder: (context, index) {
-                                    final comment =
-                                        currentStory.comments[index];
+                                    final comment = displayComments[index];
                                     return Padding(
                                       padding: const EdgeInsets.only(
                                         bottom: 16,
@@ -408,28 +578,30 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                                             CrossAxisAlignment.start,
                                         children: [
                                           CircleAvatar(
-                                            radius: 20,
+                                            radius: 18,
+                                            backgroundColor: Colors.transparent,
                                             backgroundImage:
-                                                currentStory
-                                                        .userImageUrl
-                                                        .isNotEmpty
+                                                _hasValidImageUrl(
+                                                      comment.userImageUrl,
+                                                    )
                                                     ? NetworkImage(
-                                                      currentStory.userImageUrl,
+                                                      comment.userImageUrl,
                                                     )
                                                     : null,
                                             child:
-                                                currentStory
-                                                        .userImageUrl
-                                                        .isEmpty
-                                                    ? Image.asset(
-                                                      "assets/teralero.png",
-                                                      width: 40,
-                                                      height: 40,
-                                                      fit: BoxFit.cover,
+                                                !_hasValidImageUrl(
+                                                      comment.userImageUrl,
+                                                    )
+                                                    ? ClipOval(
+                                                      child: Image.asset(
+                                                        "assets/teralero.png",
+                                                        width: 36,
+                                                        height: 36,
+                                                        fit: BoxFit.cover,
+                                                      ),
                                                     )
                                                     : null,
                                           ),
-
                                           const SizedBox(width: 12),
                                           Expanded(
                                             child: Column(
@@ -474,7 +646,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
 
                       // Comment input
                       Container(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 30),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           border: Border(
@@ -485,21 +657,23 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                           children: [
                             CircleAvatar(
                               radius: 18,
+                              backgroundColor: Colors.transparent,
                               backgroundImage:
-                                  widget.currentUserImageUrl.isNotEmpty
+                                  _hasValidImageUrl(widget.currentUserImageUrl)
                                       ? NetworkImage(widget.currentUserImageUrl)
                                       : null,
                               child:
-                                  widget.currentUserImageUrl.isEmpty
-                                      ? Image.asset(
-                                        "assets/teralero.png",
-                                        width: 36,
-                                        height: 36,
-                                        fit: BoxFit.cover,
+                                  !_hasValidImageUrl(widget.currentUserImageUrl)
+                                      ? ClipOval(
+                                        child: Image.asset(
+                                          "assets/teralero.png",
+                                          width: 36,
+                                          height: 36,
+                                          fit: BoxFit.cover,
+                                        ),
                                       )
                                       : null,
                             ),
-
                             const SizedBox(width: 12),
                             Expanded(
                               child: TextField(
