@@ -4,6 +4,7 @@ import 'package:eatmehv2/core/constants/firebase_constants.dart';
 import 'package:eatmehv2/data/models/notification/notification_model.dart';
 import 'package:eatmehv2/data/repos/notification_repo.dart';
 import 'package:eatmehv2/data/services/notification_service.dart';
+import 'package:eatmehv2/presentation/screens/user/friends_screen.dart';
 import 'package:eatmehv2/presentation/screens/user/notifications_screen.dart';
 import 'package:eatmehv2/presentation/screens/user/profile_screen.dart';
 import 'package:flutter/material.dart';
