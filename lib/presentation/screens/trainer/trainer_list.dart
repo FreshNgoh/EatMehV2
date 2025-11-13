@@ -5,7 +5,7 @@ import 'package:eatmehv2/data/repos/notification_repo.dart';
 import 'package:eatmehv2/data/repos/trainer_profile_repo.dart';
 import 'package:eatmehv2/data/services/notification_service.dart';
 import 'package:eatmehv2/data/services/trainer_profile_service.dart';
-import 'package:eatmehv2/presentation/screens/trainer/trainer_chat_room.dart';
+import 'package:eatmehv2/presentation/screens/user/profile_screen.dart';
 import 'package:eatmehv2/presentation/widgets/custom_list.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -75,6 +75,16 @@ class _TrainerListState extends State<TrainerList> {
                         'assets/images/default_face.jpeg',
                       ),
                     ),
+                    onProfileTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) =>
+                                  ProfileScreen(userUid: trainer['uid']),
+                        ),
+                      );
+                    },
                     value: trainer['name'],
                     actionIcons: [
                       ListActionIcon(
@@ -106,19 +116,6 @@ class _TrainerListState extends State<TrainerList> {
                         tooltip: 'Request Trainer',
                       ),
                     ],
-                    onFieldTap: () {
-                      // Navigator.push(
-                      //   context,
-                      //   MaterialPageRoute(
-                      //     builder:
-                      //         (context) => TrainerChatRoom(
-                      //           receiverUid: trainer['uid'],
-                      //           receiverName: trainer['name'],
-                      //           receiverImage: trainer['image'],
-                      //         ),
-                      //   ),
-                      // );
-                    },
                   );
                 },
               ),

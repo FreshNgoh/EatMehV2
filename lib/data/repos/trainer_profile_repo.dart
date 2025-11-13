@@ -34,11 +34,11 @@ class TrainerProfileRepo {
     );
   }
 
-  Future<List<Map<String, dynamic>>> getTraineesDetails(
+  Stream<List<Map<String, dynamic>>> getTraineesDetailsStream(
     List<String> traineeUids,
-    trainerUid,
-  ) async {
-    return await _trainerProfileService.getTraineesDetails(
+    String trainerUid,
+  ) {
+    return _trainerProfileService.getTraineesDetailsStream(
       traineeUids,
       trainerUid,
     );

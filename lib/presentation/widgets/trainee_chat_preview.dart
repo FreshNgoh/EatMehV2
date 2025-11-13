@@ -41,21 +41,32 @@ class TraineeChatPreview extends StatelessWidget {
         Timestamp? lastUpdated;
         String? lastSenderUid;
         String timeAgo = '';
+        bool hasUnreadMessages = false;
 
         if (snapshot.hasData && snapshot.data!.exists) {
           final data = snapshot.data!.data() as Map<String, dynamic>;
           subtitle = data['lastMessage'] ?? 'Added by';
-          lastUpdated = data['lastUpdated'] as Timestamp;
+          lastUpdated = data['lastUpdated'] as Timestamp?;
           lastSenderUid = data['lastSenderUid'] ?? '';
+
+          // Check if there are unread messages from the trainee
+          final unreadCount = data['unreadCount_$currentUserUid'] ?? 0;
+          final isLastMessageFromOther = lastSenderUid != currentUserUid;
+          hasUnreadMessages = isLastMessageFromOther && unreadCount > 0;
         }
+
+        final formattedMessage =
+            subtitle.length > 30 ? '${subtitle.substring(0, 10)}...' : subtitle;
 
         final displayMessage =
             (lastSenderUid == currentUserUid && subtitle != 'Added by')
-                ? "You: $subtitle"
+                ? "You: $formattedMessage"
                 : subtitle;
 
         if (lastUpdated != null) {
           timeAgo = DateFormatter.getTimeAgo(lastUpdated.toDate());
+        } else {
+          timeAgo = 'Just now';
         }
 
         return StreamBuilder<DocumentSnapshot>(
@@ -77,8 +88,10 @@ class TraineeChatPreview extends StatelessWidget {
             }
 
             return CustomList(
-              profile: const CircleAvatar(
-                backgroundImage: AssetImage('assets/images/default_face.jpeg'),
+              profile: CircleAvatar(
+                backgroundImage: const AssetImage(
+                  'assets/images/default_face.jpeg',
+                ),
               ),
               onProfileTap: () {
                 Navigator.push(
@@ -91,6 +104,14 @@ class TraineeChatPreview extends StatelessWidget {
               value: traineeName,
               lastMessage:
                   "$displayMessage${timeAgo.isNotEmpty ? " • $timeAgo" : ""}",
+              lastMessageStyle: TextStyle(
+                fontWeight:
+                    hasUnreadMessages ? FontWeight.bold : FontWeight.normal,
+                color:
+                    hasUnreadMessages
+                        ? const Color(0xFF191919)
+                        : Colors.grey.shade600,
+              ),
               actionIcons:
                   hasSetGoals
                       ? [
