@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eatmehv2/core/constants/firebase_constants.dart';
 import 'package:eatmehv2/data/models/trainer/trainer_profile_model.dart';
@@ -58,54 +60,60 @@ class TrainerProfileService {
     return null;
   }
 
-  // Get trainees' details
-  Future<List<Map<String, dynamic>>> getTraineesDetails(
+  // Stream trainees' details with latest chat updates
+  Stream<List<Map<String, dynamic>>> getTraineesDetailsStream(
     List<String> traineeUids,
     String trainerUid,
-  ) async {
-    final List<Map<String, dynamic>> trainees = [];
+  ) {
+    final trainees = <Map<String, dynamic>>[];
+    final controller = StreamController<List<Map<String, dynamic>>>();
 
-    try {
-      for (final uid in traineeUids) {
-        final doc =
+    // For each trainee, listen to their chat room
+    for (final uid in traineeUids) {
+      final roomId = _generateRoomId(trainerUid, uid);
+      final chatRoomRef = _firestore
+          .collection(FirebaseConstants.chatRoomsCollection)
+          .doc(roomId);
+
+      // Listen to chat updates for this specific trainee
+      chatRoomRef.snapshots().listen((chatDoc) async {
+        final userDoc =
             await _firestore
                 .collection(FirebaseConstants.usersCollection)
                 .doc(uid)
                 .get();
-        if (doc.exists) {
-          final data = doc.data()!;
-          final trainee = {
-            'uid': uid,
-            'name': data['username'] ?? 'Unknown',
-            'image': data['imageUrl'] ?? '',
-          };
 
-          // Generate chat room ID between trainer and this trainee
-          final roomId = _generateRoomId(trainerUid, uid);
+        if (!userDoc.exists) return;
 
-          // Fetch chat room metadata (if exists)
-          final chatDoc =
-              await _firestore
-                  .collection(FirebaseConstants.chatRoomsCollection)
-                  .doc(roomId)
-                  .get();
+        final userData = userDoc.data()!;
+        final trainee = {
+          'uid': uid,
+          'name': userData['username'] ?? 'Unknown',
+          'image': userData['imageUrl'] ?? '',
+          'lastMessage': chatDoc.data()?['lastMessage'] ?? '',
+          'lastUpdated': chatDoc.data()?['lastUpdated'] ?? Timestamp.now(),
+        };
 
-          if (chatDoc.exists) {
-            final chatData = chatDoc.data() as Map<String, dynamic>;
-            trainee['lastMessage'] = chatData['lastMessage'] ?? '';
-            trainee['lastUpdated'] = chatData['lastUpdated'] ?? Timestamp.now();
-          } else {
-            trainee['lastMessage'] = '';
-            trainee['lastUpdated'] = Timestamp.now();
-          }
+        // Update or insert trainee
+        final index = trainees.indexWhere((t) => t['uid'] == uid);
+        if (index >= 0) {
+          trainees[index] = trainee;
+        } else {
           trainees.add(trainee);
         }
-      }
-    } catch (e) {
-      print('Error fetching trainees: $e');
+
+        // Sort trainees by lastUpdated
+        trainees.sort((a, b) {
+          final aTime = a['lastUpdated'] as Timestamp;
+          final bTime = b['lastUpdated'] as Timestamp;
+          return bTime.compareTo(aTime);
+        });
+
+        controller.add(List<Map<String, dynamic>>.from(trainees));
+      });
     }
 
-    return trainees;
+    return controller.stream;
   }
 
   // Get all trainers
