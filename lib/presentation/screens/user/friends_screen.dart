@@ -1,3 +1,4 @@
+import 'package:eatmehv2/presentation/screens/user/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:eatmehv2/bloc/auth/auth_bloc.dart';
@@ -86,26 +87,6 @@ class _FriendsScreenState extends State<FriendsScreen>
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Search error: $e')));
-      }
-    }
-  }
-
-  Future<void> _sendFriendRequest(String toUserId) async {
-    final authState = context.read<AuthBloc>().state;
-    if (authState is! Authenticated) return;
-
-    try {
-      await _userRepo.sendFriendRequest(authState.user.uid, toUserId);
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Friend request sent!')));
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error sending request: $e')));
       }
     }
   }
@@ -234,9 +215,6 @@ class _FriendsScreenState extends State<FriendsScreen>
   }
 
   Widget _buildSearchTab() {
-    final authState = context.watch<AuthBloc>().state;
-    final currentUser = authState is Authenticated ? authState.user : null;
-
     return Column(
       children: [
         Padding(
@@ -298,11 +276,6 @@ class _FriendsScreenState extends State<FriendsScreen>
                     itemCount: _searchResults.length,
                     itemBuilder: (context, index) {
                       final user = _searchResults[index];
-                      final isFriend =
-                          currentUser?.friends.contains(user.uid) ?? false;
-                      final hasRequestPending =
-                          currentUser?.friendRequests.contains(user.uid) ??
-                          false;
 
                       return ListTile(
                         contentPadding: const EdgeInsets.symmetric(vertical: 8),
@@ -340,6 +313,14 @@ class _FriendsScreenState extends State<FriendsScreen>
                                   ),
                                 )
                                 : null,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ProfileScreen(userUid: user.uid),
+                            ),
+                          );
+                        },
                       );
                     },
                   ),
@@ -373,107 +354,69 @@ class _FriendsScreenState extends State<FriendsScreen>
       );
     }
 
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 5, 16, 20),
       itemCount: _friendRequests.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final user = _friendRequests[index];
-        return Card(
-          elevation: 0,
-          color: Colors.grey.shade50,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: Colors.grey.shade200),
+        return ListTile(
+          contentPadding: const EdgeInsets.symmetric(vertical: 8),
+          leading: CircleAvatar(
+            radius: 25,
+            backgroundColor: Colors.grey.shade200,
+            backgroundImage:
+                user.imageUrl != null && user.imageUrl!.isNotEmpty
+                    ? NetworkImage(user.imageUrl!)
+                    : null,
+            child:
+                (user.imageUrl == null || user.imageUrl!.isEmpty)
+                    ? Text(
+                      user.username[0].toUpperCase(),
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    )
+                    : null,
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 30,
-                  backgroundColor: Colors.grey.shade200,
-                  backgroundImage:
-                      user.imageUrl != null && user.imageUrl!.isNotEmpty
-                          ? NetworkImage(user.imageUrl!)
-                          : null,
-                  child:
-                      user.imageUrl == null || user.imageUrl!.isEmpty
-                          ? Text(
-                            user.username[0].toUpperCase(),
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          )
-                          : null,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        user.username,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
-                        ),
-                      ),
-                      if (user.bio != null && user.bio!.isNotEmpty)
-                        Text(
-                          user.bio!,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontSize: 13,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Column(
-                  children: [
-                    ElevatedButton(
-                      onPressed: () => _acceptFriendRequest(user.uid),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF191919),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 8,
-                        ),
-                        minimumSize: const Size(90, 36),
-                      ),
-                      child: const Text('Accept'),
-                    ),
-                    const SizedBox(height: 6),
-                    OutlinedButton(
-                      onPressed: () => _rejectFriendRequest(user.uid),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.red,
-                        side: const BorderSide(color: Colors.red),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 8,
-                        ),
-                        minimumSize: const Size(90, 36),
-                      ),
-                      child: const Text('Reject'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+          title: Text(
+            user.username,
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
           ),
+          subtitle:
+              user.bio != null && user.bio!.isNotEmpty
+                  ? Text(
+                    user.bio!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: Colors.grey[700], fontSize: 14),
+                  )
+                  : null,
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                onPressed: () => _acceptFriendRequest(user.uid),
+                icon: const Icon(Icons.check),
+                color: Colors.green,
+                tooltip: 'Confirm',
+              ),
+              IconButton(
+                onPressed: () => _rejectFriendRequest(user.uid),
+                icon: const Icon(Icons.close),
+                color: Colors.red,
+                tooltip: 'Delete',
+              ),
+            ],
+          ),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ProfileScreen(userUid: user.uid),
+              ),
+            );
+          },
         );
       },
     );

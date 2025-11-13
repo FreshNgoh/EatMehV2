@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:eatmehv2/bloc/auth/auth_bloc.dart';
 import 'package:eatmehv2/core/theme/app_colors.dart';
 import 'package:eatmehv2/data/models/user/user_model.dart';
 import 'package:eatmehv2/data/repos/calorie_tracker_repo.dart';
@@ -13,6 +14,8 @@ import 'package:eatmehv2/utils/calorie_utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:eatmehv2/presentation/widgets/friend_request_button.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String userUid;
@@ -339,12 +342,18 @@ class _ProfileScreenState extends State<ProfileScreen>
                                         ],
                                       ),
                                     ),
+                                    // const SizedBox(height: 4),
+                                    _buildProfileActions(
+                                      context,
+                                      _user!,
+                                      isOwnProfile,
+                                    ),
                                   ],
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 15),
 
                           // User Bio
                           GestureDetector(
@@ -367,7 +376,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                               ),
                             ),
                           ),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 15),
 
                           // Badges
                           Wrap(
@@ -614,6 +623,35 @@ class _ProfileScreenState extends State<ProfileScreen>
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildProfileActions(
+    BuildContext context,
+    UserModel profileUser,
+    bool isOwnProfile,
+  ) {
+    // Don't show if viewing own profile
+    if (isOwnProfile) {
+      return const SizedBox.shrink();
+    }
+
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        if (state is! Authenticated) {
+          return const SizedBox.shrink();
+        }
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: FriendRequestButton(
+            targetUserId: profileUser.uid,
+            currentUserFriends: state.user.friends,
+            targetUserFriendRequests: profileUser.friendRequests,
+            currentUserFriendRequests: state.user.friendRequests,
+          ),
+        );
+      },
     );
   }
 }

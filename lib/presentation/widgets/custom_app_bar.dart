@@ -1,4 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eatmehv2/bloc/auth/auth_bloc.dart';
+import 'package:eatmehv2/core/constants/firebase_constants.dart';
 import 'package:eatmehv2/data/models/notification/notification_model.dart';
 import 'package:eatmehv2/data/repos/notification_repo.dart';
 import 'package:eatmehv2/data/services/notification_service.dart';
@@ -117,45 +119,75 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   // Request Button
   Widget _showFriendRequestButton(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 8.0),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.person_add, color: Color(0xFF191919)),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => FriendsScreen()),
-              );
-            },
-          ),
-          Positioned(
-            right: 0,
-            top: 1,
-            child: Container(
-              padding: const EdgeInsets.all(2),
-              decoration: const BoxDecoration(
-                color: Colors.red,
-                shape: BoxShape.circle,
+    final authState = context.read<AuthBloc>().state;
+    if (authState is! Authenticated) {
+      return const SizedBox.shrink();
+    }
+
+    final userUid = authState.user.uid;
+
+    return StreamBuilder<DocumentSnapshot>(
+      stream:
+          FirebaseFirestore.instance
+              .collection(FirebaseConstants.usersCollection)
+              .doc(userUid)
+              .snapshots(),
+      builder: (context, snapshot) {
+        int requestCount = 0;
+
+        if (snapshot.hasData && snapshot.data?.data() != null) {
+          final data = snapshot.data!.data() as Map<String, dynamic>;
+          final friendRequests = List<String>.from(
+            data['friendRequests'] ?? [],
+          );
+          requestCount = friendRequests.length;
+        }
+
+        return Padding(
+          padding: const EdgeInsets.only(right: 8.0),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.person_add, color: Color(0xFF191919)),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const FriendsScreen()),
+                  );
+                },
               ),
-              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-              child: const Center(
-                child: Text(
-                  '2',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
+              if (requestCount > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 18,
+                      minHeight: 18,
+                    ),
+                    child: Center(
+                      child: Text(
+                        requestCount > 9 ? '9+' : '$requestCount',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
                   ),
-                  textAlign: TextAlign.center,
                 ),
-              ),
-            ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -228,88 +260,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
     );
   }
-
-  // void _showNotifications(BuildContext context) {
-  //   // 🔹 Static dummy notifications list
-  //   final List<Map<String, dynamic>> notifications = [
-  //     {
-  //       'type': 'friend_request',
-  //       'title': 'New friend request',
-  //       'body': 'John Doe sent you a friend request.',
-  //       'read': false,
-  //       'createdAt': DateTime.now().subtract(const Duration(minutes: 10)),
-  //     },
-  //     {
-  //       'type': 'meal_reminder',
-  //       'title': 'Lunch time!',
-  //       'body': 'Don’t forget your healthy meal today 🍱',
-  //       'read': true,
-  //       'createdAt': DateTime.now().subtract(const Duration(hours: 3)),
-  //     },
-  //     {
-  //       'type': 'story_view',
-  //       'title': 'Your story was viewed',
-  //       'body': 'Emily viewed your latest story.',
-  //       'read': false,
-  //       'createdAt': DateTime.now().subtract(const Duration(days: 1)),
-  //     },
-  //   ];
-
-  //   showModalBottomSheet(
-  //     context: context,
-  //     backgroundColor: Colors.white,
-  //     shape: const RoundedRectangleBorder(
-  //       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-  //     ),
-  //     builder: (context) {
-  //       return Container(
-  //         padding: const EdgeInsets.all(20),
-  //         child: Column(
-  //           crossAxisAlignment: CrossAxisAlignment.start,
-  //           mainAxisSize: MainAxisSize.min,
-  //           children: [
-  //             const Text(
-  //               'Notifications',
-  //               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-  //             ),
-  //             const SizedBox(height: 16),
-  //             ...notifications.map((notif) {
-  //               return ListTile(
-  //                 leading: Container(
-  //                   padding: const EdgeInsets.all(8),
-  //                   decoration: BoxDecoration(
-  //                     color:
-  //                         notif['read']
-  //                             ? Colors.grey.shade200
-  //                             : const Color(0xFF191919).withOpacity(0.1),
-  //                     shape: BoxShape.circle,
-  //                   ),
-  //                   child: Icon(
-  //                     _getNotificationIcon(notif['type']),
-  //                     color:
-  //                         notif['read'] ? Colors.grey : const Color(0xFF191919),
-  //                   ),
-  //                 ),
-  //                 title: Text(
-  //                   notif['title'],
-  //                   style: TextStyle(
-  //                     fontWeight:
-  //                         notif['read'] ? FontWeight.normal : FontWeight.bold,
-  //                   ),
-  //                 ),
-  //                 subtitle: Text(notif['body']),
-  //                 trailing: Text(
-  //                   _getTimeAgo(notif['createdAt']),
-  //                   style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-  //                 ),
-  //               );
-  //             }).toList(),
-  //           ],
-  //         ),
-  //       );
-  //     },
-  //   );
-  // }
 
   void _showNotifications(
     BuildContext context,
