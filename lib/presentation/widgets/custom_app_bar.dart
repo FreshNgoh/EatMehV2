@@ -1,4 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eatmehv2/bloc/auth/auth_bloc.dart';
+import 'package:eatmehv2/core/constants/firebase_constants.dart';
 import 'package:eatmehv2/data/models/notification/notification_model.dart';
 import 'package:eatmehv2/data/repos/notification_repo.dart';
 import 'package:eatmehv2/data/services/notification_service.dart';
@@ -103,7 +105,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
       ),
       actions: [
-        if (showFriendRequest) _showFriendRequestButton(),
+        if (showFriendRequest) _showFriendRequestButton(context),
         if (showNotification) _showNotificationsButton(context),
 
         const SizedBox(width: 12),
@@ -116,44 +118,76 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   // Request Button
-  Widget _showFriendRequestButton() {
-    return Padding(
-      padding: const EdgeInsets.only(right: 8.0),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.person_add, color: Color(0xFF191919)),
-            onPressed: () {
-              // Navigate to friend requests
-              // Navigator.pushNamed(context, '/friend-requests');
-            },
-          ),
-          Positioned(
-            right: 0,
-            top: 1,
-            child: Container(
-              padding: const EdgeInsets.all(2),
-              decoration: const BoxDecoration(
-                color: Colors.red,
-                shape: BoxShape.circle,
+  Widget _showFriendRequestButton(BuildContext context) {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is! Authenticated) {
+      return const SizedBox.shrink();
+    }
+
+    final userUid = authState.user.uid;
+
+    return StreamBuilder<DocumentSnapshot>(
+      stream:
+          FirebaseFirestore.instance
+              .collection(FirebaseConstants.usersCollection)
+              .doc(userUid)
+              .snapshots(),
+      builder: (context, snapshot) {
+        int requestCount = 0;
+
+        if (snapshot.hasData && snapshot.data?.data() != null) {
+          final data = snapshot.data!.data() as Map<String, dynamic>;
+          final friendRequests = List<String>.from(
+            data['friendRequests'] ?? [],
+          );
+          requestCount = friendRequests.length;
+        }
+
+        return Padding(
+          padding: const EdgeInsets.only(right: 8.0),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.person_add, color: Color(0xFF191919)),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const FriendsScreen()),
+                  );
+                },
               ),
-              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-              child: const Center(
-                child: Text(
-                  '2',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
+              if (requestCount > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 18,
+                      minHeight: 18,
+                    ),
+                    child: Center(
+                      child: Text(
+                        requestCount > 9 ? '9+' : '$requestCount',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
                   ),
-                  textAlign: TextAlign.center,
                 ),
-              ),
-            ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -232,85 +266,92 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
-  // void _showNotifications(BuildContext context) {
-  //   // 🔹 Static dummy notifications list
-  //   final List<Map<String, dynamic>> notifications = [
-  //     {
-  //       'type': 'friend_request',
-  //       'title': 'New friend request',
-  //       'body': 'John Doe sent you a friend request.',
-  //       'read': false,
-  //       'createdAt': DateTime.now().subtract(const Duration(minutes: 10)),
-  //     },
-  //     {
-  //       'type': 'meal_reminder',
-  //       'title': 'Lunch time!',
-  //       'body': 'Don’t forget your healthy meal today 🍱',
-  //       'read': true,
-  //       'createdAt': DateTime.now().subtract(const Duration(hours: 3)),
-  //     },
-  //     {
-  //       'type': 'story_view',
-  //       'title': 'Your story was viewed',
-  //       'body': 'Emily viewed your latest story.',
-  //       'read': false,
-  //       'createdAt': DateTime.now().subtract(const Duration(days: 1)),
-  //     },
-  //   ];
+  void _showNotifications(
+    BuildContext context,
+    List<NotificationModel> notifications,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        if (notifications.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.all(20),
+            child: Center(child: Text("No notifications yet")),
+          );
+        }
 
-  //   showModalBottomSheet(
-  //     context: context,
-  //     backgroundColor: Colors.white,
-  //     shape: const RoundedRectangleBorder(
-  //       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-  //     ),
-  //     builder: (context) {
-  //       return Container(
-  //         padding: const EdgeInsets.all(20),
-  //         child: Column(
-  //           crossAxisAlignment: CrossAxisAlignment.start,
-  //           mainAxisSize: MainAxisSize.min,
-  //           children: [
-  //             const Text(
-  //               'Notifications',
-  //               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-  //             ),
-  //             const SizedBox(height: 16),
-  //             ...notifications.map((notif) {
-  //               return ListTile(
-  //                 leading: Container(
-  //                   padding: const EdgeInsets.all(8),
-  //                   decoration: BoxDecoration(
-  //                     color:
-  //                         notif['read']
-  //                             ? Colors.grey.shade200
-  //                             : const Color(0xFF191919).withOpacity(0.1),
-  //                     shape: BoxShape.circle,
-  //                   ),
-  //                   child: Icon(
-  //                     _getNotificationIcon(notif['type']),
-  //                     color:
-  //                         notif['read'] ? Colors.grey : const Color(0xFF191919),
-  //                   ),
-  //                 ),
-  //                 title: Text(
-  //                   notif['title'],
-  //                   style: TextStyle(
-  //                     fontWeight:
-  //                         notif['read'] ? FontWeight.normal : FontWeight.bold,
-  //                   ),
-  //                 ),
-  //                 subtitle: Text(notif['body']),
-  //                 trailing: Text(
-  //                   _getTimeAgo(notif['createdAt']),
-  //                   style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-  //                 ),
-  //               );
-  //             }).toList(),
-  //           ],
-  //         ),
-  //       );
-  //     },
-  //   );
-  // }
+        return Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Notifications',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              ...notifications.map((notif) {
+                return ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color:
+                          notif.isRead
+                              ? Colors.grey.shade200
+                              : const Color(0xFF191919).withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      _getNotificationIcon(notif.type),
+                      color:
+                          notif.isRead ? Colors.grey : const Color(0xFF191919),
+                    ),
+                  ),
+                  title: Text(
+                    notif.title,
+                    style: TextStyle(
+                      fontWeight:
+                          notif.isRead ? FontWeight.normal : FontWeight.bold,
+                    ),
+                  ),
+                  subtitle: Text(notif.message),
+                  trailing: Text(
+                    _getTimeAgo(notif.createdAt.toDate()),
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  ),
+                );
+              }),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  IconData _getNotificationIcon(String type) {
+    switch (type) {
+      case 'trainer_request':
+        return Icons.fitness_center;
+      case 'friend_request':
+        return Icons.person_add;
+      case 'story_view':
+        return Icons.visibility;
+      case 'meal_reminder':
+        return Icons.restaurant;
+      default:
+        return Icons.notifications;
+    }
+  }
+
+  String _getTimeAgo(DateTime dateTime) {
+    final diff = DateTime.now().difference(dateTime);
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    return '${diff.inDays}d ago';
+  }
 }

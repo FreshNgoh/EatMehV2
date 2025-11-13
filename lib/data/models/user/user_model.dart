@@ -60,8 +60,8 @@ class UserModel {
       bio: map['bio'] as String?,
       friends: List<String>.from(map['friends'] ?? []),
       friendRequests: List<String>.from(map['friendRequests'] ?? []),
-      createdAt: map['createdAt'] as Timestamp,
-      updatedAt: map['updatedAt'] as Timestamp,
+      createdAt: map['createdAt'] ?? Timestamp.now(), // fallback if null
+      updatedAt: map['updatedAt'] ?? Timestamp.now(), // fallback if null
       settings:
           map['settings'] != null
               ? UserSettings.fromMap(map['settings'] as Map<String, dynamic>)

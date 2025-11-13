@@ -11,7 +11,6 @@ import '../../../data/repos/user_repo.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class EditProfile extends StatefulWidget {
   final UserModel user;
@@ -129,7 +128,7 @@ class _EditProfileState extends State<EditProfile> {
 
       final updatedData = {
         'username': _usernameController.text.trim(),
-        'bio': bioText.isEmpty ? FieldValue.delete() : bioText,
+        'bio': bioText.isEmpty ? '' : bioText,
         'age': int.tryParse(_ageController.text),
         'gender': _selectedGender,
         'height': double.tryParse(_heightController.text),
@@ -295,7 +294,6 @@ class _EditProfileState extends State<EditProfile> {
                 ),
               ),
             );
-            ;
           }).toList(),
     );
   }

@@ -19,6 +19,7 @@ class CommentModel {
 
   Map<String, dynamic> toMap() {
     return {
+      'uid': uid,
       'userId': userId,
       'username': username,
       'userImageUrl': userImageUrl,
@@ -27,9 +28,9 @@ class CommentModel {
     };
   }
 
-  factory CommentModel.fromMap(String uid, Map<String, dynamic> map) {
+  factory CommentModel.fromMap(Map<String, dynamic> map) {
     return CommentModel(
-      uid: uid,
+      uid: map['uid'] ?? '',
       userId: map['userId'] ?? '',
       username: map['username'] ?? '',
       userImageUrl: map['userImageUrl'] ?? '',
