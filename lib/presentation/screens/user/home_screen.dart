@@ -1,7 +1,7 @@
 import 'package:eatmehv2/presentation/screens/user/camera_screen.dart';
 import 'package:eatmehv2/presentation/screens/user/consult_screen.dart';
 import 'package:eatmehv2/presentation/screens/user/dashboard_screen.dart';
-import 'package:eatmehv2/presentation/screens/user/friends_screen.dart';
+import 'package:eatmehv2/presentation/screens/user/story/story_feed_screen.dart';
 import 'package:eatmehv2/presentation/screens/user/record_screen.dart';
 import 'package:eatmehv2/presentation/widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
@@ -18,10 +18,8 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   int _selectedRecordTab = 1;
 
-
   @override
   Widget build(BuildContext context) {
-    
     final loc = context.loc;
 
     final List<String> _titles = [
@@ -129,7 +127,7 @@ Widget _buildPage(int index, int selectedRecordTab) {
     case 0:
       return const DashboardScreen();
     case 1:
-      return const FriendsScreen();
+      return const StoriesFeedScreen();
     case 2:
       return const CameraScreen();
     case 3:

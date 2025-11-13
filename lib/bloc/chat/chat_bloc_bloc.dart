@@ -94,13 +94,13 @@ class ChatBlocBloc extends Bloc<ChatBlocEvent, ChatBlocState> {
               Analyze the food and return the following data **in strict JSON format only**:
 
               {
-                "foodName": "name of the meal",
+                "foodName": "short name of the meal",
                 "calories": number,
                 "protein": number (grams),
                 "carbs": number (grams),
                 "fat": number (grams),
                 "fiber": number (grams),
-                "recommendation": "short sentence recommending improvements"
+                "recommendation": "short sentence recommending improvements (within 15 words)"
               }
 
               Make sure all numbers are integers and units are not included in the values.

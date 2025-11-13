@@ -39,7 +39,7 @@ class StoryModel {
       viewCount: map['viewCount'] ?? 0,
       comments:
           (map['comments'] as List<dynamic>?)
-              ?.map((c) => CommentModel.fromMap(c['uid'] ?? '', c))
+              ?.map((c) => CommentModel.fromMap(Map<String, dynamic>.from(c)))
               .toList() ??
           [],
     );
