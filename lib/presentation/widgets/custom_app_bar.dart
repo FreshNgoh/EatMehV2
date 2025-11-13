@@ -2,6 +2,7 @@ import 'package:eatmehv2/bloc/auth/auth_bloc.dart';
 import 'package:eatmehv2/data/models/notification/notification_model.dart';
 import 'package:eatmehv2/data/repos/notification_repo.dart';
 import 'package:eatmehv2/data/services/notification_service.dart';
+import 'package:eatmehv2/presentation/screens/user/friends_screen.dart';
 import 'package:eatmehv2/presentation/screens/user/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -102,7 +103,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
       ),
       actions: [
-        if (showFriendRequest) _showFriendRequestButton(),
+        if (showFriendRequest) _showFriendRequestButton(context),
         if (showNotification) _showNotificationsButton(context),
 
         const SizedBox(width: 12),
@@ -115,7 +116,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   // Request Button
-  Widget _showFriendRequestButton() {
+  Widget _showFriendRequestButton(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(right: 8.0),
       child: Stack(
@@ -124,8 +125,10 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           IconButton(
             icon: const Icon(Icons.person_add, color: Color(0xFF191919)),
             onPressed: () {
-              // Navigate to friend requests
-              // Navigator.pushNamed(context, '/friend-requests');
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => FriendsScreen()),
+              );
             },
           ),
           Positioned(
@@ -190,13 +193,13 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   /// --- RECORD PAGE TAB SWITCHER ---
   Widget _buildRecordTabs(BuildContext context) {
-  final loc = context.loc; 
-  
-  final tabs = [
-    loc.recordTabDiet,
-    loc.recordTabOverview,
-    loc.recordTabExercise
-  ];
+    final loc = context.loc;
+
+    final tabs = [
+      loc.recordTabDiet,
+      loc.recordTabOverview,
+      loc.recordTabExercise,
+    ];
 
     return Padding(
       padding: const EdgeInsets.only(
