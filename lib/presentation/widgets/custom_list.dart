@@ -11,19 +11,21 @@ class ListActionIcon {
 
 class CustomList extends StatelessWidget {
   final String value;
-  final VoidCallback onFieldTap;
+  final VoidCallback? onFieldTap;
   final VoidCallback? onProfileTap;
   final Widget? profile;
   final String? lastMessage;
+  final TextStyle? lastMessageStyle;
   final List<ListActionIcon> actionIcons;
 
   const CustomList({
     super.key,
     required this.value,
-    required this.onFieldTap,
+    this.onFieldTap,
     this.onProfileTap,
     this.profile,
     this.lastMessage,
+    this.lastMessageStyle,
     this.actionIcons = const [],
   });
 
@@ -63,10 +65,12 @@ class CustomList extends StatelessWidget {
                               Expanded(
                                 child: Text(
                                   lastMessage ?? '',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey[600],
-                                  ),
+                                  style:
+                                      lastMessageStyle ??
+                                      TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey[600],
+                                      ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
