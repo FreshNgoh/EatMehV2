@@ -118,9 +118,27 @@ class _CaloriesTrackerPageState extends State<CaloriesTrackerPage>
       CalorieUtils.calculateNetCalories(_avgTaken, _avgBurnt);
 
   // utils
-  CalorieStatus get _calorieStatus =>
-      CalorieUtils.getCalorieStatus(_netCalories);
-  Color get _netCaloriesColor => CalorieUtils.getStatusColor(_netCalories);
+  double get _maintenanceCalories {
+    final authState = context.read<AuthBloc>().state as Authenticated;
+    final user = authState.user;
+
+    return CalorieUtils.calculateMaintenanceCalories(
+      weightKg: user.weight!,
+      heightCm: user.height!,
+      age: user.age!,
+      gender: user.gender!,
+    );
+  }
+
+  // Get calorie status based on net calories and maintenance
+  CalorieStatus get _calorieStatus {
+    return CalorieUtils.getCalorieStatus(
+      netCalories: _netCalories,
+      maintenanceCalories: _maintenanceCalories,
+    );
+  }
+
+  Color get _netCaloriesColor => CalorieUtils.getStatusColor(_calorieStatus);
   String get _statusText => CalorieUtils.getStatusText(_calorieStatus);
 
   String get _periodText {

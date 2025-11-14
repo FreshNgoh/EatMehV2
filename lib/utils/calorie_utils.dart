@@ -15,16 +15,66 @@ class CalorieUtils {
     return caloriesTaken - caloriesBurnt;
   }
 
-  /// Returns the [CalorieStatus] based on the given net calorie value.
-  static CalorieStatus getCalorieStatus(double netCalories) {
-    if (netCalories < 300) return CalorieStatus.low;
-    if (netCalories > 600) return CalorieStatus.high;
+  /// BMR (static)
+  static double calculateBMR({
+    required double weightKg,
+    required double heightCm,
+    required int age,
+    required String gender, // 'male' or 'female'
+  }) {
+    if (gender.toLowerCase() == 'male') {
+      return 10 * weightKg + 6.25 * heightCm - 5 * age + 5;
+    } else {
+      return 10 * weightKg + 6.25 * heightCm - 5 * age - 161;
+    }
+  }
+
+  /// Maintenance calories (static)
+  static double calculateMaintenanceCalories({
+    required double weightKg,
+    required double heightCm,
+    required int age,
+    required String gender,
+    double activityFactor = 1.2, // sedentary default
+  }) {
+    final bmr = calculateBMR(
+      weightKg: weightKg,
+      heightCm: heightCm,
+      age: age,
+      gender: gender,
+    );
+    return bmr * activityFactor;
+  }
+
+  /// Dynamic calorie status based on user maintenance calories
+  static CalorieStatus getCalorieStatus({
+    required double netCalories,
+    required double maintenanceCalories,
+  }) {
+    final lowThreshold = maintenanceCalories * 0.9; // 10% below
+    final highThreshold = maintenanceCalories * 1.1; // 10% above
+
+    if (netCalories < lowThreshold) return CalorieStatus.low;
+    if (netCalories > highThreshold) return CalorieStatus.high;
+
     return CalorieStatus.balanced;
   }
 
   /// Returns the appropriate color for the given [CalorieStatus].
-  static Color getStatusColor(double netCalories) {
-    return AppColors.getCalorieColor(netCalories.toInt());
+  // static Color getStatusColor(double netCalories) {
+  //   return AppColors.getCalorieColor(netCalories.toInt());
+  // }
+
+  /// Returns the display text for a given [CalorieStatus].
+  static Color getStatusColor(CalorieStatus status) {
+    switch (status) {
+      case CalorieStatus.low:
+        return AppColors.caloriesLow;
+      case CalorieStatus.balanced:
+        return AppColors.caloriesMedium;
+      case CalorieStatus.high:
+        return AppColors.caloriesHigh;
+    }
   }
 
   /// Returns the display text for a given [CalorieStatus].
