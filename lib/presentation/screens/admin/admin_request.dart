@@ -23,15 +23,6 @@ class _RequestScreenState extends State<RequestScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Trainer Request',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0.5,
-      ),
       // Use StreamBuilder to get live data from your repository
       body: StreamBuilder<List<TrainerApplication>>(
         stream: _repository.getPendingApplications(),

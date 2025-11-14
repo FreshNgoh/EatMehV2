@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 // Adjust the paths as needed for your project structure
 import 'package:eatmehv2/data/models/user/user_model.dart';
 import 'package:eatmehv2/data/repos/user_repo.dart';
+import 'package:eatmehv2/presentation/screens/user/profile_screen.dart';
 
 class UserScreen extends StatefulWidget {
   const UserScreen({super.key});
@@ -87,17 +88,6 @@ class _UserScreenState extends State<UserScreen> {
         [];
 
     return Scaffold(
-      // App Bar (Unchanged)
-      appBar: AppBar(
-        title: const Text(
-          'Account',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0.5,
-      ),
-
       // 9. Body: User List (Updated)
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -135,18 +125,30 @@ class UserListItem extends StatelessWidget {
       contentPadding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
       
       // 12. Use user.imageUrl for the avatar
-      leading: CircleAvatar(
-        radius: 28,
-        backgroundColor: Colors.grey[200],
-        // Use NetworkImage if imageUrl is present, otherwise show default icon
-        backgroundImage: (user.imageUrl != null && user.imageUrl!.isNotEmpty)
-            ? NetworkImage(user.imageUrl!)
-            : null,
-        child: (user.imageUrl == null || user.imageUrl!.isEmpty)
-            ? Icon(Icons.person, color: Colors.grey[600])
-            : null,
+     // Wrap your CircleAvatar with a GestureDetector
+leading: GestureDetector(
+  onTap: () {
+    // --- Add your navigation logic here ---
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProfileScreen(userUid: user.uid ,), // Replace with your page
       ),
-      
+    );
+    // -------------------------------------
+  },
+  child: CircleAvatar(
+    radius: 28,
+    backgroundColor: Colors.grey[200],
+    // Use NetworkImage if imageUrl is present, otherwise show default icon
+    backgroundImage: (user.imageUrl != null && user.imageUrl!.isNotEmpty)
+        ? NetworkImage(user.imageUrl!)
+        : null,
+    child: (user.imageUrl == null || user.imageUrl!.isEmpty)
+        ? Icon(Icons.person, color: Colors.grey[600])
+        : null,
+  ),
+),
       // 13. Use user.username and user.bio
       title: Padding(
         padding: const EdgeInsets.only(bottom: 4.0),

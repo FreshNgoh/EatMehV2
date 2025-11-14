@@ -24,6 +24,11 @@ class ExerciseRepository {
       throw Exception('Failed to save exercise: $e');
     }
   }
+  
+  Future<List<ExerciseRecordModel>> fetchAllExercises() async {
+    final querySnapshot = await _exerciseRecordsCollection.get();
+    return querySnapshot.docs.map((doc) => doc.data()).toList();
+  }
 
   /// Fetch exercise records for a specific user and date
   Future<List<ExerciseRecordModel>> fetchExercises({

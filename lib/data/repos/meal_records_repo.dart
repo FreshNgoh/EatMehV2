@@ -20,6 +20,11 @@ class MealRecordsRepository {
   Future<void> saveMealRecord(MealRecordModel mealRecord) async {
     await _mealRecordsCollection.doc(mealRecord.uid).set(mealRecord);
   }
+  
+  Future<List<MealRecordModel>> fetchAllMealRecords() async {
+    final querySnapshot = await _mealRecordsCollection.get();
+    return querySnapshot.docs.map((doc) => doc.data()).toList();
+  }
 
   // Fetch all meal records for a specific user and date
   Future<List<MealRecordModel>> fetchMealRecordsByUserAndDate({
