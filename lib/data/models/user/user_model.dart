@@ -24,6 +24,7 @@ class UserModel {
   final double? bmi;
   final String? dietType; // "vegetarian", "vegan", "omnivore", etc.
   final Goal? goal;
+  final String? goalType; // maintain, lose, gain weight
   final String? currentTrainerUid;
 
   UserModel({
@@ -47,6 +48,7 @@ class UserModel {
     this.bmi,
     this.dietType,
     this.goal,
+    this.goalType,
     this.currentTrainerUid,
   });
 
@@ -83,6 +85,7 @@ class UserModel {
           map['goal'] != null
               ? Goal.fromMap(map['goal'] as Map<String, dynamic>)
               : null,
+      goalType: map['goalType'] as String?,
       currentTrainerUid: map['currentTrainerUid'] as String?,
     );
   }
@@ -109,6 +112,7 @@ class UserModel {
       'bmi': bmi,
       'dietType': dietType,
       'goal': goal?.toMap(),
+      'goalType': goalType,
       'currentTrainerUid': currentTrainerUid,
     };
   }
@@ -157,6 +161,7 @@ class UserModel {
       bmi: bmi ?? this.bmi,
       dietType: dietType ?? this.dietType,
       goal: goal ?? this.goal,
+      goalType: goalType,
       currentTrainerUid: currentTrainerUid ?? this.currentTrainerUid,
     );
   }

@@ -94,6 +94,24 @@ class _TrainerListState extends State<TrainerList> {
                               context.read<AuthBloc>().state as Authenticated;
                           final currentUser = authState.user.uid;
 
+                          // Check if a request already exists
+                          final existRequest = await notificationRepo
+                              .checkExistingTrainerRequest(
+                                currentUser,
+                                trainer['uid'],
+                              );
+
+                          if (existRequest) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'You have already sent a request to this trainer.',
+                                ),
+                              ),
+                            );
+                            return;
+                          }
+
                           final request = NotificationModel(
                             senderUid: currentUser,
                             receiverUid: trainer['uid'],

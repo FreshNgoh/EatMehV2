@@ -354,6 +354,12 @@ class _UserFeedbackScreenState extends State<UserFeedbackScreen> {
                         currentUserUid,
                         widget.trainerUid,
                       );
+
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Friend request sent!')),
+                        );
+                      }
                     },
                   ),
                   const SizedBox(height: 10),

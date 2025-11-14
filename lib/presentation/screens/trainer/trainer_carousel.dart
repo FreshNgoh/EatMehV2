@@ -9,12 +9,11 @@ import 'package:eatmehv2/presentation/screens/trainer/trainee_list.dart';
 import 'package:eatmehv2/presentation/screens/trainer/trainer_chat_room.dart';
 import 'package:eatmehv2/presentation/screens/trainer/trainer_instruction.dart';
 import 'package:eatmehv2/presentation/screens/trainer/trainer_list.dart';
-import 'package:eatmehv2/presentation/screens/user/onBoarding/user_goals.dart';
+import 'package:eatmehv2/presentation/screens/user/user_goals.dart';
 import 'package:eatmehv2/presentation/widgets/custom_action_card.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class CarouselApp extends StatefulWidget {
   const CarouselApp({super.key});
@@ -139,13 +138,13 @@ class Carousel extends StatefulWidget {
 }
 
 Future<void> _navigateBasedOnGoal(BuildContext context) async {
-  final prefs = await SharedPreferences.getInstance();
-  final user = FirebaseAuth.instance.currentUser;
-  bool hasSetGoals = false;
+  final authState = context.read<AuthBloc>().state as Authenticated;
+  final currentUserUid = authState.user.uid;
+  final userRepo = UserRepository();
 
-  if (user != null) {
-    hasSetGoals = prefs.getBool('hasSetGoals_${user.uid}') ?? false;
-  }
+  final userModel = await userRepo.getUser(currentUserUid);
+
+  final bool hasSetGoals = userModel?.goalType != null;
 
   if (hasSetGoals) {
     Navigator.push(

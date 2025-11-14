@@ -1,8 +1,10 @@
+import 'package:eatmehv2/bloc/auth/auth_bloc.dart';
+import 'package:eatmehv2/data/repos/user_repo.dart';
 import 'package:eatmehv2/presentation/screens/trainer/trainer_list.dart';
 import 'package:eatmehv2/presentation/widgets/custom_button.dart';
 import 'package:eatmehv2/presentation/widgets/custom_goal.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class UserGoals extends StatefulWidget {
   const UserGoals({super.key});
@@ -86,21 +88,26 @@ class _UserGoalsState extends State<UserGoals> {
               onPressed:
                   selectedGoal == null
                       ? null
-                      : () async {
-                        final prefs = await SharedPreferences.getInstance();
-                        await prefs.setBool('hasSetGoals', true);
-
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const TrainerList(),
-                          ),
-                        );
+                      : () {
+                        updateUserGoal();
                       },
             ),
           ),
         ],
       ),
+    );
+  }
+
+  void updateUserGoal() async {
+    final userRepo = UserRepository();
+    final authState = context.read<AuthBloc>().state as Authenticated;
+    final currentUserUid = authState.user.uid;
+
+    await userRepo.updateGoal(currentUserUid, selectedGoal);
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const TrainerList()),
     );
   }
 }
