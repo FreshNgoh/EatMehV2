@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:eatmehv2/utils/calorie_utils.dart';
 import 'package:flutter/material.dart';
 
 import '../../../data/models/user/user_model.dart';
@@ -37,15 +38,18 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
   bool _isLoading = false;
 
   void _updateBMI() {
-    final heightCm = double.tryParse(_heightController.text);
-    final weightKg = double.tryParse(_weightController.text);
+    final heightCm = double.tryParse(_heightController.text.trim());
+    final weightKg = double.tryParse(_weightController.text.trim());
 
-    if (heightCm != null && weightKg != null && heightCm > 0) {
-      final heightM = heightCm / 100;
-      final bmi = weightKg / (heightM * heightM);
-      _bmiController.text = bmi.toStringAsFixed(2);
-    } else {
+    final bmi = CalorieUtils.calculateBMI(
+      heightCm: heightCm,
+      weightKg: weightKg,
+    );
+
+    if (bmi == null) {
       _bmiController.text = '';
+    } else {
+      _bmiController.text = bmi.toStringAsFixed(2);
     }
   }
 

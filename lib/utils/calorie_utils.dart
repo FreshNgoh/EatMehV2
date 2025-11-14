@@ -71,4 +71,18 @@ class CalorieUtils {
         return Icons.sentiment_very_dissatisfied;
     }
   }
+
+  /// Calculates BMI using height in cm and weight in kg.
+  static double? calculateBMI({
+    required double? heightCm,
+    required double? weightKg,
+  }) {
+    if (heightCm == null || weightKg == null) return null;
+    if (heightCm <= 0 || weightKg <= 0) return null;
+
+    final heightM = heightCm / 100;
+    final bmi = weightKg / (heightM * heightM);
+
+    return bmi;
+  }
 }
