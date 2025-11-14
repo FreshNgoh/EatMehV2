@@ -13,6 +13,16 @@ class NotificationRepo {
     return _notificationService.getNotifications(userUid);
   }
 
+  Future<bool> checkExistingTrainerRequest(
+    String senderUid,
+    String receiverUid,
+  ) async {
+    return await _notificationService.checkExistingTrainerRequest(
+      senderUid,
+      receiverUid,
+    );
+  }
+
   Future<void> markAsRead(String notificationId) async {
     await _notificationService.markAsRead(notificationId);
   }

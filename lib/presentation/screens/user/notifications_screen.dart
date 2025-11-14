@@ -23,7 +23,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   final Map<String, String> filterTypes = {
     'all': 'All',
     'trainer_request': 'Trainer Requests',
-    'friend_request': 'Friend Requests',
     'story_view': 'Story Views',
     'meal_reminder': 'Meal Reminders',
   };
@@ -378,9 +377,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           );
         }
         break;
-      case 'friend_request':
-        // navigate
-        break;
       case 'story_view':
         // navigate
         break;
@@ -396,8 +392,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     switch (type) {
       case 'trainer_request':
         return Icons.fitness_center;
-      case 'friend_request':
-        return Icons.person_add;
       case 'story_view':
         return Icons.visibility;
       case 'meal_reminder':
@@ -411,8 +405,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     switch (type) {
       case 'trainer_request':
         return Colors.orange;
-      case 'friend_request':
-        return Colors.blue;
       case 'story_view':
         return Colors.purple;
       case 'meal_reminder':

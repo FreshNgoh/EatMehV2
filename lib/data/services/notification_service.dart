@@ -43,6 +43,26 @@ class NotificationService {
         });
   }
 
+  Future<bool> checkExistingTrainerRequest(
+    String senderUid,
+    String receiverUid,
+  ) {
+    try {
+      final querySnapshot = _getNotificationCollection
+          .where('senderUid', isEqualTo: senderUid)
+          .where('receiverUid', isEqualTo: receiverUid)
+          .where('type', isEqualTo: 'trainer_request')
+          .where('status', isEqualTo: 'pending');
+
+      return querySnapshot.get().then((snapshot) {
+        return snapshot.docs.isNotEmpty;
+      });
+    } catch (e) {
+      print('Error checking existing trainer request: $e');
+    }
+    return Future.value(false);
+  }
+
   Future<void> markAsRead(String notificationId) async {
     try {
       await _getNotificationCollection.doc(notificationId).update({

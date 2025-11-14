@@ -75,6 +75,7 @@ class _TrainerSetGoalState extends State<TrainerSetGoal> {
 
     final userName = _user!.username;
     final userId = '@${_user!.uid.substring(0, 10)}...';
+    final userGoals = _user!.goalType;
     final isCreatingNewGoal = _goal == null;
 
     return Scaffold(
@@ -195,7 +196,7 @@ class _TrainerSetGoalState extends State<TrainerSetGoal> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
-                                '$userName hope to (user goals)',
+                                '$userName hope to $userGoals',
                                 style: TextStyle(
                                   color: Colors.blue[900],
                                   fontWeight: FontWeight.w500,
@@ -326,7 +327,7 @@ class _TrainerSetGoalState extends State<TrainerSetGoal> {
       final startDate = DateFormatter.parseDate(_startDateController.text);
       final endDate = DateFormatter.parseDate(_endDateController.text);
       final goals = Goal(
-        goalType: 'custom',
+        goalType: _user!.goalType ?? '',
         goalCal: double.parse(_caloriesController.text),
         protein: double.parse(_proteinController.text),
         carbs: double.parse(_carbsController.text),
