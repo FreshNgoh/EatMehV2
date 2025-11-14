@@ -616,6 +616,8 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
 
                 await ExerciseRepository().saveExercise(exerciseRecord);
 
+                setState(() {}); // 🚀 <— TRIGGERS FutureBuilder to reload
+
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text(loc.exerciseSaveSuccess)),
                 );
@@ -822,8 +824,13 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                     ),
                     child:
                         isLoading
-                            ? const CircularProgressIndicator(
-                              color: Colors.white,
+                            ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                                color: Colors.white,
+                              ),
                             )
                             : Text(
                               loc.exerciseSaving,

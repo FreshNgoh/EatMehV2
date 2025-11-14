@@ -676,6 +676,12 @@ class _ProfileScreenState extends State<ProfileScreen>
             currentUserFriends: state.user.friends,
             targetUserFriendRequests: profileUser.friendRequests,
             currentUserFriendRequests: state.user.friendRequests,
+            onStatusChanged: () {
+              // Refresh the profile data after friend status changes
+              _loadUserData();
+              // Also refresh the auth bloc to update current user's friend list
+              context.read<AuthBloc>().add(AuthRefreshUserRequested());
+            },
           ),
         );
       },

@@ -32,6 +32,8 @@ class AuthRegisterRequested extends AuthEvent {
 
 class AuthLogoutRequested extends AuthEvent {}
 
+class AuthRefreshUserRequested extends AuthEvent {}
+
 // States
 abstract class AuthState extends Equatable {
   @override
@@ -69,6 +71,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthLoginRequested>(_onAuthLoginRequested);
     on<AuthRegisterRequested>(_onAuthRegisterRequested);
     on<AuthLogoutRequested>(_onAuthLogoutRequested);
+    on<AuthRefreshUserRequested>(_onAuthRefreshUserRequested);
   }
 
   Future<void> _onAuthCheckRequested(
@@ -136,5 +139,25 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     await authRepository.signOut();
     emit(Unauthenticated());
+  }
+
+  Future<void> _onAuthRefreshUserRequested(
+    AuthRefreshUserRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    // Only refresh if logged in
+    if (state is! Authenticated) return;
+
+    final currentUser = (state as Authenticated).user;
+
+    try {
+      final updatedUser = await authRepository.getUserModel(currentUser.uid);
+
+      if (updatedUser != null) {
+        emit(Authenticated(updatedUser));
+      }
+    } catch (_) {
+      // Do nothing — keep old state
+    }
   }
 }
