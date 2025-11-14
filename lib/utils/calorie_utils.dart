@@ -46,38 +46,32 @@ class CalorieUtils {
     return bmr * activityFactor;
   }
 
+  /// NEW: Get the low calorie threshold (10% below maintenance)
+  static double getLowCalorieThreshold({required double maintenanceCalories}) {
+    return maintenanceCalories * 0.9;
+  }
+
+  /// NEW: Get the high calorie threshold (10% above maintenance)
+  static double getHighCalorieThreshold({required double maintenanceCalories}) {
+    return maintenanceCalories * 1.1;
+  }
+
   /// Dynamic calorie status based on user maintenance calories
   static CalorieStatus getCalorieStatus({
     required double netCalories,
     required double maintenanceCalories,
   }) {
-    final lowThreshold = maintenanceCalories * 0.9; // 10% below
-    final highThreshold = maintenanceCalories * 1.1; // 10% above
+    final lowThreshold = getLowCalorieThreshold(
+      maintenanceCalories: maintenanceCalories,
+    );
+    final highThreshold = getHighCalorieThreshold(
+      maintenanceCalories: maintenanceCalories,
+    );
 
     if (netCalories < lowThreshold) return CalorieStatus.low;
     if (netCalories > highThreshold) return CalorieStatus.high;
 
     return CalorieStatus.balanced;
-  }
-
-  /// Returns how far the user is from the balanced calorie range.
-  /// Positive value = above high threshold
-  /// Negative value = below low threshold
-  /// 0 = balanced
-  static double getCalorieDifference({
-    required double netCalories,
-    required double maintenanceCalories,
-  }) {
-    final lowThreshold = maintenanceCalories * 0.9;
-    final highThreshold = maintenanceCalories * 1.1;
-
-    if (netCalories < lowThreshold) {
-      return netCalories - lowThreshold; // negative
-    } else if (netCalories > highThreshold) {
-      return netCalories - highThreshold; // positive
-    }
-
-    return 0; // balanced
   }
 
   /// Returns the display text for a given [CalorieStatus].
@@ -149,5 +143,21 @@ class CalorieUtils {
     final bmi = weightKg / (heightM * heightM);
 
     return bmi;
+  }
+
+  /// NEW: Get BMI category text
+  static String getBMICategory(double bmi) {
+    if (bmi < 18.5) return 'Underweight';
+    if (bmi < 25) return 'Normal';
+    if (bmi < 30) return 'Overweight';
+    return 'Obese';
+  }
+
+  /// NEW: Get BMI category color
+  static Color getBMIColor(double bmi) {
+    if (bmi < 18.5) return AppColors.caloriesLow;
+    if (bmi < 25) return AppColors.caloriesMedium;
+    if (bmi < 30) return AppColors.warning;
+    return AppColors.caloriesHigh;
   }
 }
