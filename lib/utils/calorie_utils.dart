@@ -60,10 +60,25 @@ class CalorieUtils {
     return CalorieStatus.balanced;
   }
 
-  /// Returns the appropriate color for the given [CalorieStatus].
-  // static Color getStatusColor(double netCalories) {
-  //   return AppColors.getCalorieColor(netCalories.toInt());
-  // }
+  /// Returns how far the user is from the balanced calorie range.
+  /// Positive value = above high threshold
+  /// Negative value = below low threshold
+  /// 0 = balanced
+  static double getCalorieDifference({
+    required double netCalories,
+    required double maintenanceCalories,
+  }) {
+    final lowThreshold = maintenanceCalories * 0.9;
+    final highThreshold = maintenanceCalories * 1.1;
+
+    if (netCalories < lowThreshold) {
+      return netCalories - lowThreshold; // negative
+    } else if (netCalories > highThreshold) {
+      return netCalories - highThreshold; // positive
+    }
+
+    return 0; // balanced
+  }
 
   /// Returns the display text for a given [CalorieStatus].
   static Color getStatusColor(CalorieStatus status) {
