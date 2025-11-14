@@ -410,7 +410,7 @@ class _CaloriesTrackerPageState extends State<CaloriesTrackerPage>
                                       ),
                                     ),
                                     Text(
-                                      'Cal',
+                                      'kcal',
                                       style: TextStyle(
                                         fontSize: 16,
                                         color: _netCaloriesColor.withOpacity(
@@ -457,7 +457,7 @@ class _CaloriesTrackerPageState extends State<CaloriesTrackerPage>
                               Expanded(
                                 child: _buildStatCard(
                                   icon: Icons.local_fire_department,
-                                  label: 'Avg Cal taken',
+                                  label: 'Avg kcal taken',
                                   value: _avgTaken.toInt(),
                                   color: Colors.orange,
                                 ),
@@ -466,7 +466,7 @@ class _CaloriesTrackerPageState extends State<CaloriesTrackerPage>
                               Expanded(
                                 child: _buildStatCard(
                                   icon: Icons.directions_run,
-                                  label: 'Avg Cal burnt',
+                                  label: 'Avg kcal burnt',
                                   value: _avgBurnt.toInt(),
                                   color: Colors.blue,
                                 ),
@@ -526,7 +526,7 @@ class _CaloriesTrackerPageState extends State<CaloriesTrackerPage>
               Padding(
                 padding: const EdgeInsets.only(bottom: 4),
                 child: Text(
-                  'Cal',
+                  'kcal',
                   style: TextStyle(color: Colors.grey[500], fontSize: 14),
                 ),
               ),

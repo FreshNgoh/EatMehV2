@@ -164,7 +164,7 @@ class _ProfileMeTabState extends State<ProfileMeTab> {
                 ),
               ),
               Text(
-                'Cal',
+                'kcal',
                 style: TextStyle(
                   fontSize: 16,
                   color: widget.netCaloriesColor.withOpacity(0.7),
