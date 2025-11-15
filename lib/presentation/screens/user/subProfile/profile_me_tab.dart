@@ -287,7 +287,7 @@ class _ProfileMeTabState extends State<ProfileMeTab> {
                               children: [
                                 CircleAvatar(
                                   radius: 25,
-                                  backgroundColor: Colors.grey.shade200,
+                                  backgroundColor: Colors.grey.shade300,
                                   backgroundImage:
                                       friend.imageUrl != null &&
                                               friend.imageUrl!.isNotEmpty

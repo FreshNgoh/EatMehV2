@@ -1,4 +1,5 @@
 import 'package:eatmehv2/presentation/screens/auth/login_screen.dart';
+import 'package:eatmehv2/presentation/screens/user/simple_user_manual_screen.dart';
 import 'package:eatmehv2/presentation/widgets/custom_card.dart';
 import 'package:eatmehv2/presentation/widgets/toast.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -221,7 +222,12 @@ class _SettingScreenState extends State<SettingScreen> {
               const SizedBox(height: 8),
               GestureDetector(
                 onTap: () {
-                  print("clicked user manual");
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const SimpleUserManualScreen(),
+                    ),
+                  );
                 },
                 child: CustomCard(
                   child: Row(
