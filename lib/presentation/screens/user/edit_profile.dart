@@ -301,7 +301,7 @@ class _EditProfileState extends State<EditProfile> {
     } else if (_avatarUrl != null && _avatarUrl!.isNotEmpty) {
       avatarImage = NetworkImage(_avatarUrl!); // from Firestore
     } else {
-      avatarImage = const AssetImage('assets/teralero.png'); // fallback
+      avatarImage = const AssetImage('NO_IMAGE_FALLBACK');
     }
 
     return Scaffold(
@@ -334,10 +334,26 @@ class _EditProfileState extends State<EditProfile> {
                               child: SizedBox(
                                 width: 150,
                                 height: 150,
-                                child: Image(
-                                  image: avatarImage, // use ImageProvider here
-                                  fit: BoxFit.cover,
-                                ),
+                                child:
+                                    (_newImageFile == null &&
+                                            (_avatarUrl == null ||
+                                                _avatarUrl!.isEmpty))
+                                        ? CircleAvatar(
+                                          radius: 75,
+                                          backgroundColor: Colors.grey.shade300,
+                                          child: Text(
+                                            widget.user.username[0]
+                                                .toUpperCase(),
+                                            style: const TextStyle(
+                                              fontSize: 45,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        )
+                                        : Image(
+                                          image: avatarImage,
+                                          fit: BoxFit.cover,
+                                        ),
                               ),
                             ),
                             Positioned(

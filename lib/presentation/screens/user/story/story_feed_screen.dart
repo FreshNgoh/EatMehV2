@@ -136,7 +136,7 @@ class _StoriesFeedScreenState extends State<StoriesFeedScreen> {
                     border:
                         userStories.isNotEmpty && !hasUnviewed
                             ? Border.all(color: Colors.grey.shade300, width: 2)
-                            : Border.all(color: Colors.grey.shade300, width: 2),
+                            : Border.all(color: Colors.white, width: 2),
                   ),
                   padding: const EdgeInsets.all(3),
                   child: Container(
@@ -152,10 +152,32 @@ class _StoriesFeedScreenState extends State<StoriesFeedScreen> {
                                 displayImageUrl,
                                 fit: BoxFit.cover,
                                 errorBuilder:
-                                    (_, __, ___) =>
-                                        Image.asset('assets/teralero.png'),
+                                    (_, __, ___) => CircleAvatar(
+                                      radius: 20,
+                                      backgroundColor: Colors.grey.shade300,
+                                      child: Text(
+                                        (username != null &&
+                                                username.isNotEmpty)
+                                            ? username[0].toUpperCase()
+                                            : "?",
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
                               )
-                              : Image.asset('assets/teralero.png'),
+                              : CircleAvatar(
+                                radius: 20,
+                                backgroundColor: Colors.grey.shade300,
+                                child: Text(
+                                  (username != null && username.isNotEmpty)
+                                      ? username[0].toUpperCase()
+                                      : "?",
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
                     ),
                   ),
                 ),
@@ -502,11 +524,8 @@ class _StoriesFeedScreenState extends State<StoriesFeedScreen> {
                                                           width: 2,
                                                         )
                                                         : Border.all(
-                                                          color:
-                                                              Colors
-                                                                  .grey
-                                                                  .shade200,
-                                                          width: 1,
+                                                          color: Colors.white,
+                                                          width: 2,
                                                         ),
                                               ),
                                               padding: const EdgeInsets.all(3),
@@ -533,12 +552,39 @@ class _StoriesFeedScreenState extends State<StoriesFeedScreen> {
                                                                   _,
                                                                   __,
                                                                   ___,
-                                                                ) => Image.asset(
-                                                                  'assets/teralero.png',
+                                                                ) => CircleAvatar(
+                                                                  radius: 20,
+                                                                  backgroundColor:
+                                                                      Colors
+                                                                          .grey
+                                                                          .shade300,
+                                                                  child: Text(
+                                                                    friend
+                                                                        .username[0]
+                                                                        .toUpperCase(),
+                                                                    style: const TextStyle(
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .bold,
+                                                                    ),
+                                                                  ),
                                                                 ),
                                                           )
-                                                          : Image.asset(
-                                                            'assets/teralero.png',
+                                                          : CircleAvatar(
+                                                            radius: 20,
+                                                            backgroundColor:
+                                                                Colors
+                                                                    .grey
+                                                                    .shade300,
+                                                            child: Text(
+                                                              friend.username[0]
+                                                                  .toUpperCase(),
+                                                              style: const TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                              ),
+                                                            ),
                                                           ),
                                                 ),
                                               ),

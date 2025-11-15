@@ -592,12 +592,17 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                                                 !_hasValidImageUrl(
                                                       comment.userImageUrl,
                                                     )
-                                                    ? ClipOval(
-                                                      child: Image.asset(
-                                                        "assets/teralero.png",
-                                                        width: 36,
-                                                        height: 36,
-                                                        fit: BoxFit.cover,
+                                                    ? CircleAvatar(
+                                                      radius: 20,
+                                                      backgroundColor:
+                                                          Colors.grey.shade300,
+                                                      child: Text(
+                                                        currentStory.username[0]
+                                                            .toUpperCase(),
+                                                        style: const TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
                                                       ),
                                                     )
                                                     : null,
@@ -664,12 +669,15 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                                       : null,
                               child:
                                   !_hasValidImageUrl(widget.currentUserImageUrl)
-                                      ? ClipOval(
-                                        child: Image.asset(
-                                          "assets/teralero.png",
-                                          width: 36,
-                                          height: 36,
-                                          fit: BoxFit.cover,
+                                      ? CircleAvatar(
+                                        radius: 20,
+                                        backgroundColor: Colors.grey.shade300,
+                                        child: Text(
+                                          currentStory.username[0]
+                                              .toUpperCase(),
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       )
                                       : null,

@@ -272,7 +272,7 @@ class _FriendsScreenState extends State<FriendsScreen>
                         contentPadding: const EdgeInsets.symmetric(vertical: 8),
                         leading: CircleAvatar(
                           radius: 25,
-                          backgroundColor: Colors.grey.shade200,
+                          backgroundColor: Colors.grey.shade300,
                           backgroundImage:
                               user.imageUrl != null && user.imageUrl!.isNotEmpty
                                   ? NetworkImage(user.imageUrl!)
@@ -354,7 +354,7 @@ class _FriendsScreenState extends State<FriendsScreen>
           contentPadding: const EdgeInsets.symmetric(vertical: 8),
           leading: CircleAvatar(
             radius: 25,
-            backgroundColor: Colors.grey.shade200,
+            backgroundColor: Colors.grey.shade300,
             backgroundImage:
                 user.imageUrl != null && user.imageUrl!.isNotEmpty
                     ? NetworkImage(user.imageUrl!)

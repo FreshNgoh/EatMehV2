@@ -204,6 +204,27 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
+  Widget buildProfileAvatar(UserModel user) {
+    // If image exists → show image
+    if (user.imageUrl != null && user.imageUrl!.isNotEmpty) {
+      return CircleAvatar(
+        radius: 50,
+        backgroundColor: Colors.white,
+        backgroundImage: NetworkImage(user.imageUrl!),
+      );
+    }
+
+    // No image → show initial letter
+    return CircleAvatar(
+      radius: 50,
+      backgroundColor: Colors.grey.shade300,
+      child: Text(
+        user.username.isNotEmpty ? user.username[0].toUpperCase() : '?',
+        style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -273,12 +294,6 @@ class _ProfileScreenState extends State<ProfileScreen>
     final netCaloriesColor = CalorieUtils.getStatusColor(calorieStatus);
     final statusText = CalorieUtils.getStatusText(calorieStatus);
 
-    // user image
-    final ImageProvider avatarImage =
-        (_user!.imageUrl != null && _user!.imageUrl!.isNotEmpty)
-            ? NetworkImage(_user!.imageUrl!)
-            : const AssetImage("assets/teralero.png");
-
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
@@ -322,11 +337,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                         children: [
                           Row(
                             children: [
-                              CircleAvatar(
-                                radius: 50,
-                                backgroundColor: Colors.white,
-                                backgroundImage: avatarImage,
-                              ),
+                              buildProfileAvatar(_user!),
                               const SizedBox(width: 16),
                               Expanded(
                                 child: Column(
