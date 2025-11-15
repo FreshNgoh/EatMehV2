@@ -12,6 +12,7 @@ import 'package:eatmehv2/data/repos/meal_records_repo.dart';
 import 'package:eatmehv2/data/repos/user_repo.dart';
 import 'package:eatmehv2/routes/app_router.dart';
 import 'package:eatmehv2/utils/firebase_options.dart';
+import 'package:eatmehv2/utils/language_cubit.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -64,29 +65,33 @@ class MyApp extends StatelessWidget {
                   chatRepository: context.read<ChatRepository>(),
                 ),
           ),
+          BlocProvider(
+            create: (context) => LanguageCubit(), // Add LanguageCubit
+          ),
         ],
 
-        child: MaterialApp(
-          debugShowCheckedModeBanner: false,
-          title: 'Eat Meh',
-          theme: AppTheme.lightTheme,
-          darkTheme: AppTheme.darkTheme,
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          supportedLocales: const [
-            Locale('en', ''), // English
-            Locale('zh', ''), // Chinese
-          ],
-          locale: const Locale('en'),
-          // Use login as initial route
-          initialRoute: RouteConstants.login,
-
-          // Link your AppRouter
-          onGenerateRoute: AppRouter.generateRoute,
+        child: BlocBuilder<LanguageCubit, LanguageState>(
+          builder: (context, languageState) {
+            return MaterialApp(
+              debugShowCheckedModeBanner: false,
+              title: 'Eat Meh',
+              theme: AppTheme.lightTheme,
+              darkTheme: AppTheme.darkTheme,
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: const [
+                Locale('en', ''), // English
+                Locale('zh', ''), // Chinese
+              ],
+              locale: languageState.locale, // Dynamic locale from cubit
+              initialRoute: RouteConstants.login,
+              onGenerateRoute: AppRouter.generateRoute,
+            );
+          },
         ),
       ),
     );
