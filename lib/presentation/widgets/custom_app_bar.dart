@@ -7,6 +7,7 @@ import 'package:eatmehv2/data/services/notification_service.dart';
 import 'package:eatmehv2/presentation/screens/user/friends_screen.dart';
 import 'package:eatmehv2/presentation/screens/user/notifications_screen.dart';
 import 'package:eatmehv2/presentation/screens/user/profile_screen.dart';
+import 'package:eatmehv2/presentation/widgets/shimmer/shimmer_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/localization/app_localizations.dart';
@@ -70,12 +71,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               );
             }
 
-            final ImageProvider avatarImage =
-                (state.user.imageUrl != null && state.user.imageUrl!.isNotEmpty)
-                    ? NetworkImage(state.user.imageUrl!)
-                    : const AssetImage("assets/teralero.png");
-
             final currentUserUid = state.user.uid;
+            final avatarUrl = state.user.imageUrl;
 
             return Align(
               alignment: Alignment.centerLeft,
@@ -90,15 +87,35 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 },
                 child: Container(
                   padding: const EdgeInsets.all(3),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.black, width: 1),
-                  ),
-                  child: CircleAvatar(
-                    radius: 20,
-                    backgroundColor: Colors.white,
-                    backgroundImage: avatarImage,
-                  ),
+                  decoration: const BoxDecoration(shape: BoxShape.circle),
+                  child:
+                      avatarUrl != null && avatarUrl.isNotEmpty
+                          ? StatefulBuilder(
+                            builder: (context, setState) {
+                              bool isLoading = true;
+
+                              return Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  if (isLoading) const ShimmerAvatar(size: 40),
+                                  CircleAvatar(
+                                    radius: 20,
+                                    backgroundColor: Colors.white,
+                                    backgroundImage: NetworkImage(avatarUrl),
+                                    onBackgroundImageError: (_, __) {
+                                      setState(() {
+                                        isLoading = false;
+                                      });
+                                    },
+                                  ),
+                                ],
+                              );
+                            },
+                          )
+                          : const CircleAvatar(
+                            radius: 20,
+                            backgroundImage: AssetImage("assets/teralero.png"),
+                          ),
                 ),
               ),
             );
