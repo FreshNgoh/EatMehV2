@@ -1,3 +1,4 @@
+import 'package:eatmehv2/core/constants/route_constants.dart';
 import 'package:eatmehv2/presentation/widgets/toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -62,7 +63,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
           }
 
           if (state is Authenticated) {
-            Navigator.of(context).popUntil((route) => route.isFirst);
+            // Navigate to home screen using named route
+            Navigator.of(context).pushNamedAndRemoveUntil(
+              RouteConstants.home,
+              (route) => false,
+              arguments: state.user,
+            );
           }
         },
         child: SafeArea(

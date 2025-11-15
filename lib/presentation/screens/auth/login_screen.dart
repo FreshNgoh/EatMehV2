@@ -1,12 +1,13 @@
+import 'package:eatmehv2/core/constants/route_constants.dart';
 import 'package:eatmehv2/presentation/widgets/toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../bloc/auth/auth_bloc.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import 'register_screen.dart';
-import '../../../core/localization/app_localizations.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -49,7 +50,11 @@ class _LoginScreenState extends State<LoginScreen> {
           }
 
           if (state is Authenticated) {
-            Navigator.of(context).popUntil((route) => route.isFirst);
+            Navigator.of(context).pushNamedAndRemoveUntil(
+              RouteConstants.home,
+              (route) => false, // Clear previous login screen
+              arguments: state.user, // Pass UserModel for dynamic routing
+            );
           }
         },
         child: SafeArea(

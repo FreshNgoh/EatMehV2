@@ -1,9 +1,11 @@
-import 'package:eatmehv2/presentation/screens/auth/login_screen.dart';
+import 'package:eatmehv2/bloc/auth/auth_bloc.dart';
+import 'package:eatmehv2/core/constants/route_constants.dart';
 import 'package:eatmehv2/presentation/screens/user/simple_user_manual_screen.dart';
 import 'package:eatmehv2/presentation/widgets/custom_card.dart';
 import 'package:eatmehv2/presentation/widgets/toast.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class SettingScreen extends StatefulWidget {
   const SettingScreen({super.key});
@@ -16,15 +18,21 @@ class _SettingScreenState extends State<SettingScreen> {
   bool _isDarkTheme = false;
   bool _notificationsEnabled = true;
   String _selectedLanguage = 'English';
-
   Future<void> _signOut(BuildContext context) async {
     try {
-      await FirebaseAuth.instance.signOut(); // Sign out user
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
-        (route) => false,
-      );
+      // First dispatch logout to AuthBloc
+      context.read<AuthBloc>().add(AuthLogoutRequested());
+
+      // Sign out from Firebase
+      await FirebaseAuth.instance.signOut();
+
+      // Use pushAndRemoveUntil to clear ALL previous routes
+      if (context.mounted) {
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          RouteConstants.login,
+          (route) => false, // Clear all previous routes
+        );
+      }
     } catch (e) {
       final errorMsg = 'Logout failed: $e';
       showCustomToast(context, errorMsg, type: ToastType.error);
