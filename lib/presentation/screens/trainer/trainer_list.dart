@@ -69,11 +69,24 @@ class _TrainerListState extends State<TrainerList> {
                 itemCount: trainers.length,
                 itemBuilder: (context, index) {
                   final trainer = trainers[index];
+                  final imageUrl = trainer['imageUrl'] ?? "";
+                  final name = trainer['name'] ?? "Trainer";
                   return CustomList(
                     profile: CircleAvatar(
-                      backgroundImage: AssetImage(
-                        'assets/images/default_face.jpeg',
-                      ),
+                      radius: 25,
+                      backgroundColor: Colors.grey.shade200,
+                      backgroundImage:
+                          imageUrl.isNotEmpty ? NetworkImage(imageUrl) : null,
+                      child:
+                          imageUrl.isEmpty
+                              ? Text(
+                                name[0].toUpperCase(),
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              )
+                              : null,
                     ),
                     onProfileTap: () {
                       Navigator.push(

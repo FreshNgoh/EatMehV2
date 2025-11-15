@@ -4,6 +4,7 @@ class NotificationModel {
   final String? uid;
   final String senderUid;
   final String? senderName;
+  final String? senderImage;
   final String receiverUid;
   final String title;
   final String message;
@@ -16,6 +17,7 @@ class NotificationModel {
     this.uid,
     required this.senderUid,
     this.senderName,
+    this.senderImage,
     required this.receiverUid,
     required this.title,
     required this.message,
@@ -30,6 +32,7 @@ class NotificationModel {
       uid: uid,
       senderUid: map['senderUid'] as String,
       senderName: map['senderName'] as String?,
+      senderImage: map['senderImage'] as String?,
       receiverUid: map['receiverUid'] as String,
       title: map['title'] as String,
       message: map['message'] as String,
@@ -44,6 +47,7 @@ class NotificationModel {
     return {
       'senderUid': senderUid,
       'senderName': senderName,
+      'senderImage': senderImage,
       'receiverUid': receiverUid,
       'title': title,
       'message': message,

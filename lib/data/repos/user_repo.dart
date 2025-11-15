@@ -169,4 +169,9 @@ class UserRepository {
       print('Error removing trainee: $e');
     }
   }
+
+  // Delete user goal when change trainer
+  Future<void> deleteUserGoal(String uid) async {
+    await updateUser(uid, {'goal': null});
+  }
 }

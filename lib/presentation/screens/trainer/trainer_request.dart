@@ -156,17 +156,29 @@ class _TrainerRequestsScreenState extends State<TrainerRequestsScreen> {
                 return const SizedBox.shrink();
               }
 
+              final traineeName = req.senderName ?? 'Unknown User';
+              final traineeImage = req.senderImage ?? '';
+
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: CustomList(
                   profile: CircleAvatar(
-                    backgroundImage: AssetImage(
-                      'assets/images/default_face.jpeg',
-                    ),
+                    radius: 25,
+                    backgroundColor: Colors.grey.shade200,
+                    backgroundImage:
+                        traineeImage.isNotEmpty
+                            ? NetworkImage(traineeImage)
+                            : null,
                     child:
-                        req.senderName != null
-                            ? null
-                            : const Icon(Icons.person, color: Colors.white),
+                        traineeImage.isEmpty
+                            ? Text(
+                              traineeName[0].toUpperCase(),
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            )
+                            : null,
                   ),
                   value: req.senderName ?? 'Unknown User',
                   actionIcons:

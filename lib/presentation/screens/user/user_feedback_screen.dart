@@ -1,7 +1,9 @@
 import 'package:eatmehv2/bloc/auth/auth_bloc.dart';
 import 'package:eatmehv2/data/models/user/user_model.dart';
+import 'package:eatmehv2/data/repos/chat_room_repo.dart';
 import 'package:eatmehv2/data/repos/trainer_profile_repo.dart';
 import 'package:eatmehv2/data/repos/user_repo.dart';
+import 'package:eatmehv2/data/services/chat_room_service.dart';
 import 'package:eatmehv2/data/services/trainer_profile_service.dart';
 import 'package:eatmehv2/presentation/widgets/custom_button.dart';
 import 'package:eatmehv2/presentation/widgets/custom_card.dart';
@@ -145,13 +147,24 @@ class _UserFeedbackScreenState extends State<UserFeedbackScreen> {
                           ),
                         ),
                         child: CircleAvatar(
-                          radius: 50,
-                          backgroundColor: Colors.white,
+                          radius: 40,
+                          backgroundColor: Colors.grey.shade200,
                           backgroundImage:
-                              _trainer!.imageUrl != null
+                              _trainer!.imageUrl != null &&
+                                      _trainer!.imageUrl!.isNotEmpty
                                   ? NetworkImage(_trainer!.imageUrl!)
-                                  : const AssetImage("assets/teralero.png")
-                                      as ImageProvider,
+                                  : null,
+                          child:
+                              (_trainer!.imageUrl == null ||
+                                      _trainer!.imageUrl!.isEmpty)
+                                  ? Text(
+                                    _trainer!.username[0].toUpperCase(),
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  )
+                                  : null,
                         ),
                       ),
                       Positioned(
@@ -412,12 +425,16 @@ class _UserFeedbackScreenState extends State<UserFeedbackScreen> {
   }
 
   void _showChangeTrainerDialog() {
+    final authState = context.read<AuthBloc>().state as Authenticated;
+    final currentUserUid = authState.user.uid;
+    final chatRepo = ChatRoomRepo(ChatRoomService());
+
     showDialog(
       context: context,
       builder:
-          (context) => AlertDialog.adaptive(
+          (dialogContext) => AlertDialog.adaptive(
             title: const Text('Change Trainer'),
-            content: Text(
+            content: const Text(
               'Are you sure you want to change your trainer? You will need to find a new trainer.',
             ),
             shape: RoundedRectangleBorder(
@@ -425,33 +442,63 @@ class _UserFeedbackScreenState extends State<UserFeedbackScreen> {
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => Navigator.pop(dialogContext),
                 child: const Text('Cancel'),
               ),
               TextButton(
                 onPressed: () async {
-                  Navigator.pop(context);
+                  Navigator.pop(dialogContext);
+
+                  if (!mounted) return;
+
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder:
+                        (context) =>
+                            const Center(child: CircularProgressIndicator()),
+                  );
+
                   try {
-                    final authState =
-                        context.read<AuthBloc>().state as Authenticated;
-                    final currentUserUid = authState.user.uid;
                     await userRepo.changeTrainer(
                       widget.trainerUid,
                       currentUserUid,
                     );
 
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Trainer removed. You can now request a new trainer.',
-                          ),
+                    await chatRepo.deleteChatRoom(
+                      currentUserUid,
+                      widget.trainerUid,
+                    );
+
+                    await userRepo.deleteUserGoal(currentUserUid);
+
+                    Navigator.pop(context);
+                    Navigator.pop(context);
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Trainer removed. You can now request a new trainer.',
                         ),
-                      );
-                      Navigator.pop(context);
-                    }
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+
+                    // Pop the feedback screen
+                    Navigator.pop(context);
                   } catch (e) {
-                    throw ('Error: $e');
+                    if (!mounted) return;
+
+                    // Pop loading indicator
+                    Navigator.pop(context);
+
+                    // Show error message
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Error: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
                   }
                 },
                 style: TextButton.styleFrom(foregroundColor: Colors.red),

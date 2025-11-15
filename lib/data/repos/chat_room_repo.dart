@@ -16,4 +16,8 @@ class ChatRoomRepo {
   Stream<List<MessageModel>> getMessages(String senderUid, String receiverUid) {
     return _chatRoomService.getMessages(senderUid, receiverUid);
   }
+
+  Future<void> deleteChatRoom(String senderUid, String receiverUid) async {
+    return await _chatRoomService.deleteChat(senderUid, receiverUid);
+  }
 }

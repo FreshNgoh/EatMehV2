@@ -25,6 +25,10 @@ class CarouselApp extends StatefulWidget {
 class _CarouselAppState extends State<CarouselApp> {
   late Future<String> _statusFuture;
   final userRepo = UserRepository();
+  final trainerAppRepo = TrainerApplicationRepository(
+    TrainerApplicationService(),
+  );
+  final trainerProfileRepo = TrainerProfileRepo(TrainerProfileService());
   bool hasTrainer = false;
   bool isCheckingTrainer = true;
 
@@ -38,10 +42,6 @@ class _CarouselAppState extends State<CarouselApp> {
   Future<String> _getApplicationStatus() async {
     final user = FirebaseAuth.instance.currentUser;
 
-    final trainerAppRepo = TrainerApplicationRepository(
-      TrainerApplicationService(),
-    );
-    final trainerProfileRepo = TrainerProfileRepo(TrainerProfileService());
     final status = await trainerAppRepo.fetchApplicationStatus(user!.uid);
 
     if (status == 'approved') {
@@ -161,13 +161,30 @@ Future<void> _navigateBasedOnGoal(BuildContext context) async {
 
 class _CarouselState extends State<Carousel> {
   final userRepo = UserRepository();
+  final trainerProfileRepo = TrainerProfileRepo(TrainerProfileService());
   int _currentPage = 0;
   final PageController _pageController = PageController(viewportFraction: 0.85);
+  List<Map<String, dynamic>> trainers = [];
+  bool isLoading = true;
 
   @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    loadTrainers();
+  }
+
+  Future<void> loadTrainers() async {
+    final data = await trainerProfileRepo.getAllTrainers();
+    setState(() {
+      trainers = data;
+      isLoading = false;
+    });
   }
 
   Future<void> _navigateToTrainerChat(BuildContext context) async {
@@ -230,38 +247,69 @@ class _CarouselState extends State<Carousel> {
               const SizedBox(height: 40),
 
               // Carousel Section
+              // Carousel Section
               SizedBox(
                 height: 320,
-                child: PageView.builder(
-                  controller: _pageController,
-                  onPageChanged: (index) {
-                    setState(() {
-                      _currentPage = index % ImageInfo.values.length;
-                    });
-                  },
-                  itemCount: 1000, // Infinite scroll
-                  itemBuilder: (context, index) {
-                    final actualIndex = index % ImageInfo.values.length;
-                    final imageInfo = ImageInfo.values[actualIndex];
-                    return AnimatedBuilder(
-                      animation: _pageController,
-                      builder: (context, child) {
-                        double value = 1.0;
-                        if (_pageController.position.haveDimensions) {
-                          value = _pageController.page! - index;
-                          value = (1 - (value.abs() * 0.3)).clamp(0.0, 1.0);
-                        }
-                        return Center(
-                          child: SizedBox(
-                            height: Curves.easeOut.transform(value) * 320,
-                            child: child,
-                          ),
-                        );
-                      },
-                      child: HeroLayoutCard(imageInfo: imageInfo),
-                    );
-                  },
-                ),
+                child:
+                    isLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : trainers.isEmpty
+                        ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              size: 50,
+                              color: Colors.grey.shade500,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              "No trainers available",
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        )
+                        : PageView.builder(
+                          controller: _pageController,
+                          onPageChanged: (index) {
+                            setState(() {
+                              _currentPage = index % trainers.length;
+                            });
+                          },
+                          itemCount: 1000, // Infinite scroll
+                          itemBuilder: (context, index) {
+                            final actualIndex = index % trainers.length;
+                            final trainer = trainers[actualIndex];
+
+                            return AnimatedBuilder(
+                              animation: _pageController,
+                              builder: (context, child) {
+                                double value = 1.0;
+                                if (_pageController.position.haveDimensions) {
+                                  value = _pageController.page! - index;
+                                  value = (1 - (value.abs() * 0.3)).clamp(
+                                    0.0,
+                                    1.0,
+                                  );
+                                }
+                                return Center(
+                                  child: SizedBox(
+                                    height:
+                                        Curves.easeOut.transform(value) * 320,
+                                    child: child,
+                                  ),
+                                );
+                              },
+                              child: HeroLayoutCard(
+                                name: trainer['name'],
+                                imageUrl: trainer['image'],
+                              ),
+                            );
+                          },
+                        ),
               ),
 
               const SizedBox(height: 20),
@@ -270,7 +318,7 @@ class _CarouselState extends State<Carousel> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
-                  ImageInfo.values.length,
+                  trainers.length,
                   (index) => AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
                     margin: const EdgeInsets.symmetric(horizontal: 4),
@@ -452,9 +500,16 @@ class _CarouselState extends State<Carousel> {
 }
 
 class HeroLayoutCard extends StatelessWidget {
-  const HeroLayoutCard({super.key, required this.imageInfo});
+  final String name;
+  final String imageUrl;
+  final String? ratings;
 
-  final ImageInfo imageInfo;
+  const HeroLayoutCard({
+    super.key,
+    required this.name,
+    required this.imageUrl,
+    this.ratings,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -478,11 +533,29 @@ class HeroLayoutCard extends StatelessWidget {
             // Image with gradient overlay
             Container(
               decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: const AssetImage('assets/images/default_face.jpeg'),
-                  fit: BoxFit.cover,
-                ),
+                borderRadius: BorderRadius.circular(16),
+                image:
+                    (imageUrl.trim().isNotEmpty)
+                        ? DecorationImage(
+                          image: NetworkImage(imageUrl),
+                          fit: BoxFit.cover,
+                        )
+                        : null,
+                color: (imageUrl.trim().isEmpty) ? Colors.grey.shade300 : null,
               ),
+              child:
+                  (imageUrl.trim().isEmpty)
+                      ? Center(
+                        child: Text(
+                          name.isNotEmpty ? name[0].toUpperCase() : '?',
+                          style: const TextStyle(
+                            fontSize: 80,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      )
+                      : null,
             ),
 
             // Gradient Overlay
@@ -503,28 +576,8 @@ class HeroLayoutCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white.withOpacity(0.3)),
-                    ),
-                    child: const Text(
-                      'Success Story',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
                   Text(
-                    imageInfo.title,
+                    name,
                     style: const TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
@@ -545,7 +598,7 @@ class HeroLayoutCard extends StatelessWidget {
                       Icon(Icons.star, color: Colors.amber, size: 20),
                       const SizedBox(width: 8),
                       Text(
-                        '5.0',
+                        ratings ?? '5.0',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 14,
@@ -562,17 +615,4 @@ class HeroLayoutCard extends StatelessWidget {
       ),
     );
   }
-}
-
-enum ImageInfo {
-  image0('Micky', 'content_based_color_scheme_1.png'),
-  image1('Nancy', 'content_based_color_scheme_2.png'),
-  image2('Adeline', 'content_based_color_scheme_3.png'),
-  image3('Handsome', 'content_based_color_scheme_4.png'),
-  image4('Haha', 'content_based_color_scheme_5.png'),
-  image5('Rainy', 'content_based_color_scheme_6.png');
-
-  const ImageInfo(this.title, this.url);
-  final String title;
-  final String url;
 }

@@ -86,4 +86,17 @@ class ChatRoomService {
           }).toList();
         });
   }
+
+  // Delete chat
+  Future<void> deleteChat(String senderUid, String receiverUid) async {
+    final roomId = _generateRoomId(senderUid, receiverUid);
+    final chatRoomRef = _chatRoomsCollection.doc(roomId);
+
+    final messagesSnapshot = await chatRoomRef.collection('messages').get();
+    for (final doc in messagesSnapshot.docs) {
+      await doc.reference.delete();
+    }
+
+    await chatRoomRef.delete();
+  }
 }
