@@ -10,6 +10,7 @@ import 'package:eatmehv2/presentation/screens/user/setting_screen.dart';
 import 'package:eatmehv2/presentation/screens/user/subProfile/profile_consult_tab.dart';
 import 'package:eatmehv2/presentation/screens/user/subProfile/profile_me_tab.dart';
 import 'package:eatmehv2/presentation/widgets/custom_card.dart';
+import 'package:eatmehv2/presentation/widgets/toast.dart';
 import 'package:eatmehv2/utils/calorie_utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -159,11 +160,19 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  void _showEditProfile(BuildContext context) {
-    Navigator.push(
+  void _showEditProfile(BuildContext context) async {
+    if (_user == null) return;
+
+    // Wait until EditProfile page is popped
+    final updated = await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => EditProfile(user: _user!)),
     );
+
+    // If user updated profile, reload data
+    if (updated == true) {
+      _loadUserData();
+    }
   }
 
   void _showBioEditor(BuildContext context) {
@@ -181,19 +190,38 @@ class _ProfileScreenState extends State<ProfileScreen>
                 await _userRepo.updateUser(widget.userUid, {'bio': newBio});
                 await _loadUserData(); // Reload data
                 if (mounted) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(const SnackBar(content: Text('Bio updated!')));
+                  final successMsg = 'Bio updated!';
+                  showCustomToast(context, successMsg, type: ToastType.success);
                 }
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed to update bio: $e')),
-                  );
+                  final errorMsg = 'Failed to update bio: $e';
+                  showCustomToast(context, errorMsg, type: ToastType.error);
                 }
               }
             },
           ),
+    );
+  }
+
+  Widget buildProfileAvatar(UserModel user) {
+    // If image exists → show image
+    if (user.imageUrl != null && user.imageUrl!.isNotEmpty) {
+      return CircleAvatar(
+        radius: 50,
+        backgroundColor: Colors.white,
+        backgroundImage: NetworkImage(user.imageUrl!),
+      );
+    }
+
+    // No image → show initial letter
+    return CircleAvatar(
+      radius: 50,
+      backgroundColor: Colors.grey.shade300,
+      child: Text(
+        user.username.isNotEmpty ? user.username[0].toUpperCase() : '?',
+        style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
+      ),
     );
   }
 
@@ -266,12 +294,6 @@ class _ProfileScreenState extends State<ProfileScreen>
     final netCaloriesColor = CalorieUtils.getStatusColor(calorieStatus);
     final statusText = CalorieUtils.getStatusText(calorieStatus);
 
-    // user image
-    final ImageProvider avatarImage =
-        (_user!.imageUrl != null && _user!.imageUrl!.isNotEmpty)
-            ? NetworkImage(_user!.imageUrl!)
-            : const AssetImage("assets/teralero.png");
-
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
@@ -315,11 +337,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                         children: [
                           Row(
                             children: [
-                              CircleAvatar(
-                                radius: 50,
-                                backgroundColor: Colors.white,
-                                backgroundImage: avatarImage,
-                              ),
+                              buildProfileAvatar(_user!),
                               const SizedBox(width: 16),
                               Expanded(
                                 child: Column(
@@ -339,15 +357,12 @@ class _ProfileScreenState extends State<ProfileScreen>
                                         Clipboard.setData(
                                           ClipboardData(text: _user!.uid),
                                         );
-                                        ScaffoldMessenger.of(
+                                        final infoMsg =
+                                            'User ID copied to clipboard!';
+                                        showCustomToast(
                                           context,
-                                        ).showSnackBar(
-                                          const SnackBar(
-                                            content: Text(
-                                              'User ID copied to clipboard!',
-                                            ),
-                                            duration: Duration(seconds: 1),
-                                          ),
+                                          infoMsg,
+                                          type: ToastType.success,
                                         );
                                       },
                                       child: Row(

@@ -65,8 +65,11 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 alignment: Alignment.centerLeft,
                 child: CircleAvatar(
                   radius: 20,
-                  backgroundColor: Colors.white,
-                  backgroundImage: const AssetImage("assets/teralero.png"),
+                  backgroundColor: Colors.grey.shade300,
+                  child: Text(
+                    "?",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
               );
             }
@@ -112,9 +115,16 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                               );
                             },
                           )
-                          : const CircleAvatar(
+                          : CircleAvatar(
                             radius: 20,
-                            backgroundImage: AssetImage("assets/teralero.png"),
+                            backgroundColor: Colors.grey.shade300,
+                            child: Text(
+                              state.user.username[0].toUpperCase(),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                 ),
               ),

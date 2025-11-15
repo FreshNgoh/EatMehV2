@@ -37,6 +37,7 @@ dependencies:
   form_builder_validators:
   table_calendar:
   shimmer:
+  video_player:
 
   # Localization
   flutter_localizations:
@@ -70,6 +71,7 @@ flutter:
     - assets/teralero.png
     - assets/error.png
     - assets/noData.png
+    - assets/videos/demo.mov
     - .env
 
   fonts:

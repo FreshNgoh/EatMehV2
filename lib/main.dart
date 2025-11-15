@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eatmehv2/bloc/auth/auth_bloc.dart';
 import 'package:eatmehv2/bloc/chat/chat_bloc_bloc.dart';
+import 'package:eatmehv2/core/constants/route_constants.dart';
 import 'package:eatmehv2/core/localization/app_localizations.dart';
 import 'package:eatmehv2/core/theme/app_theme.dart';
 import 'package:eatmehv2/data/repos/auth_repo.dart';
@@ -9,9 +10,9 @@ import 'package:eatmehv2/data/repos/chat_repo.dart';
 import 'package:eatmehv2/data/repos/exercise_repo.dart';
 import 'package:eatmehv2/data/repos/meal_records_repo.dart';
 import 'package:eatmehv2/data/repos/user_repo.dart';
-import 'package:eatmehv2/presentation/screens/auth/login_screen.dart';
 import 'package:eatmehv2/routes/app_router.dart';
 import 'package:eatmehv2/utils/firebase_options.dart';
+import 'package:eatmehv2/utils/language_cubit.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -64,33 +65,33 @@ class MyApp extends StatelessWidget {
                   chatRepository: context.read<ChatRepository>(),
                 ),
           ),
+          BlocProvider(
+            create: (context) => LanguageCubit(), // Add LanguageCubit
+          ),
         ],
 
-        child: MaterialApp(
-          debugShowCheckedModeBanner: false,
-          title: 'Eat Meh',
-          theme: AppTheme.lightTheme,
-          darkTheme: AppTheme.darkTheme,
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          supportedLocales: const [
-            Locale('en', ''), // English
-            Locale('zh', ''), // Chinese
-          ],
-          locale: const Locale('en'),
-          home: BlocBuilder<AuthBloc, AuthState>(
-            builder: (context, authState) {
-              if (authState is Authenticated) {
-                return AppRouter.getHomeScreen(authState.user);
-              }
-
-              return const LoginScreen();
-            },
-          ),
+        child: BlocBuilder<LanguageCubit, LanguageState>(
+          builder: (context, languageState) {
+            return MaterialApp(
+              debugShowCheckedModeBanner: false,
+              title: 'Eat Meh',
+              theme: AppTheme.lightTheme,
+              darkTheme: AppTheme.darkTheme,
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: const [
+                Locale('en', ''), // English
+                Locale('zh', ''), // Chinese
+              ],
+              locale: languageState.locale, // Dynamic locale from cubit
+              initialRoute: RouteConstants.login,
+              onGenerateRoute: AppRouter.generateRoute,
+            );
+          },
         ),
       ),
     );

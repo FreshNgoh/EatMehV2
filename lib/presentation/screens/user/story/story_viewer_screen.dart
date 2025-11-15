@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:eatmehv2/presentation/screens/user/profile_screen.dart';
+import 'package:eatmehv2/presentation/widgets/toast.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eatmehv2/data/models/story/story_model.dart';
@@ -159,9 +160,8 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
       setState(() {
         _localComments[_currentIndex]?.removeLast();
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to post comment: $e')));
+      final errorMsg = 'Failed to post comment: $e';
+      showCustomToast(context, errorMsg, type: ToastType.error);
     }
   }
 
@@ -592,12 +592,17 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                                                 !_hasValidImageUrl(
                                                       comment.userImageUrl,
                                                     )
-                                                    ? ClipOval(
-                                                      child: Image.asset(
-                                                        "assets/teralero.png",
-                                                        width: 36,
-                                                        height: 36,
-                                                        fit: BoxFit.cover,
+                                                    ? CircleAvatar(
+                                                      radius: 20,
+                                                      backgroundColor:
+                                                          Colors.grey.shade300,
+                                                      child: Text(
+                                                        currentStory.username[0]
+                                                            .toUpperCase(),
+                                                        style: const TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
                                                       ),
                                                     )
                                                     : null,
@@ -664,12 +669,15 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                                       : null,
                               child:
                                   !_hasValidImageUrl(widget.currentUserImageUrl)
-                                      ? ClipOval(
-                                        child: Image.asset(
-                                          "assets/teralero.png",
-                                          width: 36,
-                                          height: 36,
-                                          fit: BoxFit.cover,
+                                      ? CircleAvatar(
+                                        radius: 20,
+                                        backgroundColor: Colors.grey.shade300,
+                                        child: Text(
+                                          currentStory.username[0]
+                                              .toUpperCase(),
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       )
                                       : null,

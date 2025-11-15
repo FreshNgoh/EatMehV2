@@ -1,4 +1,5 @@
 import 'package:eatmehv2/presentation/screens/user/profile_screen.dart';
+import 'package:eatmehv2/presentation/widgets/toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:eatmehv2/bloc/auth/auth_bloc.dart';
@@ -50,9 +51,8 @@ class _FriendsScreenState extends State<FriendsScreen>
     } catch (e) {
       setState(() => _isLoadingRequests = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading friend requests: $e')),
-        );
+        final errorMsg = 'Error loading friend requests: $e';
+        showCustomToast(context, errorMsg, type: ToastType.error);
       }
     }
   }
@@ -84,9 +84,8 @@ class _FriendsScreenState extends State<FriendsScreen>
     } catch (e) {
       setState(() => _isSearching = false);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Search error: $e')));
+        final errorMsg = 'Search error: $e';
+        showCustomToast(context, errorMsg, type: ToastType.error);
       }
     }
   }
@@ -99,15 +98,13 @@ class _FriendsScreenState extends State<FriendsScreen>
       await _userRepo.acceptFriendRequest(authState.user.uid, requesterId);
       await _loadFriendRequests();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Friend request accepted!')),
-        );
+        final successMsg = 'Friend request accepted!';
+        showCustomToast(context, successMsg, type: ToastType.success);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error accepting request: $e')));
+        final errorMsg = 'Error accepting request: $e';
+        showCustomToast(context, errorMsg, type: ToastType.error);
       }
     }
   }
@@ -120,15 +117,13 @@ class _FriendsScreenState extends State<FriendsScreen>
       await _userRepo.rejectFriendRequest(authState.user.uid, requesterId);
       await _loadFriendRequests();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Friend request rejected')),
-        );
+        final rejectMsg = 'Friend request rejected';
+        showCustomToast(context, rejectMsg, type: ToastType.info);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error rejecting request: $e')));
+        final errorMsg = 'Error rejecting request: $e';
+        showCustomToast(context, errorMsg, type: ToastType.error);
       }
     }
   }
@@ -139,11 +134,7 @@ class _FriendsScreenState extends State<FriendsScreen>
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF191919)),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leadingWidth: 60,
         title: const Text(
           'Friends',
           style: TextStyle(
@@ -281,7 +272,7 @@ class _FriendsScreenState extends State<FriendsScreen>
                         contentPadding: const EdgeInsets.symmetric(vertical: 8),
                         leading: CircleAvatar(
                           radius: 25,
-                          backgroundColor: Colors.grey.shade200,
+                          backgroundColor: Colors.grey.shade300,
                           backgroundImage:
                               user.imageUrl != null && user.imageUrl!.isNotEmpty
                                   ? NetworkImage(user.imageUrl!)
@@ -363,7 +354,7 @@ class _FriendsScreenState extends State<FriendsScreen>
           contentPadding: const EdgeInsets.symmetric(vertical: 8),
           leading: CircleAvatar(
             radius: 25,
-            backgroundColor: Colors.grey.shade200,
+            backgroundColor: Colors.grey.shade300,
             backgroundImage:
                 user.imageUrl != null && user.imageUrl!.isNotEmpty
                     ? NetworkImage(user.imageUrl!)

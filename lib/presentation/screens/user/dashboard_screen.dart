@@ -2,8 +2,10 @@ import 'package:eatmehv2/bloc/auth/auth_bloc.dart';
 import 'package:eatmehv2/core/theme/app_colors.dart';
 import 'package:eatmehv2/data/models/exercise/exercise_model.dart';
 import 'package:eatmehv2/data/models/meal/meal_record_model.dart';
+import 'package:eatmehv2/data/models/user/user_model.dart';
 import 'package:eatmehv2/data/repos/exercise_repo.dart';
 import 'package:eatmehv2/data/repos/meal_records_repo.dart';
+import 'package:eatmehv2/data/repos/user_repo.dart';
 import 'package:eatmehv2/presentation/widgets/custom_card.dart';
 import 'package:eatmehv2/utils/calorie_utils.dart';
 import 'package:flutter/material.dart';
@@ -21,37 +23,89 @@ class _DashboardScreenState extends State<DashboardScreen> {
   late MealRecordsRepository _mealRepo;
   late ExerciseRepository _exerciseRepo;
 
+  final UserRepository _userRepo = UserRepository();
+  UserModel? _user; // local user state
+  bool _isLoadingUser = true;
+
   @override
   void initState() {
     super.initState();
     _mealRepo = MealRecordsRepository();
     _exerciseRepo = ExerciseRepository();
+
+    final authState = context.read<AuthBloc>().state as Authenticated;
+    final userUid = authState.user.uid;
+    _loadUserData(userUid);
+  }
+
+  Future<void> _loadUserData(String uid) async {
+    try {
+      final user = await _userRepo.getUser(uid); // fetch user from repo
+      setState(() {
+        _user = user;
+        _isLoadingUser = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingUser = false;
+      });
+      print('Error loading user: $e');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final authState = context.read<AuthBloc>().state as Authenticated;
-    final user = authState.user;
-    final userUid = user.uid;
     final today = DateTime.now();
 
-    // Calculate user metrics
+    if (_isLoadingUser) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (_user == null) {
+      return const Scaffold(
+        body: Center(child: Text('Failed to load user data')),
+      );
+    }
+
+    final user = _user!;
+    final userUid = user.uid;
+
+    // ✅ Check if user has completed their profile
+    final hasCompleteProfile =
+        user.height != null &&
+        user.weight != null &&
+        user.age != null &&
+        user.gender != null;
+
+    // Calculate user metrics only if profile is complete
     final bmi = CalorieUtils.calculateBMI(
       heightCm: user.height,
       weightKg: user.weight,
     );
-    final maintenanceCalories = CalorieUtils.calculateMaintenanceCalories(
-      weightKg: user.weight!,
-      heightCm: user.height!,
-      age: user.age!,
-      gender: user.gender!,
-    );
-    final lowThreshold = CalorieUtils.getLowCalorieThreshold(
-      maintenanceCalories: maintenanceCalories,
-    );
-    final highThreshold = CalorieUtils.getHighCalorieThreshold(
-      maintenanceCalories: maintenanceCalories,
-    );
+
+    final double? maintenanceCalories =
+        hasCompleteProfile
+            ? CalorieUtils.calculateMaintenanceCalories(
+              weightKg: user.weight!,
+              heightCm: user.height!,
+              age: user.age!,
+              gender: user.gender!,
+            )
+            : null;
+
+    final double? lowThreshold =
+        maintenanceCalories != null
+            ? CalorieUtils.getLowCalorieThreshold(
+              maintenanceCalories: maintenanceCalories,
+            )
+            : null;
+
+    final double? highThreshold =
+        maintenanceCalories != null
+            ? CalorieUtils.getHighCalorieThreshold(
+              maintenanceCalories: maintenanceCalories,
+            )
+            : null;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9F9),
@@ -63,7 +117,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
-
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -183,48 +236,51 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                   const SizedBox(height: 16),
 
-                  // Calorie Thresholds Section
-                  const Text(
-                    'Daily Calorie Guide',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF2D3748),
+                  // Calorie Thresholds Section (only show if profile is complete)
+                  if (hasCompleteProfile &&
+                      lowThreshold != null &&
+                      highThreshold != null) ...[
+                    const Text(
+                      'Daily Calorie Guide',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF2D3748),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildCalorieThresholdCard(
-                          icon: Icons.trending_down,
-                          label: 'Too Low',
-                          value: '< ${lowThreshold.toInt()}',
-                          color: AppColors.caloriesLow,
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildCalorieThresholdCard(
+                            icon: Icons.trending_down,
+                            label: 'Too Low',
+                            value: '< ${lowThreshold.toInt()}',
+                            color: AppColors.caloriesLow,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _buildCalorieThresholdCard(
-                          icon: Icons.check_circle,
-                          label: 'Healthy',
-                          value:
-                              '${lowThreshold.toInt()}-${highThreshold.toInt()}',
-                          color: AppColors.caloriesMedium,
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _buildCalorieThresholdCard(
+                            icon: Icons.check_circle,
+                            label: 'Healthy',
+                            value:
+                                '${lowThreshold.toInt()}-${highThreshold.toInt()}',
+                            color: AppColors.caloriesMedium,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _buildCalorieThresholdCard(
-                          icon: Icons.trending_up,
-                          label: 'Too High',
-                          value: '> ${highThreshold.toInt()}',
-                          color: AppColors.caloriesHigh,
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _buildCalorieThresholdCard(
+                            icon: Icons.trending_up,
+                            label: 'Too High',
+                            value: '> ${highThreshold.toInt()}',
+                            color: AppColors.caloriesHigh,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -409,7 +465,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ],
                       ),
                     ),
-
                     exercises.isEmpty
                         ? Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -450,8 +505,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 );
               },
             ),
-
-            // const SizedBox(height: 12),
 
             // === TODAY'S MEALS SECTION ===
             FutureBuilder<List<MealRecordModel>>(
@@ -775,7 +828,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildMealCard(MealRecordModel meal, double maintenanceCalories) {
+  Widget _buildMealCard(MealRecordModel meal, double? maintenanceCalories) {
     // Use general meal calorie thresholds (not user-specific for individual meals)
     final calorieColor = AppColors.getCalorieColor(meal.calories);
 
