@@ -1,6 +1,14 @@
 import 'package:eatmehv2/data/models/user/user_model.dart';
 import 'package:eatmehv2/presentation/screens/onboarding/personal_info_screen.dart';
 import 'package:flutter/material.dart';
+import '../../widgets/video_player.dart';
+
+class ManualStep {
+  final String videoAsset;
+  final String text;
+
+  ManualStep({required this.videoAsset, required this.text});
+}
 
 class UserManualScreen extends StatefulWidget {
   final UserModel user;
@@ -15,29 +23,40 @@ class _UserManualScreenState extends State<UserManualScreen> {
   final PersonalInfoController _personalInfoController =
       PersonalInfoController();
 
-  // Dummy content for first 4 steps
-  final List<String> _manualSteps = [
-    "Welcome to EatMeh! 🍽️\n\nTrack your meals and stay healthy.",
-    "Connect with professional trainers to reach your goals.",
-    "Monitor your BMI, diet, and daily progress easily.",
-    "Set realistic goals and track achievements effortlessly.",
+  // ⭐ NEW 5 steps (4 video steps + last PersonalInfo)
+  final List<ManualStep> _steps = [
+    ManualStep(
+      videoAsset: 'assets/videos/scan_manual.mov',
+      text: 'Scan your meal, get healthy',
+    ),
+    ManualStep(
+      videoAsset: 'assets/videos/story_manual.mov',
+      text: 'Post a story, share your meal',
+    ),
+    ManualStep(
+      videoAsset: 'assets/videos/record_manual.mov',
+      text: 'Track your record, stay healthy',
+    ),
+    ManualStep(
+      videoAsset: 'assets/videos/trainee_manual.mov',
+      text: 'Find a consult, customize your goal',
+    ),
+    ManualStep(
+      videoAsset: 'assets/videos/trainer_manual.mov',
+      text: 'Apply a consult, get your trainees',
+    ),
   ];
+
   void _nextStep() {
-    if (_currentStep == 4) {
+    if (_currentStep == 5) {
       _personalInfoController.completeOnboarding?.call();
     } else {
-      setState(() {
-        _currentStep++;
-      });
+      setState(() => _currentStep++);
     }
   }
 
   void _previousStep() {
-    if (_currentStep > 0) {
-      setState(() {
-        _currentStep--;
-      });
-    }
+    if (_currentStep > 0) setState(() => _currentStep--);
   }
 
   @override
@@ -51,17 +70,17 @@ class _UserManualScreenState extends State<UserManualScreen> {
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
         child: Column(
           children: [
-            // Progress indicator
+            // Progress bar
             LinearProgressIndicator(
-              value: (_currentStep + 1) / 5,
+              value: (_currentStep + 1) / 6,
               backgroundColor: Colors.grey.shade300,
               color: Colors.green,
             ),
             const SizedBox(height: 10),
 
-            // Step counter
+            // Step indicator
             Text(
-              "${_currentStep + 1} of 5",
+              "${_currentStep + 1} of 6",
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey.shade600,
@@ -73,10 +92,10 @@ class _UserManualScreenState extends State<UserManualScreen> {
             // Step content
             Expanded(
               child:
-                  _currentStep < 4
-                      ? _buildManualStep(_manualSteps[_currentStep])
+                  _currentStep < 5
+                      ? _buildVideoStep(_steps[_currentStep])
                       : PersonalInfoScreen(
-                        key: ValueKey('personal_info_$_currentStep'),
+                        key: ValueKey("personal-info-step"),
                         user: widget.user,
                         showButton: false,
                         controller: _personalInfoController,
@@ -88,7 +107,6 @@ class _UserManualScreenState extends State<UserManualScreen> {
             // Bottom navigation buttons
             Row(
               children: [
-                // Previous button
                 if (_currentStep > 0)
                   Expanded(
                     child: OutlinedButton(
@@ -112,7 +130,6 @@ class _UserManualScreenState extends State<UserManualScreen> {
 
                 // Next/Start button
                 Expanded(
-                  flex: _currentStep == 0 ? 1 : 1,
                   child: ElevatedButton(
                     onPressed: _nextStep,
                     style: ElevatedButton.styleFrom(
@@ -120,7 +137,7 @@ class _UserManualScreenState extends State<UserManualScreen> {
                       backgroundColor: Colors.green,
                     ),
                     child: Text(
-                      _currentStep == 4 ? "Start EatMeh" : "Next",
+                      _currentStep == 5 ? "Start EatMeh" : "Next",
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
@@ -136,38 +153,25 @@ class _UserManualScreenState extends State<UserManualScreen> {
     );
   }
 
-  Widget _buildManualStep(String text) {
+  //  Replaces _buildManualStep()
+  Widget _buildVideoStep(ManualStep step) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(_getStepIcon(_currentStep), size: 80, color: Colors.green),
-            const SizedBox(height: 30),
-            Text(
-              text,
-              style: const TextStyle(fontSize: 18, height: 1.6),
-              textAlign: TextAlign.center,
-            ),
-          ],
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              DemoVideoPlayer(videoAsset: step.videoAsset),
+              const SizedBox(height: 20),
+              Text(
+                step.text,
+                style: const TextStyle(fontSize: 18, height: 1.6),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
       ),
     );
-  }
-
-  IconData _getStepIcon(int step) {
-    switch (step) {
-      case 0:
-        return Icons.restaurant_menu;
-      case 1:
-        return Icons.people;
-      case 2:
-        return Icons.monitor_heart;
-      case 3:
-        return Icons.flag;
-      default:
-        return Icons.info;
-    }
   }
 }

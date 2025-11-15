@@ -21,23 +21,23 @@ class _SimpleUserManualScreenState extends State<SimpleUserManualScreen> {
   // ✅ Dynamic steps with video + text
   final List<ManualStep> _steps = [
     ManualStep(
-      videoAsset: 'assets/videos/demo.mov',
+      videoAsset: 'assets/videos/scan_manual.mov',
       text: 'Scan your meal, get healthy',
     ),
     ManualStep(
-      videoAsset: 'assets/videos/demo.mov',
-      text: 'Track your record, stay healthy',
-    ),
-    ManualStep(
-      videoAsset: 'assets/videos/demo.mov',
+      videoAsset: 'assets/videos/story_manual.mov',
       text: 'Post a story, share your meal',
     ),
     ManualStep(
-      videoAsset: 'assets/videos/demo4.mov',
+      videoAsset: 'assets/videos/record_manual.mov',
+      text: 'Track your record, stay healthy',
+    ),
+    ManualStep(
+      videoAsset: 'assets/videos/trainee_manual.mov',
       text: 'Find a consult, customize your goal',
     ),
     ManualStep(
-      videoAsset: 'assets/videos/demo.mov',
+      videoAsset: 'assets/videos/trainer_manual.mov',
       text: 'Apply a consult, get your trainees',
     ),
   ];
@@ -70,7 +70,7 @@ class _SimpleUserManualScreenState extends State<SimpleUserManualScreen> {
               backgroundColor: Colors.grey.shade300,
               color: Colors.green,
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 5),
 
             // Step counter
             Text(
@@ -81,7 +81,7 @@ class _SimpleUserManualScreenState extends State<SimpleUserManualScreen> {
                 fontWeight: FontWeight.w500,
               ),
             ),
-            const SizedBox(height: 5),
+            // const SizedBox(height: 5),
 
             // Step content
             Expanded(child: _buildManualStep(_steps[_currentStep])),

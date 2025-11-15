@@ -15,8 +15,20 @@ class _DemoVideoPlayerState extends State<DemoVideoPlayer> {
   @override
   void initState() {
     super.initState();
+    _initVideo(widget.videoAsset);
+  }
 
-    _controller = VideoPlayerController.asset(widget.videoAsset)
+  // ⭐ When parent updates videoAsset, reload the video
+  @override
+  void didUpdateWidget(covariant DemoVideoPlayer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.videoAsset != widget.videoAsset) {
+      _initVideo(widget.videoAsset);
+    }
+  }
+
+  void _initVideo(String asset) {
+    _controller = VideoPlayerController.asset(asset)
       ..initialize().then((_) {
         _controller.setLooping(true);
         _controller.setVolume(0);
@@ -35,15 +47,15 @@ class _DemoVideoPlayerState extends State<DemoVideoPlayer> {
   Widget build(BuildContext context) {
     return _controller.value.isInitialized
         ? GestureDetector(
-          onTap:
-              () =>
-                  _controller.value.isPlaying
-                      ? _controller.pause()
-                      : _controller.play(),
+          onTap: () {
+            _controller.value.isPlaying
+                ? _controller.pause()
+                : _controller.play();
+          },
           child: Center(
             child: SizedBox(
               width: MediaQuery.of(context).size.width * 0.7,
-              height: 400, // adjust height
+              height: 600,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: FittedBox(
