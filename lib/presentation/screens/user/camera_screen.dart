@@ -32,6 +32,7 @@ class _CameraScreenState extends State<CameraScreen> {
   bool _isSaving = false;
   bool _isPosting = false;
   Map<String, dynamic>? _analysisResult;
+  String? _savedMealUid;
 
   @override
   void initState() {
@@ -94,6 +95,9 @@ class _CameraScreenState extends State<CameraScreen> {
 
       await mealRepo.saveMealRecord(meal);
 
+      // Save the meal UID so postStory can reuse it
+      _savedMealUid = meal.uid;
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           // --- 3. USE LOCALIZED STRING ---
@@ -125,6 +129,7 @@ class _CameraScreenState extends State<CameraScreen> {
     final authState = context.read<AuthBloc>().state as Authenticated;
     final user = authState.user;
     final file = File(_selectedImage!.path);
+    MealRecordModel? meal;
 
     try {
       // 🟢 1. Upload image to SAME mealRecord folder (not separate)
@@ -153,7 +158,11 @@ class _CameraScreenState extends State<CameraScreen> {
 
       // 🟢 3. Create story
       final story = StoryModel(
-        uid: FirebaseFirestore.instance.collection('stories').doc().id,
+        uid:
+            FirebaseFirestore.instance
+                .collection(FirebaseConstants.storiesCollection)
+                .doc()
+                .id,
         userId: user.uid,
         username: user.username,
         userImageUrl: user.imageUrl ?? '',
@@ -165,35 +174,56 @@ class _CameraScreenState extends State<CameraScreen> {
         comments: [],
       );
 
-      // 🟢 4. Create meal record (same image)
-      final meal = MealRecordModel(
-        uid:
-            FirebaseFirestore.instance
-                .collection(FirebaseConstants.mealRecordFolder)
-                .doc()
-                .id,
-        userUid: user.uid,
-        imageUrl: downloadUrl,
-        calories: calories,
-        foodName: foodName,
-        nutritionInfo: NutritionInfo(
-          protein: protein.toDouble(),
-          carbs: carbs.toDouble(),
-          fat: fat.toDouble(),
-          fiber: fiber.toDouble(),
-        ),
-        recommendation: recommendation,
-        createdAt: now,
-        updatedAt: now,
-      );
-
+      // 🟢 4. Create meal record
+      if (_savedMealUid != null) {
+        // User already saved — reuse existing meal record
+        meal = MealRecordModel(
+          uid: _savedMealUid!,
+          userUid: user.uid,
+          imageUrl: downloadUrl,
+          calories: calories,
+          foodName: foodName,
+          nutritionInfo: NutritionInfo(
+            protein: protein.toDouble(),
+            carbs: carbs.toDouble(),
+            fat: fat.toDouble(),
+            fiber: fiber.toDouble(),
+          ),
+          recommendation: recommendation,
+          createdAt: now,
+          updatedAt: now,
+        );
+      } else {
+        // User did NOT save — create a NEW meal record
+        meal = MealRecordModel(
+          uid:
+              FirebaseFirestore.instance
+                  .collection(FirebaseConstants.mealRecordFolder)
+                  .doc()
+                  .id,
+          userUid: user.uid,
+          imageUrl: downloadUrl,
+          calories: calories,
+          foodName: foodName,
+          nutritionInfo: NutritionInfo(
+            protein: protein.toDouble(),
+            carbs: carbs.toDouble(),
+            fat: fat.toDouble(),
+            fiber: fiber.toDouble(),
+          ),
+          recommendation: recommendation,
+          createdAt: now,
+          updatedAt: now,
+        );
+      }
       // 🟢 5. Save both to Firestore
       final storyRepo = StoryRepository();
       final mealRepo = MealRecordsRepository();
 
       await Future.wait([
         storyRepo.createStory(story),
-        mealRepo.saveMealRecord(meal),
+        // dont save to meal collection if save it before
+        if (_savedMealUid == null) mealRepo.saveMealRecord(meal),
       ]);
 
       if (mounted) {
@@ -593,7 +623,7 @@ class _CameraScreenState extends State<CameraScreen> {
             // ⚪ Post Story Button (outlined look)
             Expanded(
               child: CustomButton(
-                text: _isPosting ? "Posting" : 'Post',
+                text: _isPosting ? "Posting.." : 'Post',
                 icon: Icons.add_circle,
                 backgroundColor: Colors.white,
                 textColor: const Color(0xFF191919),

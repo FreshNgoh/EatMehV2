@@ -116,8 +116,26 @@ class _ProfileScreenState extends State<ProfileScreen>
     super.dispose();
   }
 
+  // Helper method to calculate maintenance calories
+  double _getMaintenanceCalories() {
+    if (_user == null ||
+        _user!.weight == null ||
+        _user!.height == null ||
+        _user!.age == null ||
+        _user!.gender == null) {
+      return 2000.0; // Default fallback
+    }
+
+    return CalorieUtils.calculateMaintenanceCalories(
+      weightKg: _user!.weight!,
+      heightCm: _user!.height!,
+      age: _user!.age!,
+      gender: _user!.gender!,
+    );
+  }
+
   void _updateImage() {
-    if (_calorieData == null) return;
+    if (_calorieData == null || _user == null) return;
 
     final caloriesTaken = _calorieData!['taken'] ?? 0.0;
     final caloriesBurnt = _calorieData!['burnt'] ?? 0.0;
@@ -125,7 +143,12 @@ class _ProfileScreenState extends State<ProfileScreen>
       caloriesTaken,
       caloriesBurnt,
     );
-    final calorieStatus = CalorieUtils.getCalorieStatus(netCalories);
+
+    final maintenanceCalories = _getMaintenanceCalories();
+    final calorieStatus = CalorieUtils.getCalorieStatus(
+      netCalories: netCalories,
+      maintenanceCalories: maintenanceCalories,
+    );
     _currentImagePath = CalorieUtils.getRandomStatusImage(calorieStatus);
   }
 
@@ -235,8 +258,12 @@ class _ProfileScreenState extends State<ProfileScreen>
       caloriesBurnt.toDouble(),
     );
 
-    final calorieStatus = CalorieUtils.getCalorieStatus(netCalories);
-    final netCaloriesColor = CalorieUtils.getStatusColor(netCalories);
+    final maintenanceCalories = _getMaintenanceCalories();
+    final calorieStatus = CalorieUtils.getCalorieStatus(
+      netCalories: netCalories,
+      maintenanceCalories: maintenanceCalories,
+    );
+    final netCaloriesColor = CalorieUtils.getStatusColor(calorieStatus);
     final statusText = CalorieUtils.getStatusText(calorieStatus);
 
     // user image
@@ -649,6 +676,12 @@ class _ProfileScreenState extends State<ProfileScreen>
             currentUserFriends: state.user.friends,
             targetUserFriendRequests: profileUser.friendRequests,
             currentUserFriendRequests: state.user.friendRequests,
+            onStatusChanged: () {
+              // Refresh the profile data after friend status changes
+              _loadUserData();
+              // Also refresh the auth bloc to update current user's friend list
+              context.read<AuthBloc>().add(AuthRefreshUserRequested());
+            },
           ),
         );
       },

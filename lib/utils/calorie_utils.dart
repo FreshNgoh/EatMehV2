@@ -15,16 +15,75 @@ class CalorieUtils {
     return caloriesTaken - caloriesBurnt;
   }
 
-  /// Returns the [CalorieStatus] based on the given net calorie value.
-  static CalorieStatus getCalorieStatus(double netCalories) {
-    if (netCalories < 300) return CalorieStatus.low;
-    if (netCalories > 600) return CalorieStatus.high;
+  /// BMR (static)
+  static double calculateBMR({
+    required double weightKg,
+    required double heightCm,
+    required int age,
+    required String gender, // 'male' or 'female'
+  }) {
+    if (gender.toLowerCase() == 'male') {
+      return 10 * weightKg + 6.25 * heightCm - 5 * age + 5;
+    } else {
+      return 10 * weightKg + 6.25 * heightCm - 5 * age - 161;
+    }
+  }
+
+  /// Maintenance calories (static)
+  static double calculateMaintenanceCalories({
+    required double weightKg,
+    required double heightCm,
+    required int age,
+    required String gender,
+    double activityFactor = 1.2, // sedentary default
+  }) {
+    final bmr = calculateBMR(
+      weightKg: weightKg,
+      heightCm: heightCm,
+      age: age,
+      gender: gender,
+    );
+    return bmr * activityFactor;
+  }
+
+  /// NEW: Get the low calorie threshold (10% below maintenance)
+  static double getLowCalorieThreshold({required double maintenanceCalories}) {
+    return maintenanceCalories * 0.9;
+  }
+
+  /// NEW: Get the high calorie threshold (10% above maintenance)
+  static double getHighCalorieThreshold({required double maintenanceCalories}) {
+    return maintenanceCalories * 1.1;
+  }
+
+  /// Dynamic calorie status based on user maintenance calories
+  static CalorieStatus getCalorieStatus({
+    required double netCalories,
+    required double maintenanceCalories,
+  }) {
+    final lowThreshold = getLowCalorieThreshold(
+      maintenanceCalories: maintenanceCalories,
+    );
+    final highThreshold = getHighCalorieThreshold(
+      maintenanceCalories: maintenanceCalories,
+    );
+
+    if (netCalories < lowThreshold) return CalorieStatus.low;
+    if (netCalories > highThreshold) return CalorieStatus.high;
+
     return CalorieStatus.balanced;
   }
 
-  /// Returns the appropriate color for the given [CalorieStatus].
-  static Color getStatusColor(double netCalories) {
-    return AppColors.getCalorieColor(netCalories.toInt());
+  /// Returns the display text for a given [CalorieStatus].
+  static Color getStatusColor(CalorieStatus status) {
+    switch (status) {
+      case CalorieStatus.low:
+        return AppColors.caloriesLow;
+      case CalorieStatus.balanced:
+        return AppColors.caloriesMedium;
+      case CalorieStatus.high:
+        return AppColors.caloriesHigh;
+    }
   }
 
   /// Returns the display text for a given [CalorieStatus].
@@ -70,5 +129,35 @@ class CalorieUtils {
       case CalorieStatus.high:
         return Icons.sentiment_very_dissatisfied;
     }
+  }
+
+  /// Calculates BMI using height in cm and weight in kg.
+  static double? calculateBMI({
+    required double? heightCm,
+    required double? weightKg,
+  }) {
+    if (heightCm == null || weightKg == null) return null;
+    if (heightCm <= 0 || weightKg <= 0) return null;
+
+    final heightM = heightCm / 100;
+    final bmi = weightKg / (heightM * heightM);
+
+    return bmi;
+  }
+
+  /// NEW: Get BMI category text
+  static String getBMICategory(double bmi) {
+    if (bmi < 18.5) return 'Underweight';
+    if (bmi < 25) return 'Normal';
+    if (bmi < 30) return 'Overweight';
+    return 'Obese';
+  }
+
+  /// NEW: Get BMI category color
+  static Color getBMIColor(double bmi) {
+    if (bmi < 18.5) return AppColors.caloriesLow;
+    if (bmi < 25) return AppColors.caloriesMedium;
+    if (bmi < 30) return AppColors.warning;
+    return AppColors.caloriesHigh;
   }
 }

@@ -1,6 +1,7 @@
 import 'package:eatmehv2/bloc/auth/auth_bloc.dart';
 import 'package:eatmehv2/core/theme/app_colors.dart';
 import 'package:eatmehv2/data/models/meal/meal_record_model.dart';
+import 'package:eatmehv2/data/models/user/goal_model.dart';
 import 'package:eatmehv2/data/repos/meal_records_repo.dart';
 import 'package:eatmehv2/presentation/widgets/custom_card.dart';
 import 'package:flutter/material.dart';
@@ -45,6 +46,44 @@ class _DietScreenState extends State<DietScreen> {
     if (date != null) setState(() => selectedDate = date);
   }
 
+  /// Returns true if `goal` has valid start/end and today is inside the range (inclusive).
+  bool _isGoalActive(Goal? goal) {
+    if (goal == null) return false;
+    final now = DateTime.now();
+
+    // Convert Firestore Timestamp -> DateTime if necessary
+    final start = goal.startDate?.toDate();
+    final end = goal.endDate?.toDate();
+
+    if (start == null || end == null) return false;
+
+    // inclusive check: start <= now <= end
+    return (now.isAtSameMomentAs(start) || now.isAfter(start)) &&
+        (now.isAtSameMomentAs(end) || now.isBefore(end));
+  }
+
+  /// Safely get a nutrient goal value or fallback to default if goal is null or inactive.
+  double _getGoalValue({
+    required Goal? goal,
+    required String type,
+    required double defaultValue,
+  }) {
+    if (!_isGoalActive(goal)) return defaultValue;
+
+    switch (type) {
+      case 'protein':
+        return goal!.protein;
+      case 'carbs':
+        return goal!.carbs;
+      case 'fat':
+        return goal!.fat;
+      case 'fiber':
+        return goal!.fiber;
+      default:
+        return defaultValue;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // --- 2. GET LOCALIZATION ---
@@ -54,7 +93,7 @@ class _DietScreenState extends State<DietScreen> {
 
     return Scaffold(
       // Use the scaffold's background color from your theme
-      backgroundColor: const Color(0xFFF9F9F9), 
+      backgroundColor: const Color(0xFFF9F9F9),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -74,8 +113,10 @@ class _DietScreenState extends State<DietScreen> {
                     child: Row(
                       children: [
                         Text(
-                          DateFormat('EEE, MMM d', loc.locale.languageCode)
-                              .format(selectedDate),
+                          DateFormat(
+                            'EEE, MMM d',
+                            loc.locale.languageCode,
+                          ).format(selectedDate),
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
@@ -92,22 +133,22 @@ class _DietScreenState extends State<DietScreen> {
                     icon: const Icon(Icons.chevron_right, size: 28),
                     onPressed:
                         selectedDate.isBefore(
-                                DateTime(
-                                  DateTime.now().year,
-                                  DateTime.now().month,
-                                  DateTime.now().day,
-                                ),
-                              )
+                              DateTime(
+                                DateTime.now().year,
+                                DateTime.now().month,
+                                DateTime.now().day,
+                              ),
+                            )
                             ? _nextDay
                             : null,
                     color:
                         selectedDate.isBefore(
-                                DateTime(
-                                  DateTime.now().year,
-                                  DateTime.now().month,
-                                  DateTime.now().day,
-                                ),
-                              )
+                              DateTime(
+                                DateTime.now().year,
+                                DateTime.now().month,
+                                DateTime.now().day,
+                              ),
+                            )
                             ? Colors.black
                             : Colors.grey.shade400,
                   ),
@@ -149,7 +190,9 @@ class _DietScreenState extends State<DietScreen> {
                           Text(
                             // --- 3. USE LOCALIZED STRING ---
                             loc.recordError.replaceFirst(
-                                '{error}', snapshot.error.toString()),
+                              '{error}',
+                              snapshot.error.toString(),
+                            ),
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               color: Colors.red,
@@ -209,12 +252,20 @@ class _DietScreenState extends State<DietScreen> {
                   (sum, meal) => sum + meal.nutritionInfo.fiber,
                 );
 
+                final authState =
+                    context.read<AuthBloc>().state as Authenticated;
+                final goal = authState.user.goal; // Goal? may be null
+
                 final nutritionData = [
                   _NutritionData(
                     // --- 5. USE LOCALIZED STRING ---
                     loc.recordNutrientProtein,
                     totalProtein,
-                    50, // This goal should probably come from user profile
+                    _getGoalValue(
+                      goal: goal,
+                      type: 'protein',
+                      defaultValue: 50,
+                    ),
                     AppColors.proteinIcon,
                     AppColors.proteinColor,
                   ),
@@ -222,7 +273,7 @@ class _DietScreenState extends State<DietScreen> {
                     // --- 6. USE LOCALIZED STRING ---
                     loc.recordNutrientCarbs,
                     totalCarbs,
-                    250, // This goal should probably come from user profile
+                    _getGoalValue(goal: goal, type: 'carbs', defaultValue: 250),
                     AppColors.carbsIcon,
                     AppColors.carbsColor,
                   ),
@@ -230,7 +281,7 @@ class _DietScreenState extends State<DietScreen> {
                     // --- 7. USE LOCALIZED STRING ---
                     loc.recordNutrientFat,
                     totalFat,
-                    70, // This goal should probably come from user profile
+                    _getGoalValue(goal: goal, type: 'fat', defaultValue: 70),
                     AppColors.fatIcon,
                     AppColors.fatColor,
                   ),
@@ -238,7 +289,7 @@ class _DietScreenState extends State<DietScreen> {
                     // --- 8. USE LOCALIZED STRING ---
                     loc.recordNutrientFiber,
                     totalFiber,
-                    30, // This goal should probably come from user profile
+                    _getGoalValue(goal: goal, type: 'fiber', defaultValue: 30),
                     AppColors.fiberIcon,
                     AppColors.fiberColor,
                   ),
@@ -267,6 +318,8 @@ class _DietScreenState extends State<DietScreen> {
                               color: Color(0xFF2D3748),
                             ),
                           ),
+                          const SizedBox(width: 10),
+                          _buildGoalSourceChip(goal),
                         ],
                       ),
                     ),
@@ -537,6 +590,35 @@ class _DietScreenState extends State<DietScreen> {
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGoalSourceChip(Goal? goal) {
+    final active = _isGoalActive(goal);
+
+    if (!active) return const SizedBox();
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.red.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.sync, size: 14, color: Colors.red),
+          const SizedBox(width: 4),
+          Text(
+            'sync with goal',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Colors.red,
             ),
           ),
         ],

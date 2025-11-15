@@ -8,6 +8,7 @@ class FriendRequestButton extends StatefulWidget {
   final List<String> currentUserFriends;
   final List<String> targetUserFriendRequests;
   final List<String> currentUserFriendRequests;
+  final VoidCallback? onStatusChanged; // Add this callback
 
   const FriendRequestButton({
     super.key,
@@ -15,6 +16,7 @@ class FriendRequestButton extends StatefulWidget {
     required this.currentUserFriends,
     required this.targetUserFriendRequests,
     required this.currentUserFriendRequests,
+    this.onStatusChanged, // Add this parameter
   });
 
   @override
@@ -68,6 +70,11 @@ class _FriendRequestButtonState extends State<FriendRequestButton> {
           ).showSnackBar(const SnackBar(content: Text('Friend request sent!')));
         }
       }
+
+      // Trigger refresh after successful action
+      if (mounted) {
+        widget.onStatusChanged?.call();
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -90,6 +97,8 @@ class _FriendRequestButtonState extends State<FriendRequestButton> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Friend request accepted')),
         );
+        // Trigger refresh after successful action
+        widget.onStatusChanged?.call();
       }
     } catch (e) {
       if (mounted) {
@@ -113,6 +122,8 @@ class _FriendRequestButtonState extends State<FriendRequestButton> {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Friend request deleted')));
+        // Trigger refresh after successful action
+        widget.onStatusChanged?.call();
       }
     } catch (e) {
       if (mounted) {
