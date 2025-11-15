@@ -89,9 +89,20 @@ class TraineeChatPreview extends StatelessWidget {
 
             return CustomList(
               profile: CircleAvatar(
-                backgroundImage: const AssetImage(
-                  'assets/images/default_face.jpeg',
-                ),
+                radius: 25,
+                backgroundColor: Colors.grey.shade200,
+                backgroundImage:
+                    traineeImage.isNotEmpty ? NetworkImage(traineeImage) : null,
+                child:
+                    traineeImage.isEmpty
+                        ? Text(
+                          traineeName[0].toUpperCase(),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )
+                        : null,
               ),
               onProfileTap: () {
                 Navigator.push(

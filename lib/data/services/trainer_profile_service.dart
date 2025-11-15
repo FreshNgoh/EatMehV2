@@ -130,8 +130,8 @@ class TrainerProfileService {
         return {
           'uid': doc.id,
           'name': data['username'] ?? 'Unknown',
-          'image': data['imageUrl'] ?? 'https://via.placeholder.com/150',
-          'trainerProfile': data['trainerProfile'], // optional
+          'image': data['imageUrl'] ?? '',
+          'trainerProfile': data['trainerProfile'],
         };
       }).toList();
     } catch (e) {

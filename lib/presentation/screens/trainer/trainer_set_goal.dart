@@ -101,13 +101,24 @@ class _TrainerSetGoalState extends State<TrainerSetGoal> {
                   children: [
                     CircleAvatar(
                       radius: 40,
-                      backgroundColor: Colors.white,
+                      backgroundColor: Colors.grey.shade200,
                       backgroundImage:
-                          _user!.imageUrl != null
+                          (_user!.imageUrl != null &&
+                                  _user!.imageUrl!.isNotEmpty)
                               ? NetworkImage(_user!.imageUrl!)
-                              : const AssetImage("assets/teralero.png")
-                                  as ImageProvider,
+                              : null,
+                      child:
+                          (_user!.imageUrl == null || _user!.imageUrl!.isEmpty)
+                              ? Text(
+                                _user!.username[0].toUpperCase(),
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              )
+                              : null,
                     ),
+
                     const SizedBox(width: 16),
                     Expanded(
                       child: Column(
