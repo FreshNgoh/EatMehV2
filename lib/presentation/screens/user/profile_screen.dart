@@ -160,11 +160,19 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  void _showEditProfile(BuildContext context) {
-    Navigator.push(
+  void _showEditProfile(BuildContext context) async {
+    if (_user == null) return;
+
+    // Wait until EditProfile page is popped
+    final updated = await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => EditProfile(user: _user!)),
     );
+
+    // If user updated profile, reload data
+    if (updated == true) {
+      _loadUserData();
+    }
   }
 
   void _showBioEditor(BuildContext context) {

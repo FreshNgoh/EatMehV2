@@ -168,7 +168,7 @@ class _EditProfileState extends State<EditProfile> {
       final successMsg = 'Profile updated successfully!';
       showCustomToast(context, successMsg, type: ToastType.success);
 
-      Navigator.pop(context);
+      Navigator.pop(context, true);
     } catch (e) {
       final errorMsg = 'Update failed: ${e.toString()}';
       showCustomToast(context, errorMsg, type: ToastType.error);

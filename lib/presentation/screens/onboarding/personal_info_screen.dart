@@ -2,7 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eatmehv2/presentation/widgets/toast.dart';
 import 'package:eatmehv2/utils/calorie_utils.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../bloc/auth/auth_bloc.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/user/user_model.dart';
 import '../../screens/admin/admin_screen.dart';
@@ -134,9 +136,25 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
 
       if (!context.mounted) return;
 
+      // ✅ Refresh the user data in AuthBloc from Firestore
+      context.read<AuthBloc>().add(AuthRefreshUserRequested());
+
+      // Wait a moment for the refresh to complete
+      await Future.delayed(const Duration(milliseconds: 300));
+
+      if (!context.mounted) return;
+
+      // Get the refreshed user data
+      final authState = context.read<AuthBloc>().state;
+      if (authState is! Authenticated) {
+        throw Exception('Failed to refresh user data');
+      }
+
+      final updatedUser = authState.user;
+
       // Navigate based on role
       Widget nextScreen;
-      switch (widget.user.role) {
+      switch (updatedUser.role) {
         case 'admin':
           nextScreen = const AdminScreen();
           break;
