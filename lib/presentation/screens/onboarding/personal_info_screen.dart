@@ -3,6 +3,7 @@ import 'package:eatmehv2/presentation/widgets/toast.dart';
 import 'package:eatmehv2/utils/calorie_utils.dart';
 import 'package:flutter/material.dart';
 
+import '../../../core/theme/app_colors.dart';
 import '../../../data/models/user/user_model.dart';
 import '../../screens/admin/admin_screen.dart';
 import '../../screens/user/home_screen.dart';
@@ -36,6 +37,8 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
   final _weightController = TextEditingController();
   final _bmiController = TextEditingController();
 
+  String? _selectedGender;
+  String? _selectedDietType;
   bool _isLoading = false;
 
   void _updateBMI() {
@@ -62,6 +65,8 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
     _heightController.text = widget.user.height?.toString() ?? '';
     _weightController.text = widget.user.weight?.toString() ?? '';
     _bmiController.text = widget.user.bmi?.toStringAsFixed(2) ?? '';
+    _selectedGender = widget.user.gender;
+    _selectedDietType = widget.user.dietType;
 
     _heightController.addListener(_updateBMI);
     _weightController.addListener(_updateBMI);
@@ -90,6 +95,19 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
       return;
     }
 
+    // Validate gender and diet type
+    if (_selectedGender == null) {
+      final warningMsg = 'Please select your gender';
+      showCustomToast(context, warningMsg, type: ToastType.warning);
+      return;
+    }
+
+    if (_selectedDietType == null) {
+      final warningMsg = 'Please select your diet type';
+      showCustomToast(context, warningMsg, type: ToastType.warning);
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
@@ -103,6 +121,8 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
         'height': height,
         'weight': weight,
         'bmi': bmi,
+        'gender': _selectedGender,
+        'dietType': _selectedDietType,
         'settings.showOnboarding': false,
         'updatedAt': FieldValue.serverTimestamp(),
       };
@@ -140,6 +160,119 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  Widget _buildGenderSelector() {
+    const genders = ['male', 'female'];
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children:
+          genders.map((gender) {
+            final isSelected = _selectedGender == gender;
+
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color:
+                    isSelected
+                        ? (_selectedGender == 'male'
+                            ? Colors.blue.withOpacity(0.1)
+                            : _selectedGender == 'female'
+                            ? Colors.pink.withOpacity(0.1)
+                            : Colors.grey[200])
+                        : Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color:
+                      isSelected
+                          ? (_selectedGender == 'male'
+                              ? Colors.blue.withOpacity(0.3)
+                              : _selectedGender == 'female'
+                              ? Colors.pink.withOpacity(0.3)
+                              : Colors.grey[200]!)
+                          : const Color(0xFFE2E8F0),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 5,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: InkWell(
+                onTap: () => setState(() => _selectedGender = gender),
+                borderRadius: BorderRadius.circular(16),
+                child: Text(
+                  gender,
+                  style: TextStyle(
+                    color:
+                        isSelected
+                            ? (_selectedGender == 'male'
+                                ? Colors.blue
+                                : _selectedGender == 'female'
+                                ? Colors.pink
+                                : Colors.grey[200])
+                            : Colors.black54,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+    );
+  }
+
+  Widget _buildDietSelector() {
+    const diets = ['Vegetarian', 'Vegan', 'Omnivore', 'Pescatarian'];
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children:
+          diets.map((diet) {
+            final isSelected = _selectedDietType == diet;
+            final baseColor = AppColors.getDietColor(diet);
+
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: isSelected ? baseColor.withOpacity(0.1) : Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color:
+                      isSelected
+                          ? baseColor.withOpacity(0.3)
+                          : const Color(0xFFE2E8F0),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 5,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: InkWell(
+                onTap: () => setState(() => _selectedDietType = diet),
+                borderRadius: BorderRadius.circular(16),
+                child: Text(
+                  diet,
+                  style: TextStyle(
+                    color: isSelected ? baseColor : Colors.black54,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+    );
   }
 
   @override
@@ -182,6 +315,32 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                 return null;
               },
             ),
+            const SizedBox(height: 20),
+
+            // Gender Selector
+            const Text(
+              'Gender',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF2D3748),
+              ),
+            ),
+            const SizedBox(height: 10),
+            _buildGenderSelector(),
+            const SizedBox(height: 20),
+
+            // Diet Type Selector
+            const Text(
+              'Diet Type',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF2D3748),
+              ),
+            ),
+            const SizedBox(height: 10),
+            _buildDietSelector(),
             const SizedBox(height: 20),
 
             // Height
