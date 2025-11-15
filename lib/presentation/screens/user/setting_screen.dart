@@ -18,9 +18,10 @@ class _SettingScreenState extends State<SettingScreen> {
   Future<void> _signOut(BuildContext context) async {
     try {
       await FirebaseAuth.instance.signOut(); // Sign out user
-      Navigator.pushReplacement(
+      Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => const LoginScreen()),
+        (route) => false,
       );
     } catch (e) {
       ScaffoldMessenger.of(

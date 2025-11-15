@@ -106,9 +106,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       final user = await authRepository.signIn(event.email, event.password);
       if (user != null) {
+        // Check if user is frozen
+        if (user.isFrozen) {
+          emit(
+            AuthError('Your account has been frozen. Please contact admin.'),
+          );
+          return;
+        }
+
         emit(Authenticated(user));
       } else {
-        emit(AuthError('Login failed'));
+        emit(AuthError('Login failed. Please check your credentials.'));
       }
     } catch (e) {
       emit(AuthError(e.toString()));
