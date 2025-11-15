@@ -1,5 +1,6 @@
 import 'package:eatmehv2/presentation/screens/auth/login_screen.dart';
 import 'package:eatmehv2/presentation/widgets/custom_card.dart';
+import 'package:eatmehv2/presentation/widgets/toast.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -24,9 +25,8 @@ class _SettingScreenState extends State<SettingScreen> {
         (route) => false,
       );
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Logout failed: $e')));
+      final errorMsg = 'Logout failed: $e';
+      showCustomToast(context, errorMsg, type: ToastType.error);
     }
   }
 

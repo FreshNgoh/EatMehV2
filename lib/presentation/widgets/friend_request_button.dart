@@ -1,3 +1,4 @@
+import 'package:eatmehv2/presentation/widgets/toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:eatmehv2/bloc/auth/auth_bloc.dart';
@@ -51,23 +52,20 @@ class _FriendRequestButtonState extends State<FriendRequestButton> {
       if (_isFriend) {
         await _userRepo.removeFriend(currentUserId, widget.targetUserId);
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Friend removed')));
+          final successMsg = 'Friend removed!';
+          showCustomToast(context, successMsg, type: ToastType.success);
         }
       } else if (_isPending) {
         await _userRepo.rejectFriendRequest(widget.targetUserId, currentUserId);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Friend request cancelled')),
-          );
+          final successMsg = 'Friend request cancelled!';
+          showCustomToast(context, successMsg, type: ToastType.success);
         }
       } else {
         await _userRepo.sendFriendRequest(currentUserId, widget.targetUserId);
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Friend request sent!')));
+          final successMsg = 'Friend request sent!';
+          showCustomToast(context, successMsg, type: ToastType.success);
         }
       }
 
@@ -77,9 +75,8 @@ class _FriendRequestButtonState extends State<FriendRequestButton> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        final errorMsg = 'Error: $e';
+        showCustomToast(context, errorMsg, type: ToastType.error);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -94,17 +91,15 @@ class _FriendRequestButtonState extends State<FriendRequestButton> {
     try {
       await _userRepo.acceptFriendRequest(currentUserId, widget.targetUserId);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Friend request accepted')),
-        );
+        final successMsg = 'Friend request accepted';
+        showCustomToast(context, successMsg, type: ToastType.success);
         // Trigger refresh after successful action
         widget.onStatusChanged?.call();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        final errorMsg = 'Error: $e';
+        showCustomToast(context, errorMsg, type: ToastType.error);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -119,17 +114,15 @@ class _FriendRequestButtonState extends State<FriendRequestButton> {
     try {
       await _userRepo.rejectFriendRequest(currentUserId, widget.targetUserId);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Friend request deleted')));
+        final successMsg = 'Friend request deleted';
+        showCustomToast(context, successMsg, type: ToastType.success);
         // Trigger refresh after successful action
         widget.onStatusChanged?.call();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        final errorMsg = 'Error: $e';
+        showCustomToast(context, errorMsg, type: ToastType.error);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

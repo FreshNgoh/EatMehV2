@@ -8,6 +8,7 @@ import 'package:eatmehv2/data/repos/story_repo.dart';
 import 'package:eatmehv2/data/repos/user_repo.dart';
 import 'package:eatmehv2/presentation/screens/user/profile_screen.dart';
 import 'package:eatmehv2/presentation/screens/user/story/story_viewer_screen.dart';
+import 'package:eatmehv2/presentation/widgets/toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -56,9 +57,8 @@ class _StoriesFeedScreenState extends State<StoriesFeedScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error loading stories: $e')));
+        final errorMsg = 'Error loading stories: $e';
+        showCustomToast(context, errorMsg, type: ToastType.error);
       }
     }
   }

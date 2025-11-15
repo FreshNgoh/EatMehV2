@@ -11,6 +11,7 @@ import 'package:eatmehv2/data/models/meal/meal_record_model.dart';
 import 'package:eatmehv2/data/models/meal/nutrition_info_model.dart';
 import 'package:eatmehv2/data/repos/meal_records_repo.dart';
 import 'package:eatmehv2/presentation/widgets/custom_button.dart';
+import 'package:eatmehv2/presentation/widgets/toast.dart';
 import 'package:eatmehv2/utils/firebase_storage_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -99,20 +100,18 @@ class _CameraScreenState extends State<CameraScreen> {
       _savedMealUid = meal.uid;
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          // --- 3. USE LOCALIZED STRING ---
-          SnackBar(content: Text(loc.cameraMealSaveSuccess)),
+        showCustomToast(
+          context,
+          loc.cameraMealSaveSuccess,
+          type: ToastType.success,
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            // --- 4. USE LOCALIZED STRING WITH PARAMETER ---
-            content: Text(
-              loc.cameraMealSaveError.replaceFirst('{error}', e.toString()),
-            ),
-          ),
+        showCustomToast(
+          context,
+          loc.cameraMealSaveError.replaceFirst('{error}', e.toString()),
+          type: ToastType.error,
         );
       }
     } finally {
@@ -227,9 +226,7 @@ class _CameraScreenState extends State<CameraScreen> {
       ]);
 
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(loc.cameraStoryAdded)));
+        showCustomToast(context, loc.cameraStoryAdded, type: ToastType.success);
         setState(() {
           _selectedImage = null;
           _analysisResult = null;
@@ -237,9 +234,8 @@ class _CameraScreenState extends State<CameraScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to post story: $e')));
+        final errorMsg = 'Failed to post story: $e';
+        showCustomToast(context, errorMsg, type: ToastType.error);
       }
     } finally {
       if (mounted) setState(() => _isPosting = false);
@@ -362,12 +358,10 @@ class _CameraScreenState extends State<CameraScreen> {
           });
         } else if (state is AnalyzeMealErrorState) {
           setState(() => _isAnalyzing = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                loc.cameraError.replaceFirst('{error}', state.error),
-              ),
-            ),
+          showCustomToast(
+            context,
+            loc.cameraError.replaceFirst('{error}', state.error),
+            type: ToastType.error,
           );
         }
       },

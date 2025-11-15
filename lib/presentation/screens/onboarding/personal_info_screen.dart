@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:eatmehv2/presentation/widgets/toast.dart';
 import 'package:eatmehv2/utils/calorie_utils.dart';
 import 'package:flutter/material.dart';
 
@@ -84,9 +85,8 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
 
   Future<void> _completeOnboarding(BuildContext context) async {
     if (!_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in all required fields')),
-      );
+      final warningMsg = 'Please fill in all required fields';
+      showCustomToast(context, warningMsg, type: ToastType.warning);
       return;
     }
 
@@ -133,9 +133,8 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
       );
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to save info: $e')));
+      final errorMsg = 'Failed to save: $e ';
+      showCustomToast(context, errorMsg, type: ToastType.error);
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);

@@ -1,3 +1,4 @@
+import 'package:eatmehv2/presentation/widgets/toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../bloc/auth/auth_bloc.dart';
@@ -57,9 +58,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         listener: (context, state) {
           if (state is AuthError) {
             final errorMsg = state.message.replaceFirst('Exception: ', '');
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(errorMsg)));
+            showCustomToast(context, errorMsg, type: ToastType.error);
           }
 
           if (state is Authenticated) {

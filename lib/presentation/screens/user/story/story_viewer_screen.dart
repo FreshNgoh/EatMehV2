@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:eatmehv2/presentation/screens/user/profile_screen.dart';
+import 'package:eatmehv2/presentation/widgets/toast.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eatmehv2/data/models/story/story_model.dart';
@@ -159,9 +160,8 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
       setState(() {
         _localComments[_currentIndex]?.removeLast();
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to post comment: $e')));
+      final errorMsg = 'Failed to post comment: $e';
+      showCustomToast(context, errorMsg, type: ToastType.error);
     }
   }
 

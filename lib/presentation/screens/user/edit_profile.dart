@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:eatmehv2/core/theme/app_colors.dart';
+import 'package:eatmehv2/presentation/widgets/toast.dart';
 import 'package:eatmehv2/utils/firebase_storage_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -146,13 +147,9 @@ class _EditProfileState extends State<EditProfile> {
             await user.updatePassword(_passwordController.text.trim());
           } on FirebaseAuthException catch (e) {
             if (e.code == 'requires-recent-login') {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text(
-                    'Please re-login before changing your password.',
-                  ),
-                ),
-              );
+              final warningMsg =
+                  'Please re-login before changing your password.';
+              showCustomToast(context, warningMsg, type: ToastType.warning);
               setState(() => _isLoading = false);
               return;
             } else {
@@ -168,15 +165,13 @@ class _EditProfileState extends State<EditProfile> {
       // ✅ 3. Update Firestore user document
       await _userRepo.updateUser(widget.user.uid, updatedData);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile updated successfully!')),
-      );
+      final successMsg = 'Profile updated successfully!';
+      showCustomToast(context, successMsg, type: ToastType.success);
 
       Navigator.pop(context);
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Update failed: ${e.toString()}')));
+      final errorMsg = 'Update failed: ${e.toString()}';
+      showCustomToast(context, errorMsg, type: ToastType.error);
     } finally {
       setState(() => _isLoading = false);
     }
@@ -377,11 +372,11 @@ class _EditProfileState extends State<EditProfile> {
                           Clipboard.setData(
                             ClipboardData(text: widget.user.uid),
                           );
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('User ID copied to clipboard!'),
-                              duration: Duration(seconds: 1),
-                            ),
+                          final infoMsg = 'User ID copied to clipboard!';
+                          showCustomToast(
+                            context,
+                            infoMsg,
+                            type: ToastType.success,
                           );
                         },
                         child: Row(

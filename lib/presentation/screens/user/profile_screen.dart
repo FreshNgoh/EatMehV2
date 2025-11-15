@@ -10,6 +10,7 @@ import 'package:eatmehv2/presentation/screens/user/setting_screen.dart';
 import 'package:eatmehv2/presentation/screens/user/subProfile/profile_consult_tab.dart';
 import 'package:eatmehv2/presentation/screens/user/subProfile/profile_me_tab.dart';
 import 'package:eatmehv2/presentation/widgets/custom_card.dart';
+import 'package:eatmehv2/presentation/widgets/toast.dart';
 import 'package:eatmehv2/utils/calorie_utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -181,15 +182,13 @@ class _ProfileScreenState extends State<ProfileScreen>
                 await _userRepo.updateUser(widget.userUid, {'bio': newBio});
                 await _loadUserData(); // Reload data
                 if (mounted) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(const SnackBar(content: Text('Bio updated!')));
+                  final successMsg = 'Bio updated!';
+                  showCustomToast(context, successMsg, type: ToastType.success);
                 }
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed to update bio: $e')),
-                  );
+                  final errorMsg = 'Failed to update bio: $e';
+                  showCustomToast(context, errorMsg, type: ToastType.error);
                 }
               }
             },
@@ -339,15 +338,12 @@ class _ProfileScreenState extends State<ProfileScreen>
                                         Clipboard.setData(
                                           ClipboardData(text: _user!.uid),
                                         );
-                                        ScaffoldMessenger.of(
+                                        final infoMsg =
+                                            'User ID copied to clipboard!';
+                                        showCustomToast(
                                           context,
-                                        ).showSnackBar(
-                                          const SnackBar(
-                                            content: Text(
-                                              'User ID copied to clipboard!',
-                                            ),
-                                            duration: Duration(seconds: 1),
-                                          ),
+                                          infoMsg,
+                                          type: ToastType.success,
                                         );
                                       },
                                       child: Row(

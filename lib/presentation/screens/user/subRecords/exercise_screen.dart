@@ -6,6 +6,7 @@ import 'package:eatmehv2/core/theme/app_colors.dart';
 import 'package:eatmehv2/data/models/exercise/exercise_model.dart';
 import 'package:eatmehv2/data/repos/exercise_repo.dart';
 import 'package:eatmehv2/presentation/widgets/custom_card.dart';
+import 'package:eatmehv2/presentation/widgets/toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -568,8 +569,10 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                   endTime == null ||
                   duration == null ||
                   caloriesBurned == null) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(loc.exerciseErrorFillFields)),
+                showCustomToast(
+                  context,
+                  loc.exerciseErrorFillFields,
+                  type: ToastType.warning,
                 );
                 return;
               }
@@ -618,22 +621,19 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
 
                 setState(() {}); // 🚀 <— TRIGGERS FutureBuilder to reload
 
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(loc.exerciseSaveSuccess)),
+                showCustomToast(
+                  context,
+                  loc.exerciseSaveSuccess,
+                  type: ToastType.success,
                 );
 
                 Navigator.pop(context);
               } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      loc.exerciseSaveError.replaceFirst(
-                        '{error}',
-                        e.toString(),
-                      ),
-                    ),
-                  ),
+                final errorMsg = loc.exerciseSaveError.replaceFirst(
+                  '{error}',
+                  e.toString(),
                 );
+                showCustomToast(context, errorMsg, type: ToastType.error);
               } finally {
                 setModalState(() => isLoading = false);
               }
