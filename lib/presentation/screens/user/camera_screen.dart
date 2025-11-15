@@ -623,7 +623,7 @@ class _CameraScreenState extends State<CameraScreen> {
             // ⚪ Post Story Button (outlined look)
             Expanded(
               child: CustomButton(
-                text: _isPosting ? "Posting" : 'Post',
+                text: _isPosting ? "Posting.." : 'Post',
                 icon: Icons.add_circle,
                 backgroundColor: Colors.white,
                 textColor: const Color(0xFF191919),
