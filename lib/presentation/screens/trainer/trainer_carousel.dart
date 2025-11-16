@@ -15,6 +15,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:eatmehv2/core/localization/app_localizations.dart';
 
 class CarouselApp extends StatefulWidget {
   const CarouselApp({super.key});
@@ -87,6 +88,8 @@ class _CarouselAppState extends State<CarouselApp> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = context.loc; // Get localization object
+
     if (isCheckingTrainer) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
@@ -101,8 +104,8 @@ class _CarouselAppState extends State<CarouselApp> {
         }
 
         if (snapshot.hasError) {
-          return const Scaffold(
-            body: Center(child: Text('Something went wrong.')),
+          return Scaffold(
+            body: Center(child: Text(loc.errorSomethingWentWrong)),
           );
         }
 
@@ -193,6 +196,8 @@ class _CarouselState extends State<Carousel> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = context.loc; // Get localization object
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -206,7 +211,7 @@ class _CarouselState extends State<Carousel> {
                 child: Column(
                   children: [
                     Text(
-                      'Transform Your Life',
+                      loc.carouselTitle,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 32,
@@ -217,7 +222,7 @@ class _CarouselState extends State<Carousel> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Choose your path to a healthier you',
+                      loc.carouselSubtitle,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 16,
@@ -298,13 +303,17 @@ class _CarouselState extends State<Carousel> {
                     // Trainer Card
                     CustomActionCard(
                       context: context,
-                      title: 'Become a Trainer',
-                      subtitle: 'Share your expertise and inspire others',
+                      title: loc.carouselButtonApply,
+                      subtitle: loc.consultTrainerSubtitle,
                       icon: Icons.fitness_center,
                       gradient: LinearGradient(
                         colors: [Colors.green.shade600, Colors.green.shade400],
                       ),
                       isPending: widget.applicationStatus == 'pending',
+                      // --- THIS IS THE FIX ---
+                      // The 'pendingText' parameter is removed
+                      // 'CustomActionCard' will handle localization internally
+                      // --- END OF FIX ---
                       onTap:
                           widget.applicationStatus == 'pending'
                               ? null
@@ -330,12 +339,12 @@ class _CarouselState extends State<Carousel> {
                         context: context,
                         title:
                             widget.hasTrainer
-                                ? 'Chat with Trainer'
-                                : 'Get a Trainer',
+                                ? loc.consultChatWithTrainer
+                                : loc.consultGetTrainer,
                         subtitle:
                             widget.hasTrainer
-                                ? 'Continue your fitness journey'
-                                : 'Find an expert to guide you',
+                                ? loc.consultChatSubtitle
+                                : loc.consultGetTrainerSubtitle,
                         icon:
                             widget.hasTrainer
                                 ? Icons.chat_bubble
@@ -353,7 +362,7 @@ class _CarouselState extends State<Carousel> {
                     const SizedBox(height: 32),
 
                     // Features Section
-                    _buildFeaturesSection(),
+                    _buildFeaturesSection(loc),
 
                     const SizedBox(height: 40),
                   ],
@@ -366,12 +375,12 @@ class _CarouselState extends State<Carousel> {
     );
   }
 
-  Widget _buildFeaturesSection() {
+  Widget _buildFeaturesSection(AppLocalizations loc) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Why Choose Us?',
+          loc.consultWhyChooseUs,
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -381,22 +390,22 @@ class _CarouselState extends State<Carousel> {
         const SizedBox(height: 16),
         _buildFeatureItem(
           icon: Icons.verified_user,
-          title: 'Certified Trainers',
-          subtitle: 'Work with verified fitness professionals',
+          title: loc.consultFeature1Title,
+          subtitle: loc.consultFeature1Subtitle,
           color: Colors.green,
         ),
         const SizedBox(height: 12),
         _buildFeatureItem(
           icon: Icons.track_changes,
-          title: 'Track Progress',
-          subtitle: 'Monitor your journey with detailed analytics',
+          title: loc.consultFeature2Title,
+          subtitle: loc.consultFeature2Subtitle,
           color: Colors.blue,
         ),
         const SizedBox(height: 12),
         _buildFeatureItem(
           icon: Icons.people,
-          title: 'Community Support',
-          subtitle: 'Join a community of fitness enthusiasts',
+          title: loc.consultFeature3Title,
+          subtitle: loc.consultFeature3Subtitle,
           color: Colors.orange,
         ),
       ],
@@ -459,6 +468,8 @@ class HeroLayoutCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final loc = context.loc; // Get localization object
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
@@ -514,9 +525,9 @@ class HeroLayoutCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(color: Colors.white.withOpacity(0.3)),
                     ),
-                    child: const Text(
-                      'Success Story',
-                      style: TextStyle(
+                    child: Text(
+                      loc.consultSuccessStory,
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -525,7 +536,7 @@ class HeroLayoutCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    imageInfo.title,
+                    imageInfo.title, // Leaving this as-is (demo name)
                     style: const TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
@@ -546,7 +557,7 @@ class HeroLayoutCard extends StatelessWidget {
                       Icon(Icons.star, color: Colors.amber, size: 20),
                       const SizedBox(width: 8),
                       Text(
-                        '5.0',
+                        '5.0', // Leaving as-is
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 14,

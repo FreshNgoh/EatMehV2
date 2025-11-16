@@ -9,6 +9,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:image_picker/image_picker.dart';
 
+// --- ADD THIS IMPORT ---
+import 'package:eatmehv2/core/localization/app_localizations.dart';
+
 class TrainerForm extends StatefulWidget {
   const TrainerForm({super.key});
 
@@ -40,13 +43,15 @@ class _TrainerFormState extends State<TrainerForm> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = context.loc; 
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Trainer Form'),
+        title: Text(loc.trainerFormTitle),
         titleTextStyle: const TextStyle(
           color: Colors.black87,
           fontSize: 20,
@@ -65,71 +70,73 @@ class _TrainerFormState extends State<TrainerForm> {
                 children: [
                   CustomTextField(
                     controller: _nameController,
-                    label: 'Name',
-                    hint: 'Enter your full name',
+                    label: loc.trainerFormNameLabel,
+                    hint: loc.trainerFormNameHint,
                     prefixIcon: Icons.person_outline,
-                    validator:
-                        (value) =>
-                            value == null || value.isEmpty ? 'Required' : null,
+                    validator: (value) =>
+                        value == null || value.isEmpty
+                            ? loc.trainerFormErrorRequired
+                            : null,
                   ),
                   const SizedBox(height: 16),
-
                   CustomTextField(
                     controller: _ageController,
-                    label: 'Age',
-                    hint: 'Enter your age',
+                    label: loc.trainerFormAgeLabel,
+                    hint: loc.trainerFormAgeHint,
                     prefixIcon: Icons.cake_outlined,
                     keyboardType: TextInputType.number,
                     validator: (value) {
-                      if (value == null || value.isEmpty) return 'Required';
+                      if (value == null || value.isEmpty) {
+                        return loc.trainerFormErrorRequired;
+                      }
                       final age = int.tryParse(value);
-                      if (age == null || age <= 0) return 'Enter a valid age';
+                      if (age == null || age <= 0) {
+                        return loc.trainerFormErrorAgeInvalid;
+                      }
                       return null;
                     },
                   ),
                   const SizedBox(height: 16),
-
                   CustomTextField(
                     controller: _specializationController,
-                    label: 'Specialization',
-                    hint: 'e.g. Fitness, Nutrition, etc.',
+                    label: loc.trainerFormSpecLabel,
+                    hint: loc.trainerFormSpecHint,
                     prefixIcon: Icons.work_outline,
-                    validator:
-                        (value) =>
-                            value == null || value.isEmpty ? 'Required' : null,
+                    validator: (value) =>
+                        value == null || value.isEmpty
+                            ? loc.trainerFormErrorRequired
+                            : null,
                   ),
                   const SizedBox(height: 16),
-
                   CustomTextField(
                     controller: _experienceController,
-                    label: 'Years of Experience',
-                    hint: 'Enter your experience in years',
+                    label: loc.trainerFormExpLabel,
+                    hint: loc.trainerFormExpHint,
                     prefixIcon: Icons.history_edu_outlined,
-                    validator:
-                        (value) =>
-                            value == null || value.isEmpty ? 'Required' : null,
+                    validator: (value) =>
+                        value == null || value.isEmpty
+                            ? loc.trainerFormErrorRequired
+                            : null,
                   ),
-
                   const SizedBox(height: 16),
-
                   CustomTextField(
                     controller: _contactController,
-                    label: 'Contact Number',
-                    hint: 'e.g. 0123456789',
+                    label: loc.trainerFormContactLabel,
+                    hint: loc.trainerFormContactHint,
                     prefixIcon: Icons.phone_outlined,
                     keyboardType: TextInputType.phone,
-                    validator:
-                        (value) =>
-                            value == null || value.isEmpty ? 'Required' : null,
+                    validator: (value) =>
+                        value == null || value.isEmpty
+                            ? loc.trainerFormErrorRequired
+                            : null,
                   ),
                   const SizedBox(height: 20),
-
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Prove',
-                        style: TextStyle(
+                      Text(
+                        loc.trainerFormProveLabel,
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
                         ),
@@ -156,24 +163,25 @@ class _TrainerFormState extends State<TrainerForm> {
                           ),
                           child:
                               _certPath == null
-                                  ? const Center(
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.upload_rounded,
-                                          size: 40,
-                                          color: Colors.grey,
-                                        ),
-                                        SizedBox(height: 8),
-                                        Text(
-                                          'Tap to upload certificate',
-                                          style: TextStyle(color: Colors.grey),
-                                        ),
-                                      ],
-                                    ),
-                                  )
+                                  ? Center(
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          const Icon(
+                                            Icons.upload_rounded,
+                                            size: 40,
+                                            color: Colors.grey,
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            loc.trainerFormUploadHint,
+                                            style:
+                                                const TextStyle(color: Colors.grey),
+                                          ),
+                                        ],
+                                      ),
+                                    )
                                   : ClipRRect(
                                     borderRadius: BorderRadius.circular(8),
                                     child: Image.file(
@@ -186,10 +194,9 @@ class _TrainerFormState extends State<TrainerForm> {
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 30),
                   CustomButton(
-                    text: "Submit",
+                    text: loc.trainerFormButtonSubmit,
                     isLoading: _isSubmitting,
                     onPressed: _isSubmitting ? null : submitTrainerApplication,
                   ),
@@ -203,16 +210,17 @@ class _TrainerFormState extends State<TrainerForm> {
   }
 
   Future<void> submitTrainerApplication() async {
+    final loc = context.loc;    
     if (!(_formKey.currentState?.saveAndValidate() ?? false)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please complete the form properly.')),
+        SnackBar(content: Text(loc.trainerFormErrorComplete)),
       );
       return;
     }
 
     if (_certPath == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please upload your certificate.')),
+        SnackBar(content: Text(loc.trainerFormErrorUpload)),
       );
       return;
     }
@@ -228,7 +236,7 @@ class _TrainerFormState extends State<TrainerForm> {
       final authState = context.read<AuthBloc>().state;
       if (authState is! Authenticated) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('You must be logged in to apply.')),
+          SnackBar(content: Text(loc.trainerFormErrorNotLoggedIn)),
         );
         setState(() => _isSubmitting = false);
         return;
@@ -247,7 +255,7 @@ class _TrainerFormState extends State<TrainerForm> {
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Application submitted successfully!')),
+        SnackBar(content: Text(loc.trainerFormSuccess)),
       );
 
       // have bug here
@@ -255,7 +263,7 @@ class _TrainerFormState extends State<TrainerForm> {
     } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+      ).showSnackBar(SnackBar(content: Text(loc.trainerFormErrorPrefix + e.toString())));
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }

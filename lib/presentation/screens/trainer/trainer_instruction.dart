@@ -2,6 +2,7 @@ import 'package:eatmehv2/presentation/widgets/custom_button.dart';
 import 'package:eatmehv2/presentation/screens/trainer/trainer_form.dart';
 import 'package:flutter/material.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:eatmehv2/core/localization/app_localizations.dart';
 
 class TrainerInstruction extends StatefulWidget {
   const TrainerInstruction({super.key});
@@ -40,13 +41,15 @@ class _TrainerInstructionState extends State<TrainerInstruction> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = context.loc; // Get localization object
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Trainer Instruction'),
+        title: Text(loc.trainerInstructionTitle),
         titleTextStyle: const TextStyle(
           color: Colors.black87,
           fontSize: 20,
@@ -78,28 +81,26 @@ class _TrainerInstructionState extends State<TrainerInstruction> {
               children: [
                 _buildInstruction(
                   image: 'assets/images/default_face.jpeg',
-                  text:
-                      'Welcome to Trainer Mode! Help users achieve their goals.',
+                  text: loc.trainerInstructionPage1,
                 ),
                 _buildInstruction(
                   image: 'assets/images/default_face.jpeg',
-                  text:
-                      'Instruction 1: Set personalized diet goals for each trainee.',
+                  text: loc.trainerInstructionPage2,
                 ),
                 _buildInstruction(
                   image: 'assets/images/default_face.jpeg',
-                  text:
-                      'Instruction 2: Monitor progress weekly and adjust plans.',
+                  text: loc.trainerInstructionPage3,
                 ),
               ],
             ),
           ),
-
           const SizedBox(height: 50),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 60),
             child: CustomButton(
-              text: currentPage == 2 ? "Finish" : "Next",
+              text: currentPage == 2
+                  ? loc.trainerInstructionButtonFinish
+                  : loc.trainerInstructionButtonNext,
               onPressed: _moveNextPage,
               backgroundColor: Colors.green.shade600,
               textColor: Colors.white,
@@ -120,7 +121,7 @@ class _TrainerInstructionState extends State<TrainerInstruction> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Text(
-            text,
+            text, 
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontSize: 18,

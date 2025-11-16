@@ -10,6 +10,10 @@ import 'package:eatmehv2/presentation/widgets/custom_list.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+// --- ADD THIS IMPORT ---
+// (Adjust the path to your app_localizations.dart file)
+import 'package:eatmehv2/core/localization/app_localizations.dart';
+
 class TrainerList extends StatefulWidget {
   const TrainerList({super.key});
 
@@ -41,6 +45,9 @@ class _TrainerListState extends State<TrainerList> {
 
   @override
   Widget build(BuildContext context) {
+    // --- ADDED ---
+    final loc = context.loc; // Get localization object
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -49,7 +56,8 @@ class _TrainerListState extends State<TrainerList> {
             Navigator.pop(context);
           },
         ),
-        title: const Text('Trainer List'),
+        // --- UPDATED ---
+        title: Text(loc.trainerListTitle),
         titleTextStyle: const TextStyle(
           color: Colors.black87,
           fontSize: 20,
@@ -60,68 +68,62 @@ class _TrainerListState extends State<TrainerList> {
           isLoading
               ? const Center(child: CircularProgressIndicator())
               : trainers.isEmpty
-              ? const Center(child: Text("No trainers available"))
-              : ListView.builder(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 30,
-                ),
-                itemCount: trainers.length,
-                itemBuilder: (context, index) {
-                  final trainer = trainers[index];
-                  return CustomList(
-                    profile: CircleAvatar(
-                      backgroundImage: AssetImage(
-                        'assets/images/default_face.jpeg',
+                  // --- UPDATED ---
+                  ? Center(child: Text(loc.trainerListNoTrainers))
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 30,
                       ),
-                    ),
-                    value: trainer['name'],
-                    actionIcons: [
-                      ListActionIcon(
-                        icon: Icons.add,
-                        onPressed: () async {
-                          final authState =
-                              context.read<AuthBloc>().state as Authenticated;
-                          final currentUser = authState.user.uid;
-
-                          final request = NotificationModel(
-                            senderUid: currentUser,
-                            receiverUid: trainer['uid'],
-                            title: "New trainee request",
-                            message: 'A user has requested to be your trainee.',
-                            type: 'trainer_request',
-                            status: 'pending',
-                            createdAt: Timestamp.now(),
-                          );
-                          await notificationRepo.sendNotification(request);
-
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Trainer request sent to ${trainer['name']}',
-                              ),
+                      itemCount: trainers.length,
+                      itemBuilder: (context, index) {
+                        final trainer = trainers[index];
+                        return CustomList(
+                          profile: CircleAvatar(
+                            backgroundImage: AssetImage(
+                              'assets/images/default_face.jpeg',
                             ),
-                          );
-                        },
-                        tooltip: 'Request Trainer',
-                      ),
-                    ],
-                    onFieldTap: () {
-                      // Navigator.push(
-                      //   context,
-                      //   MaterialPageRoute(
-                      //     builder:
-                      //         (context) => TrainerChatRoom(
-                      //           receiverUid: trainer['uid'],
-                      //           receiverName: trainer['name'],
-                      //           receiverImage: trainer['image'],
-                      //         ),
-                      //   ),
-                      // );
-                    },
-                  );
-                },
-              ),
+                          ),
+                          value: trainer['name'],
+                          actionIcons: [
+                            ListActionIcon(
+                              icon: Icons.add,
+                              onPressed: () async {
+                                final authState =
+                                    context.read<AuthBloc>().state as Authenticated;
+                                final currentUser = authState.user.uid;
+
+                                final request = NotificationModel(
+                                  senderUid: currentUser,
+                                  receiverUid: trainer['uid'],
+                                  // --- UPDATED ---
+                                  title: loc.trainerListRequestTitle,
+                                  message: loc.trainerListRequestMessage,
+                                  type: 'trainer_request',
+                                  status: 'pending',
+                                  createdAt: Timestamp.now(),
+                                );
+                                await notificationRepo.sendNotification(request);
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    // --- UPDATED ---
+                                    content: Text(
+                                      loc.trainerListRequestSent(trainer['name']),
+                                    ),
+                                  ),
+                                );
+                              },
+                              // --- UPDATED ---
+                              tooltip: loc.trainerListRequestTooltip,
+                            ),
+                          ],
+                          onFieldTap: () {
+                            // ... (your navigation logic)
+                          },
+                        );
+                      },
+                    ),
     );
   }
 }

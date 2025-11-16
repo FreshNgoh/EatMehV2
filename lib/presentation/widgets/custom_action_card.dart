@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:eatmehv2/core/localization/app_localizations.dart';
 
 class CustomActionCard extends StatelessWidget {
   final BuildContext context;
@@ -23,6 +24,7 @@ class CustomActionCard extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
+    final loc = context.loc;
     return GestureDetector(
       onTap: isPending ? null : onTap,
       child: AnimatedContainer(
@@ -70,7 +72,7 @@ class CustomActionCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    isPending ? 'Application Pending' : title,
+                    isPending ? loc.carouselButtonPending : title,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -79,7 +81,7 @@ class CustomActionCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    isPending ? 'We\'re reviewing your application' : subtitle,
+                    isPending ? loc.consultPendingSubtitle : subtitle,
                     style: TextStyle(
                       fontSize: 14,
                       color:

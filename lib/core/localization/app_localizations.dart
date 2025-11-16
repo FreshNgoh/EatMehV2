@@ -95,6 +95,54 @@ class AppLocalizations {
   String get trainerInstructionButtonFinish => translate('trainerInstructionButtonFinish');
   String get trainerInstructionButtonNext => translate('trainerInstructionButtonNext');
 
+  //admin user screen
+  String adminUserErrorFetch(String error) =>
+      translate('adminUserErrorFetch').replaceAll('{error}', error);
+  String adminUserErrorUpdate(String error) =>
+      translate('adminUserErrorUpdate').replaceAll('{error}', error);
+  String adminUserFreezeSuccess(String username) =>
+      translate('adminUserFreezeSuccess').replaceAll('{username}', username);
+  String adminUserUnfreezeSuccess(String username) =>
+      translate('adminUserUnfreezeSuccess').replaceAll('{username}', username);
+  String get adminUserNoBio => translate('adminUserNoBio');
+  String get adminUserButtonFreeze => translate('adminUserButtonFreeze');
+  String get adminUserButtonUnfreeze => translate('adminUserButtonUnfreeze');
+
+  // admin report
+  String adminDataErrorLoad(String error) =>
+      translate('adminDataErrorLoad').replaceAll('{error}', error);
+  String get adminDataTotalUsers => translate('adminDataTotalUsers');
+  String get adminDataUserGenders => translate('adminDataUserGenders');
+  String get adminDataMale => translate('adminDataMale');
+  String get adminDataFemale => translate('adminDataFemale');
+  String get adminDataOverview => translate('adminDataOverview');
+  String get adminDataAllMonths => translate('adminDataAllMonths');
+  String get adminDataAvgCalories => translate('adminDataAvgCalories');
+  String get adminDataTotalDuration => translate('adminDataTotalDuration');
+  String get adminDataCaloriesBurnt => translate('adminDataCaloriesBurnt');
+  String get adminDataNewUsers => translate('adminDataNewUsers');
+  String get adminDataMonthJan => translate('adminDataMonthJan');
+  String get adminDataMonthMar => translate('adminDataMonthMar');
+  String get adminDataMonthMay => translate('adminDataMonthMay');
+  String get adminDataMonthJul => translate('adminDataMonthJul');
+  String get adminDataMonthSep => translate('adminDataMonthSep');
+  String get adminDataMonthNov => translate('adminDataMonthNov');
+
+  List<String> get monthsList => [
+    translate('monthJanuary'),
+    translate('monthFebruary'),
+    translate('monthMarch'),
+    translate('monthApril'),
+    translate('monthMay'),
+    translate('monthJune'),
+    translate('monthJuly'),
+    translate('monthAugust'),
+    translate('monthSeptember'),
+    translate('monthOctober'),
+    translate('monthNovember'),
+    translate('monthDecember'),
+  ];
+
 // Nav record screen
   String get recordTabOverview => translate('recordTabOverview');
 // NavigationBar
@@ -142,6 +190,55 @@ class AppLocalizations {
   String get cameraStoryAdded => translate('cameraStoryAdded');
   String get cameraMealSaveSuccess => translate('cameraMealSaveSuccess');
   String get cameraMealSaveError => translate('cameraMealSaveError');
+
+  // request details
+  String get adminRequestApproveSuccess => translate('adminRequestApproveSuccess');
+  String adminRequestApproveError(String error) =>
+      translate('adminRequestApproveError').replaceAll('{error}', error);
+  String get adminRequestRejectReasonDefault => translate('adminRequestRejectReasonDefault');
+  String get adminRequestRejectSuccess => translate('adminRequestRejectSuccess');
+  String adminRequestRejectError(String error) =>
+      translate('adminRequestRejectError').replaceAll('{error}', error);
+  String get adminRequestHeaderInfo => translate('adminRequestHeaderInfo');
+  String get adminRequestHeaderProve => translate('adminRequestHeaderProve');
+  String get adminRequestNoCerts => translate('adminRequestNoCerts');
+  String get adminRequestButtonApprove => translate('adminRequestButtonApprove');
+  String get adminRequestButtonReject => translate('adminRequestButtonReject');
+  String get adminRequestErrorLoadCert => translate('adminRequestErrorLoadCert');
+
+  // admin request
+  String adminRequestErrorLoad(String error) =>
+      translate('adminRequestErrorLoad').replaceAll('{error}', error);
+  String get adminRequestNoPending => translate('adminRequestNoPending');
+  String get adminRequestSpecPrefix => translate('adminRequestSpecPrefix');
+
+  // admin screen
+  String get adminNavUsers => translate('adminNavUsers');
+  String get adminNavRequests => translate('adminNavRequests');
+  String get adminNavData => translate('adminNavData');
+
+  // consult
+  String get trainerListTitle => translate('trainerListTitle');
+  String get trainerListNoTrainers => translate('trainerListNoTrainers');
+  String get trainerListRequestTitle => translate('trainerListRequestTitle');
+  String get trainerListRequestMessage => translate('trainerListRequestMessage');
+  String trainerListRequestSent(String trainerName) =>
+      translate('trainerListRequestSent').replaceAll('{trainerName}', trainerName);
+  String get trainerListRequestTooltip => translate('trainerListRequestTooltip');
+  String get consultChatWithTrainer => translate('consultChatWithTrainer');
+  String get consultChatSubtitle => translate('consultChatSubtitle');
+  String get consultGetTrainer => translate('consultGetTrainer');
+  String get consultGetTrainerSubtitle => translate('consultGetTrainerSubtitle');
+  String get consultTrainerSubtitle => translate('consultTrainerSubtitle');
+  String get consultSuccessStory => translate('consultSuccessStory');
+  String get consultWhyChooseUs => translate('consultWhyChooseUs');
+  String get consultFeature1Title => translate('consultFeature1Title');
+  String get consultFeature1Subtitle => translate('consultFeature1Subtitle');
+  String get consultFeature2Title => translate('consultFeature2Title');
+  String get consultFeature2Subtitle => translate('consultFeature2Subtitle');
+  String get consultFeature3Title => translate('consultFeature3Title');
+  String get consultFeature3Subtitle => translate('consultFeature3Subtitle');
+  String get consultPendingSubtitle => translate('consultPendingSubtitle');
 
 
   // Login & Register

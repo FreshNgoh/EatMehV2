@@ -4,6 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:eatmehv2/data/models/user/user_model.dart';
 import 'package:eatmehv2/data/repos/user_repo.dart';
 import 'package:eatmehv2/presentation/screens/user/profile_screen.dart';
+import 'package:eatmehv2/core/localization/app_localizations.dart'; 
+
+// Assuming this color is available in scope or defined elsewhere, 
+// using a fallback if necessary.
+const Color kTextPrimaryLight = Colors.black87; 
 
 class UserScreen extends StatefulWidget {
   const UserScreen({super.key});
@@ -13,25 +18,20 @@ class UserScreen extends StatefulWidget {
 }
 
 class _UserScreenState extends State<UserScreen> {
-  // 2. Initialize your repository
   final UserRepository _userRepository = UserRepository();
   
-  // 3. State variables to hold the list of users and loading state
   List<UserModel>? _users;
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    // 4. Fetch users when the screen loads
     _fetchUsers();
   }
 
-  /// Fetches all users from the repository and updates the state.
   Future<void> _fetchUsers() async {
     try {
       final users = await _userRepository.getAllUsers();
-      // 5. Update the state with the fetched users
       setState(() {
         _users = users;
         _isLoading = false;
@@ -41,38 +41,37 @@ class _UserScreenState extends State<UserScreen> {
         _isLoading = false;
       });
       if (mounted) {
+        final loc = context.loc;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error fetching users: $e')),
+          SnackBar(content: Text(loc.adminUserErrorFetch(e.toString()))),
         );
       }
     }
   }
 
-  /// Handles the freeze/unfreeze action
   Future<void> _handleFreeze(UserModel user) async {
-    // Determine the new state (toggle the current state)
     final bool newFreezeState = !user.isFrozen;
 
     try {
-      // 6. Call the repository method
       await _userRepository.freezeAccount(user.uid, newFreezeState);
 
       if (mounted) {
+        final loc = context.loc;
+        final message = newFreezeState
+            ? loc.adminUserFreezeSuccess(user.username)
+            : loc.adminUserUnfreezeSuccess(user.username);
+            
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '${user.username} has been ${newFreezeState ? 'FROZEN' : 'UNFROZEN'}.',
-            ),
-          ),
+          SnackBar(content: Text(message)),
         );
       }
 
-      // 7. Refresh the user list to show the change
       _fetchUsers();
     } catch (e) {
       if (mounted) {
+        final loc = context.loc;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error updating user: $e')),
+          SnackBar(content: Text(loc.adminUserErrorUpdate(e.toString()))),
         );
       }
     }
@@ -80,15 +79,12 @@ class _UserScreenState extends State<UserScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // 8. Filter the list to exclude 'admin' roles
-    // We do this here so the list updates automatically when state changes.
     final List<UserModel> displayUsers = _users
-            ?.where((user) => user.role != 'admin')
-            .toList() ??
+        ?.where((user) => user.role != 'admin')
+        .toList() ??
         [];
 
     return Scaffold(
-      // 9. Body: User List (Updated)
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(
@@ -98,7 +94,7 @@ class _UserScreenState extends State<UserScreen> {
                 final user = displayUsers[index];
                 return UserListItem(
                   user: user,
-                  onFreeze: () => _handleFreeze(user), // 10. Connect the action
+                  onFreeze: () => _handleFreeze(user),
                 );
               },
             ),
@@ -109,7 +105,6 @@ class _UserScreenState extends State<UserScreen> {
 // --- Custom List Item Widget (Updated) ---
 
 class UserListItem extends StatelessWidget {
-  // 11. Use the UserModel from your file
   final UserModel user;
   final VoidCallback onFreeze;
 
@@ -121,50 +116,64 @@ class UserListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final loc = context.loc;
+    
+    // 1. Check if bio exists and is not just empty whitespace
+    final hasBio = user.bio != null && user.bio!.trim().isNotEmpty;
+    
+    // Determine the subtitle widget (null if no bio is present)
+    final Widget? userSubtitle = hasBio
+        ? Text(
+            user.bio!, 
+            style: TextStyle(color: Colors.grey[600]),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          )
+        : null;
+
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
       
-      // 12. Use user.imageUrl for the avatar
-     // Wrap your CircleAvatar with a GestureDetector
-leading: GestureDetector(
-  onTap: () {
-    // --- Add your navigation logic here ---
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ProfileScreen(userUid: user.uid ,), // Replace with your page
+      leading: GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ProfileScreen(userUid: user.uid ,),
+            ),
+          );
+        },
+        // 2. Updated CircleAvatar styling and logic
+        child: CircleAvatar(
+          radius: 25, // Updated radius
+          backgroundColor: Colors.grey.shade300, // Updated background color
+          backgroundImage: (user.imageUrl != null && user.imageUrl!.isNotEmpty)
+              ? NetworkImage(user.imageUrl!)
+              : null,
+          
+          child: (user.imageUrl == null || user.imageUrl!.isEmpty)
+              ? Text(
+                  user.username.isNotEmpty ? user.username[0].toUpperCase() : '?',
+                  style: const TextStyle(
+                    fontSize: 18, // Updated font size
+                    fontWeight: FontWeight.bold,
+                  ), 
+                )
+              : null,
+        ),
       ),
-    );
-    // -------------------------------------
-  },
-  child: CircleAvatar(
-    radius: 28,
-    backgroundColor: Colors.grey[200],
-    // Use NetworkImage if imageUrl is present, otherwise show default icon
-    backgroundImage: (user.imageUrl != null && user.imageUrl!.isNotEmpty)
-        ? NetworkImage(user.imageUrl!)
-        : null,
-    child: (user.imageUrl == null || user.imageUrl!.isEmpty)
-        ? Icon(Icons.person, color: Colors.grey[600])
-        : null,
-  ),
-),
-      // 13. Use user.username and user.bio
+      
       title: Padding(
         padding: const EdgeInsets.only(bottom: 4.0),
         child: Text(
-          user.username, // From UserModel
+          user.username,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
-      subtitle: Text(
-        user.bio ?? 'No bio available', // From UserModel (handles null)
-        style: TextStyle(color: Colors.grey[600]),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
+      
+      // Use the calculated subtitle (null if no bio)
+      subtitle: userSubtitle, 
 
-      // 14. Use user.isFrozen to set button text and color
       trailing: SizedBox(
         width: 90,
         child: ElevatedButton(
@@ -179,7 +188,7 @@ leading: GestureDetector(
             elevation: 2,
           ),
           child: Text(
-            user.isFrozen ? 'UNFREEZE' : 'FREEZE', // Dynamic text
+            user.isFrozen ? loc.adminUserButtonUnfreeze : loc.adminUserButtonFreeze,
             style: const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
