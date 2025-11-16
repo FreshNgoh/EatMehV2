@@ -11,11 +11,14 @@ import 'package:eatmehv2/data/models/meal/meal_record_model.dart';
 import 'package:eatmehv2/data/models/meal/nutrition_info_model.dart';
 import 'package:eatmehv2/data/repos/meal_records_repo.dart';
 import 'package:eatmehv2/presentation/widgets/custom_button.dart';
+import 'package:eatmehv2/presentation/widgets/toast.dart';
 import 'package:eatmehv2/utils/firebase_storage_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/localization/app_localizations.dart';
+import 'package:eatmehv2/data/models/story/story_model.dart';
+import 'package:eatmehv2/data/repos/story_repo.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
@@ -28,7 +31,9 @@ class _CameraScreenState extends State<CameraScreen> {
   File? _selectedImage;
   bool _isAnalyzing = false;
   bool _isSaving = false;
+  bool _isPosting = false;
   Map<String, dynamic>? _analysisResult;
+  String? _savedMealUid;
 
   @override
   void initState() {
@@ -50,7 +55,7 @@ class _CameraScreenState extends State<CameraScreen> {
     required String recommendation,
   }) async {
     setState(() => _isSaving = true); // 🟡 start loading
-   final loc = context.loc;
+    final loc = context.loc;
 
     final authState = context.read<AuthBloc>().state as Authenticated;
     final userUid = authState.user.uid;
@@ -91,30 +96,156 @@ class _CameraScreenState extends State<CameraScreen> {
 
       await mealRepo.saveMealRecord(meal);
 
+      // Save the meal UID so postStory can reuse it
+      _savedMealUid = meal.uid;
+
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          // --- 3. USE LOCALIZED STRING ---
-          SnackBar(content: Text(loc.cameraMealSaveSuccess)),
+        showCustomToast(
+          context,
+          loc.cameraMealSaveSuccess,
+          type: ToastType.success,
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
+        showCustomToast(
           context,
-        ).showSnackBar(SnackBar(
-          // --- 4. USE LOCALIZED STRING WITH PARAMETER ---
-          content: Text(loc.cameraMealSaveError.replaceFirst('{error}', e.toString()))
-        ));
+          loc.cameraMealSaveError.replaceFirst('{error}', e.toString()),
+          type: ToastType.error,
+        );
       }
     } finally {
       if (mounted) setState(() => _isSaving = false); // 🔵 stop loading
     }
   }
 
+  Future<void> _postStory() async {
+    if (_selectedImage == null || _analysisResult == null) return;
+
+    setState(() => _isPosting = true);
+    final loc = context.loc;
+
+    final authState = context.read<AuthBloc>().state as Authenticated;
+    final user = authState.user;
+    final file = File(_selectedImage!.path);
+    MealRecordModel? meal;
+
+    try {
+      // 🟢 1. Upload image to SAME mealRecord folder (not separate)
+      final storageService = FirebaseStorageService();
+      final downloadUrl = await storageService.uploadMealImage(
+        file: file,
+        userUid: user.uid,
+        folderName: FirebaseConstants.mealRecordFolder,
+      );
+
+      // 🟢 2. Extract analysis result
+      final result = _analysisResult!;
+      final foodName = result['foodName'] ?? loc.cameraUnknownMeal;
+      final calories = int.tryParse(result['calories'].toString()) ?? 0;
+      final protein = result['protein'] ?? 0;
+      final carbs = result['carbs'] ?? 0;
+      final fat = result['fat'] ?? 0;
+      final fiber = result['fiber'] ?? 0;
+      final recommendation =
+          result['recommendation'] ?? loc.cameraNoRecommendation;
+
+      final now = Timestamp.now();
+      final expiresAt = Timestamp.fromDate(
+        now.toDate().add(const Duration(hours: 24)),
+      );
+
+      // 🟢 3. Create story
+      final story = StoryModel(
+        uid:
+            FirebaseFirestore.instance
+                .collection(FirebaseConstants.storiesCollection)
+                .doc()
+                .id,
+        userId: user.uid,
+        username: user.username,
+        userImageUrl: user.imageUrl ?? '',
+        mediaUrl: downloadUrl,
+        createdAt: now,
+        expiresAt: expiresAt,
+        views: [],
+        viewCount: 0,
+        comments: [],
+      );
+
+      // 🟢 4. Create meal record
+      if (_savedMealUid != null) {
+        // User already saved — reuse existing meal record
+        meal = MealRecordModel(
+          uid: _savedMealUid!,
+          userUid: user.uid,
+          imageUrl: downloadUrl,
+          calories: calories,
+          foodName: foodName,
+          nutritionInfo: NutritionInfo(
+            protein: protein.toDouble(),
+            carbs: carbs.toDouble(),
+            fat: fat.toDouble(),
+            fiber: fiber.toDouble(),
+          ),
+          recommendation: recommendation,
+          createdAt: now,
+          updatedAt: now,
+        );
+      } else {
+        // User did NOT save — create a NEW meal record
+        meal = MealRecordModel(
+          uid:
+              FirebaseFirestore.instance
+                  .collection(FirebaseConstants.mealRecordFolder)
+                  .doc()
+                  .id,
+          userUid: user.uid,
+          imageUrl: downloadUrl,
+          calories: calories,
+          foodName: foodName,
+          nutritionInfo: NutritionInfo(
+            protein: protein.toDouble(),
+            carbs: carbs.toDouble(),
+            fat: fat.toDouble(),
+            fiber: fiber.toDouble(),
+          ),
+          recommendation: recommendation,
+          createdAt: now,
+          updatedAt: now,
+        );
+      }
+      // 🟢 5. Save both to Firestore
+      final storyRepo = StoryRepository();
+      final mealRepo = MealRecordsRepository();
+
+      await Future.wait([
+        storyRepo.createStory(story),
+        // dont save to meal collection if save it before
+        if (_savedMealUid == null) mealRepo.saveMealRecord(meal),
+      ]);
+
+      if (mounted) {
+        showCustomToast(context, loc.cameraStoryAdded, type: ToastType.success);
+        setState(() {
+          _selectedImage = null;
+          _analysisResult = null;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        final errorMsg = 'Failed to post story: $e';
+        showCustomToast(context, errorMsg, type: ToastType.error);
+      }
+    } finally {
+      if (mounted) setState(() => _isPosting = false);
+    }
+  }
+
   Future<void> _showImageSourceDialog() async {
     // --- 5. GET LOCALIZATION ---
     final loc = context.loc;
-    
+
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFFF6F6F6),
@@ -131,7 +262,10 @@ class _CameraScreenState extends State<CameraScreen> {
                 Text(
                   // --- 6. USE LOCALIZED STRING ---
                   loc.cameraSourceTitle,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 20),
                 ListTile(
@@ -188,7 +322,7 @@ class _CameraScreenState extends State<CameraScreen> {
   Widget build(BuildContext context) {
     // --- 9. GET LOCALIZATION ---
     final loc = context.loc;
-    
+
     if (_selectedImage == null) {
       return Center(
         child: Column(
@@ -224,142 +358,144 @@ class _CameraScreenState extends State<CameraScreen> {
           });
         } else if (state is AnalyzeMealErrorState) {
           setState(() => _isAnalyzing = false);
-          ScaffoldMessenger.of(
+          showCustomToast(
             context,
-          ).showSnackBar(SnackBar(
-            content: Text(loc.cameraError.replaceFirst('{error}', state.error))
-          ));
+            loc.cameraError.replaceFirst('{error}', state.error),
+            type: ToastType.error,
+          );
         }
       },
       child:
           _selectedImage == null
               ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.camera_alt,
-                        size: 100,
-                        color: Colors.grey.shade400,
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        loc.cameraNoImage,
-                        style: const TextStyle(fontSize: 18, color: Colors.grey),
-                      ),
-                      const SizedBox(height: 20),
-                      ElevatedButton.icon(
-                        onPressed: _showImageSourceDialog,
-                        icon: const Icon(Icons.add_a_photo),
-                        label: Text(loc.cameraButton),
-                      ),
-                    ],
-                  ),
-                )
-              : CustomScrollView(
-                  slivers: [
-                    SliverAppBar(
-                      expandedHeight: 350,
-                      pinned: true,
-                      backgroundColor: Colors.white,
-                      automaticallyImplyLeading: false,
-                      flexibleSpace: FlexibleSpaceBar(
-                        background: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            Container(
-                              margin: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.2),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 5),
-                                  ),
-                                ],
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(16),
-                                child: Image.file(
-                                  _selectedImage!,
-                                  fit: BoxFit.cover,
-                                  width: double.infinity,
-                                ),
-                              ),
-                            ),
-                            // Close button
-                            Positioned(
-                              top: 24,
-                              left: 24,
-                              child: IconButton(
-                                icon: Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.black.withOpacity(0.5),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.close,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _selectedImage = null;
-                                    _analysisResult = null;
-                                  });
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.camera_alt,
+                      size: 100,
+                      color: Colors.grey.shade400,
                     ),
-
-                    SliverToBoxAdapter(
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
-                        child:
-                            _isAnalyzing
-                                ? const Center(
-                                    child: Padding(
-                                      padding: EdgeInsets.symmetric(vertical: 40),
-                                      child: CircularProgressIndicator(),
-                                    ),
-                                  )
-                                : _analysisResult != null
-                                ? _buildAnalysisResult()
-                                : Center(
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(vertical: 40),
-                                      child: Text(
-                                        // --- 15. USE LOCALIZED STRING ---
-                                        loc.cameraNoAnalysis,
-                                        style: const TextStyle(color: Colors.grey),
-                                      ),
-                                    ),
-                                  ),
-                      ),
+                    const SizedBox(height: 20),
+                    Text(
+                      loc.cameraNoImage,
+                      style: const TextStyle(fontSize: 18, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton.icon(
+                      onPressed: _showImageSourceDialog,
+                      icon: const Icon(Icons.add_a_photo),
+                      label: Text(loc.cameraButton),
                     ),
                   ],
                 ),
+              )
+              : CustomScrollView(
+                slivers: [
+                  SliverAppBar(
+                    expandedHeight: 350,
+                    pinned: true,
+                    backgroundColor: Colors.white,
+                    automaticallyImplyLeading: false,
+                    flexibleSpace: FlexibleSpaceBar(
+                      background: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Container(
+                            margin: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.2),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 5),
+                                ),
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: Image.file(
+                                _selectedImage!,
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                              ),
+                            ),
+                          ),
+                          // Close button
+                          Positioned(
+                            top: 24,
+                            left: 24,
+                            child: IconButton(
+                              icon: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.5),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _selectedImage = null;
+                                  _analysisResult = null;
+                                });
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  SliverToBoxAdapter(
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+                      child:
+                          _isAnalyzing
+                              ? const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 40),
+                                  child: CircularProgressIndicator(),
+                                ),
+                              )
+                              : _analysisResult != null
+                              ? _buildAnalysisResult()
+                              : Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 40,
+                                  ),
+                                  child: Text(
+                                    // --- 15. USE LOCALIZED STRING ---
+                                    loc.cameraNoAnalysis,
+                                    style: const TextStyle(color: Colors.grey),
+                                  ),
+                                ),
+                              ),
+                    ),
+                  ),
+                ],
+              ),
     );
   }
 
   Widget _buildAnalysisResult() {
-    final loc = context.loc;  
+    final loc = context.loc;
     final result = _analysisResult!;
 
-    final foodName = result['foodName'] ?? loc.cameraUnknownMeal; 
+    final foodName = result['foodName'] ?? loc.cameraUnknownMeal;
     final calories = int.tryParse(result['calories'].toString()) ?? 0;
     final protein = result['protein'] ?? 0;
     final carbs = result['carbs'] ?? 0;
     final fat = result['fat'] ?? 0;
     final fiber = result['fiber'] ?? 0;
     final recommendation =
-        result['recommendation'] ?? loc.cameraNoRecommendation; 
+        result['recommendation'] ?? loc.cameraNoRecommendation;
 
     final calorieColor = AppColors.getCalorieColor(calories);
 
@@ -464,16 +600,16 @@ class _CameraScreenState extends State<CameraScreen> {
                     _isSaving
                         ? null // 🔒 disable while saving
                         : () {
-                            _saveMealRecord(
-                              foodName: foodName,
-                              calories: calories,
-                              protein: protein,
-                              carbs: carbs,
-                              fat: fat,
-                              fiber: fiber,
-                              recommendation: recommendation,
-                            );
-                          },
+                          _saveMealRecord(
+                            foodName: foodName,
+                            calories: calories,
+                            protein: protein,
+                            carbs: carbs,
+                            fat: fat,
+                            fiber: fiber,
+                            recommendation: recommendation,
+                          );
+                        },
               ),
             ),
             const SizedBox(width: 12),
@@ -481,19 +617,11 @@ class _CameraScreenState extends State<CameraScreen> {
             // ⚪ Post Story Button (outlined look)
             Expanded(
               child: CustomButton(
-                // --- 24. USE LOCALIZED STRING ---
-                text: loc.cameraPostStory,
+                text: _isPosting ? "Posting.." : 'Post',
                 icon: Icons.add_circle,
                 backgroundColor: Colors.white,
                 textColor: const Color(0xFF191919),
-                onPressed: () {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(
-                    // --- 25. USE LOCALIZED STRING ---
-                    content: Text(loc.cameraStoryAdded)
-                  ));
-                },
+                onPressed: _isPosting ? null : _postStory,
               ),
             ),
           ],
@@ -559,6 +687,6 @@ class _CameraScreenState extends State<CameraScreen> {
       }
     }
     // Added explicit null return
-    return null; 
+    return null;
   }
 }

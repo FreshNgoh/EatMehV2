@@ -2,7 +2,6 @@ import 'package:eatmehv2/presentation/widgets/custom_button.dart';
 import 'package:eatmehv2/presentation/screens/trainer/trainer_form.dart';
 import 'package:flutter/material.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import 'package:eatmehv2/core/localization/app_localizations.dart';
 
 class TrainerInstruction extends StatefulWidget {
   const TrainerInstruction({super.key});
@@ -41,97 +40,233 @@ class _TrainerInstructionState extends State<TrainerInstruction> {
 
   @override
   Widget build(BuildContext context) {
-    final loc = context.loc; // Get localization object
-
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios),
+          icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+          color: Colors.black87,
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(loc.trainerInstructionTitle),
-        titleTextStyle: const TextStyle(
-          color: Colors.black87,
-          fontSize: 20,
-          fontWeight: FontWeight.w700,
-        ),
+        title: const Text('Trainer Instructions'),
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const SizedBox(height: 30),
-          SmoothPageIndicator(
-            controller: controller,
-            count: 3,
-            effect: const SlideEffect(
-              spacing: 8.0,
-              radius: 5.0,
-              dotWidth: 15.0,
-              dotHeight: 8.0,
-              paintStyle: PaintingStyle.stroke,
-              strokeWidth: 1.5,
-              dotColor: Colors.grey,
-              activeDotColor: Colors.green,
-            ),
-          ),
-          Expanded(
-            child: PageView(
-              controller: controller,
-              onPageChanged: (index) => setState(() => currentPage = index),
-              children: [
-                _buildInstruction(
-                  image: 'assets/images/default_face.jpeg',
-                  text: loc.trainerInstructionPage1,
+      body: SafeArea(
+        child: Column(
+          children: [
+            const SizedBox(height: 40),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.green.withOpacity(0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: SmoothPageIndicator(
+                controller: controller,
+                count: 3,
+                effect: ExpandingDotsEffect(
+                  spacing: 8.0,
+                  radius: 6.0,
+                  dotWidth: 10.0,
+                  dotHeight: 10.0,
+                  expansionFactor: 4,
+                  dotColor: Colors.grey.shade300,
+                  activeDotColor: Colors.green.shade600,
                 ),
-                _buildInstruction(
-                  image: 'assets/images/default_face.jpeg',
-                  text: loc.trainerInstructionPage2,
-                ),
-                _buildInstruction(
-                  image: 'assets/images/default_face.jpeg',
-                  text: loc.trainerInstructionPage3,
-                ),
-              ],
+              ),
             ),
-          ),
-          const SizedBox(height: 50),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 60),
-            child: CustomButton(
-              text: currentPage == 2
-                  ? loc.trainerInstructionButtonFinish
-                  : loc.trainerInstructionButtonNext,
-              onPressed: _moveNextPage,
-              backgroundColor: Colors.green.shade600,
-              textColor: Colors.white,
+            const SizedBox(height: 20),
+            // Content
+            Expanded(
+              child: PageView(
+                controller: controller,
+                onPageChanged: (index) => setState(() => currentPage = index),
+                children: [
+                  _buildInstruction(
+                    icon: Icons.fitness_center,
+                    iconColor: Colors.green.shade600,
+                    title: 'Welcome to Trainer Mode',
+                    text:
+                        'Empower users to achieve their fitness and nutrition goals with personalized guidance.',
+                    gradient: LinearGradient(
+                      colors: [Colors.green.shade50, Colors.white],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                  ),
+                  _buildInstruction(
+                    icon: Icons.restaurant_menu,
+                    iconColor: Colors.orange.shade600,
+                    title: 'Personalized Diet Plans',
+                    text:
+                        'Create customized nutrition plans tailored to each trainee\'s unique needs and objectives.',
+                    gradient: LinearGradient(
+                      colors: [Colors.orange.shade50, Colors.white],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                  ),
+                  _buildInstruction(
+                    icon: Icons.trending_up,
+                    iconColor: Colors.blue.shade600,
+                    title: 'Track & Optimize',
+                    text:
+                        'Monitor progress weekly and adjust plans to ensure continuous improvement and results.',
+                    gradient: LinearGradient(
+                      colors: [Colors.blue.shade50, Colors.white],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 100),
-        ],
+            // Bottom Section with Button
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(32),
+                  topRight: Radius.circular(32),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 20,
+                    offset: const Offset(0, -4),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  if (currentPage < 2)
+                    TextButton(
+                      onPressed: () {
+                        controller.animateToPage(
+                          2,
+                          duration: const Duration(milliseconds: 400),
+                          curve: Curves.easeInOut,
+                        );
+                      },
+                      child: Text(
+                        'Skip',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      gradient: LinearGradient(
+                        colors: [Colors.green.shade600, Colors.green.shade500],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.green.shade600.withOpacity(0.4),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: CustomButton(
+                      text: currentPage == 2 ? "Get Started" : "Continue",
+                      onPressed: _moveNextPage,
+                      backgroundColor: Colors.transparent,
+                      textColor: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildInstruction({required String image, required String text}) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Image.asset(image, height: 400, width: 400, fit: BoxFit.cover),
-        const SizedBox(height: 20),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Text(
-            text, 
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 18,
-              color: Colors.black87,
-              fontWeight: FontWeight.w500,
-              height: 1.4,
+  Widget _buildInstruction({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String text,
+    required Gradient gradient,
+  }) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 160,
+            height: 160,
+            decoration: BoxDecoration(
+              gradient: gradient,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: iconColor.withOpacity(0.2),
+                  blurRadius: 30,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Container(
+              margin: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 20,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Icon(icon, size: 70, color: iconColor),
             ),
           ),
-        ),
-      ],
+          const SizedBox(height: 50),
+          // Title
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 28,
+              color: Colors.black87,
+              fontWeight: FontWeight.w800,
+              height: 1.2,
+              letterSpacing: -0.5,
+            ),
+          ),
+          const SizedBox(height: 20),
+          // Description
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              text,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 17,
+                color: Colors.grey.shade700,
+                fontWeight: FontWeight.w400,
+                height: 1.6,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

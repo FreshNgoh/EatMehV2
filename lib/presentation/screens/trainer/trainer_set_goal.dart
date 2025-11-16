@@ -75,6 +75,7 @@ class _TrainerSetGoalState extends State<TrainerSetGoal> {
 
     final userName = _user!.username;
     final userId = '@${_user!.uid.substring(0, 10)}...';
+    final userGoals = _user!.goalType;
     final isCreatingNewGoal = _goal == null;
 
     return Scaffold(
@@ -100,13 +101,24 @@ class _TrainerSetGoalState extends State<TrainerSetGoal> {
                   children: [
                     CircleAvatar(
                       radius: 40,
-                      backgroundColor: Colors.white,
+                      backgroundColor: Colors.grey.shade200,
                       backgroundImage:
-                          _user!.imageUrl != null
+                          (_user!.imageUrl != null &&
+                                  _user!.imageUrl!.isNotEmpty)
                               ? NetworkImage(_user!.imageUrl!)
-                              : const AssetImage("assets/teralero.png")
-                                  as ImageProvider,
+                              : null,
+                      child:
+                          (_user!.imageUrl == null || _user!.imageUrl!.isEmpty)
+                              ? Text(
+                                _user!.username[0].toUpperCase(),
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              )
+                              : null,
                     ),
+
                     const SizedBox(width: 16),
                     Expanded(
                       child: Column(
@@ -195,7 +207,7 @@ class _TrainerSetGoalState extends State<TrainerSetGoal> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
-                                '$userName hope to (user goals)',
+                                '$userName hope to $userGoals',
                                 style: TextStyle(
                                   color: Colors.blue[900],
                                   fontWeight: FontWeight.w500,
@@ -326,7 +338,7 @@ class _TrainerSetGoalState extends State<TrainerSetGoal> {
       final startDate = DateFormatter.parseDate(_startDateController.text);
       final endDate = DateFormatter.parseDate(_endDateController.text);
       final goals = Goal(
-        goalType: 'custom',
+        goalType: _user!.goalType ?? '',
         goalCal: double.parse(_caloriesController.text),
         protein: double.parse(_proteinController.text),
         carbs: double.parse(_carbsController.text),

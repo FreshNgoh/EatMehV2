@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:eatmehv2/core/theme/app_colors.dart';
+import 'package:eatmehv2/presentation/widgets/toast.dart';
 import 'package:eatmehv2/utils/firebase_storage_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,7 +12,6 @@ import '../../../data/repos/user_repo.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class EditProfile extends StatefulWidget {
   final UserModel user;
@@ -129,7 +129,7 @@ class _EditProfileState extends State<EditProfile> {
 
       final updatedData = {
         'username': _usernameController.text.trim(),
-        'bio': bioText.isEmpty ? FieldValue.delete() : bioText,
+        'bio': bioText.isEmpty ? '' : bioText,
         'age': int.tryParse(_ageController.text),
         'gender': _selectedGender,
         'height': double.tryParse(_heightController.text),
@@ -147,13 +147,9 @@ class _EditProfileState extends State<EditProfile> {
             await user.updatePassword(_passwordController.text.trim());
           } on FirebaseAuthException catch (e) {
             if (e.code == 'requires-recent-login') {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text(
-                    'Please re-login before changing your password.',
-                  ),
-                ),
-              );
+              final warningMsg =
+                  'Please re-login before changing your password.';
+              showCustomToast(context, warningMsg, type: ToastType.warning);
               setState(() => _isLoading = false);
               return;
             } else {
@@ -169,15 +165,13 @@ class _EditProfileState extends State<EditProfile> {
       // ✅ 3. Update Firestore user document
       await _userRepo.updateUser(widget.user.uid, updatedData);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile updated successfully!')),
-      );
+      final successMsg = 'Profile updated successfully!';
+      showCustomToast(context, successMsg, type: ToastType.success);
 
-      Navigator.pop(context);
+      Navigator.pop(context, true);
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Update failed: ${e.toString()}')));
+      final errorMsg = 'Update failed: ${e.toString()}';
+      showCustomToast(context, errorMsg, type: ToastType.error);
     } finally {
       setState(() => _isLoading = false);
     }
@@ -295,7 +289,6 @@ class _EditProfileState extends State<EditProfile> {
                 ),
               ),
             );
-            ;
           }).toList(),
     );
   }
@@ -308,7 +301,7 @@ class _EditProfileState extends State<EditProfile> {
     } else if (_avatarUrl != null && _avatarUrl!.isNotEmpty) {
       avatarImage = NetworkImage(_avatarUrl!); // from Firestore
     } else {
-      avatarImage = const AssetImage('assets/teralero.png'); // fallback
+      avatarImage = const AssetImage('NO_IMAGE_FALLBACK');
     }
 
     return Scaffold(
@@ -341,10 +334,26 @@ class _EditProfileState extends State<EditProfile> {
                               child: SizedBox(
                                 width: 150,
                                 height: 150,
-                                child: Image(
-                                  image: avatarImage, // use ImageProvider here
-                                  fit: BoxFit.cover,
-                                ),
+                                child:
+                                    (_newImageFile == null &&
+                                            (_avatarUrl == null ||
+                                                _avatarUrl!.isEmpty))
+                                        ? CircleAvatar(
+                                          radius: 75,
+                                          backgroundColor: Colors.grey.shade300,
+                                          child: Text(
+                                            widget.user.username[0]
+                                                .toUpperCase(),
+                                            style: const TextStyle(
+                                              fontSize: 45,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        )
+                                        : Image(
+                                          image: avatarImage,
+                                          fit: BoxFit.cover,
+                                        ),
                               ),
                             ),
                             Positioned(
@@ -379,11 +388,11 @@ class _EditProfileState extends State<EditProfile> {
                           Clipboard.setData(
                             ClipboardData(text: widget.user.uid),
                           );
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('User ID copied to clipboard!'),
-                              duration: Duration(seconds: 1),
-                            ),
+                          final infoMsg = 'User ID copied to clipboard!';
+                          showCustomToast(
+                            context,
+                            infoMsg,
+                            type: ToastType.success,
                           );
                         },
                         child: Row(

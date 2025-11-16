@@ -76,8 +76,8 @@ class UserRepository {
   }
 
   // Update goal - can use updateUser, but here's a specific method
-  Future<void> updateGoal(String uid, Map<String, dynamic> goalData) async {
-    await updateUser(uid, {'goal': goalData});
+  Future<void> updateGoal(String uid, goalData) async {
+    await updateUser(uid, {'goalType': goalData});
   }
 
   // Admin freeze account
@@ -168,5 +168,10 @@ class UserRepository {
     } catch (e) {
       print('Error removing trainee: $e');
     }
+  }
+
+  // Delete user goal when change trainer
+  Future<void> deleteUserGoal(String uid) async {
+    await updateUser(uid, {'goal': null});
   }
 }

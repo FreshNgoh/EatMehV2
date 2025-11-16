@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:eatmehv2/data/models/user/user_settings_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/user/user_model.dart';
 import 'user_repo.dart';
@@ -31,6 +32,7 @@ class AuthRepository {
         friends: [],
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
+        settings: UserSettings(),
       );
 
       await _userRepo.createUser(user);

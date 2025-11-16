@@ -1,3 +1,5 @@
+import 'package:eatmehv2/core/constants/route_constants.dart';
+import 'package:eatmehv2/presentation/widgets/toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../bloc/auth/auth_bloc.dart';
@@ -57,13 +59,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
         listener: (context, state) {
           if (state is AuthError) {
             final errorMsg = state.message.replaceFirst('Exception: ', '');
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(errorMsg)));
+            showCustomToast(context, errorMsg, type: ToastType.error);
           }
 
           if (state is Authenticated) {
-            Navigator.of(context).popUntil((route) => route.isFirst);
+            // Navigate to home screen using named route
+            Navigator.of(context).pushNamedAndRemoveUntil(
+              RouteConstants.home,
+              (route) => false,
+              arguments: state.user,
+            );
           }
         },
         child: SafeArea(

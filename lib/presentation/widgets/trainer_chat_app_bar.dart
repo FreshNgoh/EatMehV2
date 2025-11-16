@@ -37,13 +37,20 @@ class TrainerChatAppBar extends StatelessWidget implements PreferredSizeWidget {
           GestureDetector(
             onTap: onProfileTap,
             child: CircleAvatar(
+              radius: 25,
+              backgroundColor: Colors.grey.shade200,
               backgroundImage:
-              // receiverImage.isNotEmpty
-              //     ? NetworkImage(receiverImage)
-              //     : const AssetImage('assets/teralero.png')
-              //         as ImageProvider,
-              const AssetImage('assets/teralero.png'),
-              radius: 20,
+                  receiverImage.isNotEmpty ? NetworkImage(receiverImage) : null,
+              child:
+                  receiverImage.isEmpty
+                      ? Text(
+                        receiverName[0].toUpperCase(),
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
+                      : null,
             ),
           ),
 
