@@ -1,12 +1,9 @@
-//
-// request_screen.dart (Final)
-//
 import 'package:flutter/material.dart';
-// Adjust these paths
 import 'package:eatmehv2/data/models/trainer/trainer_application.dart';
 import 'package:eatmehv2/data/repos/trainer_application_repo.dart';
 import 'package:eatmehv2/data/services/trainer_application_service.dart';
 import 'admin_request_details.dart';
+import 'package:eatmehv2/core/localization/app_localizations.dart';
 
 class RequestScreen extends StatefulWidget {
   const RequestScreen({super.key});
@@ -22,6 +19,8 @@ class _RequestScreenState extends State<RequestScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = context.loc; // Get localization object
+
     return Scaffold(
       // Use StreamBuilder to get live data from your repository
       body: StreamBuilder<List<TrainerApplication>>(
@@ -31,13 +30,15 @@ class _RequestScreenState extends State<RequestScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+            // --- UPDATED ---
+            return Center(child: Text(loc.adminRequestErrorLoad(snapshot.error.toString())));
           }
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(
+            return Center(
               child: Text(
-                'No pending applications.',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+                // --- UPDATED ---
+                loc.adminRequestNoPending,
+                style: const TextStyle(fontSize: 16, color: Colors.grey),
               ),
             );
           }
@@ -49,7 +50,7 @@ class _RequestScreenState extends State<RequestScreen> {
             itemBuilder: (context, index) {
               final application = applications[index];
               return RequestListItem(
-                application: application, // Use your model
+                application: application, 
                 onTap: () {
                   Navigator.push(
                     context,
@@ -71,7 +72,7 @@ class _RequestScreenState extends State<RequestScreen> {
 
 // --- List Item Widget (Updated) ---
 class RequestListItem extends StatelessWidget {
-  final TrainerApplication application; // Use your model
+  final TrainerApplication application; 
   final VoidCallback onTap;
 
   const RequestListItem({
@@ -82,6 +83,9 @@ class RequestListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // --- ADDED ---
+    final loc = context.loc; // Get localization object
+
     return ListTile(
       onTap: onTap,
       contentPadding:
@@ -99,7 +103,8 @@ class RequestListItem extends StatelessWidget {
         ),
       ),
       subtitle: Text(
-        "Specialization: ${application.specialization}", // Use data from your model
+        // --- UPDATED ---
+        "${loc.adminRequestSpecPrefix}${application.specialization}",
         style: TextStyle(color: Colors.grey[600]),
       ),
     );

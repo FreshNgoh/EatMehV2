@@ -1,15 +1,14 @@
+import 'package:eatmehv2/presentation/widgets/custom_card.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:intl/intl.dart'; // For formatting numbers
-
-// --- Import your models and repositories ---
-// (Adjust these paths to match your project structure)
+import 'package:intl/intl.dart';
 import 'package:eatmehv2/data/models/user/user_model.dart';
 import 'package:eatmehv2/data/models/meal/meal_record_model.dart';
 import 'package:eatmehv2/data/models/exercise/exercise_model.dart';
 import 'package:eatmehv2/data/repos/user_repo.dart';
 import 'package:eatmehv2/data/repos/meal_records_repo.dart';
 import 'package:eatmehv2/data/repos/exercise_repo.dart';
+import 'package:eatmehv2/core/localization/app_localizations.dart';
 
 // --- Light UI Colors ---
 const Color kLightBackgroundColor = Colors.white;
@@ -33,7 +32,6 @@ class DataScreen extends StatefulWidget {
 }
 
 class _DataScreenState extends State<DataScreen> {
-  // --- Repositories ---
   final UserRepository _userRepo = UserRepository();
   final MealRecordsRepository _mealRepo = MealRecordsRepository();
   final ExerciseRepository _exerciseRepo = ExerciseRepository();
@@ -57,19 +55,27 @@ class _DataScreenState extends State<DataScreen> {
 
   // --- Filter State ---
   late int _selectedYear;
-  late int _selectedMonth; 
-  final List<int> _years = [2023, 2024, 2025, 2026]; 
-  final List<String> _months = [
-    'January', 'February', 'March', 'April', 'May', 'June', 'July',
-    'August', 'September', 'October', 'November', 'December',
-  ];
+  late int _selectedMonth;
+  final List<int> _years = [2023, 2024, 2025, 2026];
+  List<String> _months = []; 
 
   @override
   void initState() {
     super.initState();
     _selectedYear = DateTime.now().year;
     _selectedMonth = DateTime.now().month;
-    _fetchAndProcessData();
+  }
+  
+  bool _didFetchData = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_didFetchData) {
+      _months = context.loc.monthsList;
+      _fetchAndProcessData();
+      _didFetchData = true;
+    }
   }
 
   // --- 1. DATA FETCHING & INITIAL PROCESSING ---
@@ -88,10 +94,7 @@ class _DataScreenState extends State<DataScreen> {
       _allMeals = allData[1] as List<MealRecordModel>;
       _allExercises = allData[2] as List<ExerciseRecordModel>;
 
-      // --- Process static data (Total Users & Gender) ---
       _processStaticData();
-
-      // --- Process filtered data for the first time ---
       _processFilteredData();
 
       if (!mounted) return;
@@ -100,17 +103,14 @@ class _DataScreenState extends State<DataScreen> {
       if (!mounted) return;
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading data: $e')),
+        SnackBar(content: Text(context.loc.adminDataErrorLoad(e.toString()))),
       );
     }
   }
 
   /// Processes data that does *not* change with filters.
   void _processStaticData() {
-    // 1. Total Users
     _totalUsers = _allUsers.length.toString();
-
-    // 2. Gender Percentages (Male/Female only)
     int maleCount = _allUsers.where((u) => u.gender == 'male').length;
     int femaleCount = _allUsers.where((u) => u.gender == 'female').length;
     int totalGendered = maleCount + femaleCount;
@@ -127,7 +127,6 @@ class _DataScreenState extends State<DataScreen> {
 
   /// Processes data *based on* the selected filters.
   void _processFilteredData() {
-    // --- Filter the data lists ---
     final filteredMeals = _allMeals.where((meal) {
       final date = meal.createdAt.toDate();
       final monthMatches =
@@ -142,14 +141,12 @@ class _DataScreenState extends State<DataScreen> {
       return date.year == _selectedYear && monthMatches;
     }).toList();
     
-    // --- 1. Average Calories ---
     _avgCalories = '0';
     if (filteredMeals.isNotEmpty) {
       double calSum = filteredMeals.fold(0, (sum, meal) => sum + meal.calories);
       _avgCalories = (calSum / filteredMeals.length).toStringAsFixed(0);
     }
 
-    // --- 2. Total Duration ---
     _totalDuration = '0 min';
     if (filteredExercises.isNotEmpty) {
       int durationSum =
@@ -161,7 +158,6 @@ class _DataScreenState extends State<DataScreen> {
       }
     }
 
-    // --- 3. Total Calories Burnt ---
     _totalCaloriesBurnt = '0';
     if (filteredExercises.isNotEmpty) {
       int calBurntSum =
@@ -169,7 +165,6 @@ class _DataScreenState extends State<DataScreen> {
       _totalCaloriesBurnt = numberFormat.format(calBurntSum);
     }
 
-    // --- 4. User Signups by Month (for the line chart) ---
     Map<int, double> monthlyCounts = {
       1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0,
       7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0,
@@ -181,13 +176,14 @@ class _DataScreenState extends State<DataScreen> {
     }
     _userSignupsByMonth = monthlyCounts;
 
-    // Trigger UI rebuild
     setState(() {});
   }
 
   // --- 2. BUILD METHOD ---
   @override
   Widget build(BuildContext context) {
+    final loc = context.loc;
+
     return Scaffold(
       backgroundColor: kLightBackgroundColor,
       body: _isLoading
@@ -200,48 +196,48 @@ class _DataScreenState extends State<DataScreen> {
                   const SizedBox(height: 32),
 
                   // --- 1. TOTAL USERS CARD ---
-                  _buildSectionHeader("Total Users"),
+                  _buildSectionHeader(loc.adminDataTotalUsers),
                   const SizedBox(height: 12),
-                  _buildTotalUsersCard(), // New full-width card
+                  _buildTotalUsersCard(loc),
                   const SizedBox(height: 24),
 
                   // --- 2. GENDER GRAPH ---
-                  _buildSectionHeader("User Genders"),
+                  _buildSectionHeader(loc.adminDataUserGenders),
                   const SizedBox(height: 12),
                   _buildChartCard(
                     child: _buildGenderPieChart(),
-                    legend: _buildPieChartLegend(),
+                    legend: _buildPieChartLegend(loc),
                   ),
                   const SizedBox(height: 32),
 
                   // --- 3. FILTERS & STATS ---
-                  _buildSectionHeader("Data Overview"),
+                  _buildSectionHeader(loc.adminDataOverview),
                   const SizedBox(height: 12),
-                  _buildFilterControls(),
+                  _buildFilterControls(loc),
                   const SizedBox(height: 16),
                   
                   // --- 4. HORIZONTALLY SCROLLING STATS CARDS ---
                   SizedBox(
-                    height: 160, // Fixed height for the horizontal list
+                    height: 160,
                     child: ListView(
                       scrollDirection: Axis.horizontal,
                       children: [
                         _buildScrollableStatCard(
                           icon: Icons.local_fire_department,
                           value: _avgCalories,
-                          label: 'Avg Calories',
+                          label: loc.adminDataAvgCalories,
                           color: kIconColor1,
                         ),
                         _buildScrollableStatCard(
                           icon: Icons.timer,
                           value: _totalDuration,
-                          label: 'Total Duration',
+                          label: loc.adminDataTotalDuration,
                           color: kIconColor2,
                         ),
                         _buildScrollableStatCard(
                           icon: Icons.fitness_center,
                           value: _totalCaloriesBurnt,
-                          label: 'Calories Burnt',
+                          label: loc.adminDataCaloriesBurnt,
                           color: kIconColor3,
                         ),
                       ],
@@ -250,9 +246,9 @@ class _DataScreenState extends State<DataScreen> {
                   const SizedBox(height: 32),
 
                   // --- 5. NEW USERS OVERVIEW ---
-                  _buildSectionHeader("New Users Overview"),
+                  _buildSectionHeader(loc.adminDataNewUsers),
                   const SizedBox(height: 12),
-                  _buildLineChartCard(),
+                  _buildLineChartCard(loc),
                   const SizedBox(height: 80),
                 ],
               ),
@@ -263,20 +259,8 @@ class _DataScreenState extends State<DataScreen> {
   // --- 3. HELPER WIDGETS ---
 
   /// Builds the top full-width "Total Users" card
-  Widget _buildTotalUsersCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: kLightCardColor,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 5,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
+  Widget _buildTotalUsersCard(AppLocalizations loc) {
+    return CustomCard(
       child: Row(
         children: [
           Icon(Icons.group, size: 32, color: kIconColor4),
@@ -292,9 +276,9 @@ class _DataScreenState extends State<DataScreen> {
                   color: kTextPrimaryLight,
                 ),
               ),
-              const Text(
-                'Total Users',
-                style: TextStyle(
+              Text(
+                loc.adminDataTotalUsers,
+                style: const TextStyle(
                   fontSize: 16,
                   color: kTextSecondaryLight,
                 ),
@@ -307,23 +291,18 @@ class _DataScreenState extends State<DataScreen> {
   }
   
   /// Builds the Month/Year filter dropdowns
-  Widget _buildFilterControls() {
-    // (This widget is unchanged from the previous step)
-    return Row(
-      children: [
-        // --- Month Dropdown ---
-        Expanded(
-          flex: 2,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(
-              color: kLightCardColor,
-              borderRadius: BorderRadius.circular(10),
-            ),
+  Widget _buildFilterControls(AppLocalizations loc) {
+    return CustomCard(
+      // Removed redundant padding: CustomCard should handle its own padding
+      child: Row(
+        children: [
+          // --- Month Dropdown ---
+          Expanded(
+            flex: 2,
             child: DropdownButton<int>(
               value: _selectedMonth,
               isExpanded: true,
-              underline: Container(), // Remove underline
+              underline: Container(),
               onChanged: (newValue) {
                 if (newValue != null) {
                   setState(() => _selectedMonth = newValue);
@@ -331,36 +310,28 @@ class _DataScreenState extends State<DataScreen> {
                 }
               },
               items: [
-                // Add "All Months" option
-                const DropdownMenuItem<int>(
+                DropdownMenuItem<int>(
                   value: 13,
-                  child: Text('All Months', style: TextStyle(fontWeight: FontWeight.w500)),
+                  child: Text(loc.adminDataAllMonths, style: const TextStyle(fontWeight: FontWeight.w500)),
                 ),
                 ..._months.asMap().entries.map((entry) {
                   return DropdownMenuItem<int>(
-                    value: entry.key + 1, // 1-based index
+                    value: entry.key + 1,
                     child: Text(entry.value),
                   );
                 }).toList(),
               ],
             ),
           ),
-        ),
-        const SizedBox(width: 12),
+          const SizedBox(width: 12),
 
-        // --- Year Dropdown ---
-        Expanded(
-          flex: 1,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(
-              color: kLightCardColor,
-              borderRadius: BorderRadius.circular(10),
-            ),
+          // --- Year Dropdown ---
+          Expanded(
+            flex: 1,
             child: DropdownButton<int>(
               value: _selectedYear,
               isExpanded: true,
-              underline: Container(), // Remove underline
+              underline: Container(),
               onChanged: (newValue) {
                 if (newValue != null) {
                   setState(() => _selectedYear = newValue);
@@ -375,8 +346,8 @@ class _DataScreenState extends State<DataScreen> {
               }).toList(),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -387,44 +358,35 @@ class _DataScreenState extends State<DataScreen> {
     required String label,
     required Color color,
   }) {
-    return Container(
-      width: 140, // Fixed width for horizontal scrolling
-      margin: const EdgeInsets.only(right: 12), // Spacing between cards
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: kLightCardColor,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 5,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Icon(icon, size: 28, color: color),
-          const Spacer(),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: kTextPrimaryLight,
+    return SizedBox(
+      width: 160, // ADJUSTED WIDTH to prevent text truncation
+      child: CustomCard(
+        margin: const EdgeInsets.only(right: 12),
+        // Removed padding: CustomCard should handle its own padding
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Icon(icon, size: 28, color: color),
+            const Spacer(),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: kTextPrimaryLight,
+              ),
             ),
-          ),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 14,
-              color: kTextSecondaryLight,
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 14,
+                color: kTextSecondaryLight,
+              ),
+              // Removed overflow property
             ),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -453,13 +415,13 @@ class _DataScreenState extends State<DataScreen> {
   }
 
   /// Legend for Gender Pie Chart
-  Widget _buildPieChartLegend() {
+  Widget _buildPieChartLegend(AppLocalizations loc) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const _LegendItem(color: kGenderMale, text: 'Male'),
+        _LegendItem(color: kGenderMale, text: loc.adminDataMale),
         const SizedBox(width: 16),
-        const _LegendItem(color: kGenderFemale, text: 'Female'),
+        _LegendItem(color: kGenderFemale, text: loc.adminDataFemale),
       ],
     );
   }
@@ -479,23 +441,12 @@ class _DataScreenState extends State<DataScreen> {
   /// Helper for wrapping charts in a Card
   Widget _buildChartCard(
       {required Widget child, Widget? legend, double? height}) {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: kLightCardColor,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 5,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
+    return CustomCard(
+      // Removed redundant padding
       child: Column(
         children: [
           SizedBox(
-            height: height ?? 150, // Shorter height for pie chart
+            height: height ?? 150,
             child: child,
           ),
           if (legend != null) ...[
@@ -508,29 +459,20 @@ class _DataScreenState extends State<DataScreen> {
   }
 
   /// The card containing the line chart
-  Widget _buildLineChartCard() {
-    return Container(
-      height: 300,
-      padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
-      decoration: BoxDecoration(
-        color: kLightCardColor,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 5,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: LineChart(
-        _buildLineChartData(),
+  Widget _buildLineChartCard(AppLocalizations loc) {
+    return CustomCard(
+      // Removed redundant padding
+      child: SizedBox(
+        height: 260,
+        child: LineChart(
+          _buildLineChartData(loc),
+        ),
       ),
     );
   }
 
   /// The data and styling for the line chart
-  LineChartData _buildLineChartData() {
+  LineChartData _buildLineChartData(AppLocalizations loc) {
     final spots = <FlSpot>[];
     for (int i = 1; i <= 12; i++) {
       spots.add(FlSpot(i.toDouble(), _userSignupsByMonth[i] ?? 0));
@@ -559,12 +501,12 @@ class _DataScreenState extends State<DataScreen> {
             getTitlesWidget: (value, meta) {
               String text;
               switch (value.toInt()) {
-                case 1: text = 'Jan'; break;
-                case 3: text = 'Mar'; break;
-                case 5: text = 'May'; break;
-                case 7: text = 'Jul'; break;
-                case 9: text = 'Sep'; break;
-                case 11: text = 'Nov'; break;
+                case 1: text = loc.adminDataMonthJan; break;
+                case 3: text = loc.adminDataMonthMar; break;
+                case 5: text = loc.adminDataMonthMay; break;
+                case 7: text = loc.adminDataMonthJul; break;
+                case 9: text = loc.adminDataMonthSep; break;
+                case 11: text = loc.adminDataMonthNov; break;
                 default: return Container();
               }
               return SideTitleWidget(

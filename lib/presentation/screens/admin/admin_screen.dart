@@ -3,6 +3,7 @@ import 'package:eatmehv2/presentation/screens/admin/admin_user_screen.dart';
 import 'package:eatmehv2/presentation/screens/admin/admin_request.dart';
 import 'package:eatmehv2/presentation/screens/admin/admin_report.dart';
 import 'package:eatmehv2/presentation/widgets/custom_app_bar.dart';
+import 'package:eatmehv2/core/localization/app_localizations.dart';
 
 class AdminScreen extends StatefulWidget {
   const AdminScreen({super.key});
@@ -14,17 +15,20 @@ class AdminScreen extends StatefulWidget {
 class _AdminHomeScreenState extends State<AdminScreen> {
   int _selectedIndex = 0;
 
-  final List<String> _titles = [
-    'Users',
-    'Requests',
-    'Data',
-  ];
 
   @override
   Widget build(BuildContext context) {
+    final loc = context.loc; 
+
+    final List<String> _titles = [
+      loc.adminNavUsers,
+      loc.adminNavRequests,
+      loc.adminNavData,
+    ];
+
     return Scaffold(
       appBar: CustomAppBar(
-        title: _titles[_selectedIndex],
+        title: _titles[_selectedIndex], 
         showNotification: true,
         showFriendRequest: false,
       ),
@@ -46,9 +50,9 @@ class _AdminHomeScreenState extends State<AdminScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildNavItem(0, Icons.person, 'Users'),
-                _buildNavItem(1, Icons.assignment, 'Requests'),
-                _buildNavItem(2, Icons.data_array, 'Data'),
+                _buildNavItem(0, Icons.person, loc.adminNavUsers),
+                _buildNavItem(1, Icons.assignment, loc.adminNavRequests),
+                _buildNavItem(2, Icons.data_array, loc.adminNavData),
               ],
             ),
           ),
@@ -85,7 +89,7 @@ class _AdminHomeScreenState extends State<AdminScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                label,
+                label, // This now uses the localized label
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
