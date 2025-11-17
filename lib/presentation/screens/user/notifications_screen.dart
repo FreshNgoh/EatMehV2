@@ -1,8 +1,10 @@
+import 'package:eatmehv2/core/localization/app_localizations.dart';
 import 'package:eatmehv2/data/models/notification/notification_model.dart';
 import 'package:eatmehv2/data/repos/notification_repo.dart';
 import 'package:eatmehv2/data/repos/user_repo.dart';
 import 'package:eatmehv2/data/services/notification_service.dart';
 import 'package:eatmehv2/presentation/screens/trainer/trainer_request.dart';
+import 'package:eatmehv2/presentation/widgets/toast.dart';
 import 'package:flutter/material.dart';
 
 class NotificationsScreen extends StatefulWidget {
@@ -20,12 +22,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   bool isLoadingRole = true;
   String? userRole;
 
-  final Map<String, String> filterTypes = {
-    'all': 'All',
-    'trainer_request': 'Trainer Requests',
-    'story_view': 'Story Views',
-    'meal_reminder': 'Meal Reminders',
-  };
+  Map<String, String> _getFilterTypes(AppLocalizations loc) {
+    return {
+      'all': loc.notificationsFilterAll,
+      'trainer_request': loc.trainerReqTitleMultiple,
+      'story_view': loc.notificationsFilterStoryViews,
+      'meal_reminder': loc.notificationsFilterMealReminders,
+    };
+  }
 
   @override
   void initState() {
@@ -43,8 +47,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         });
       }
     } catch (e) {
-      Exception('Error loading user role: $e');
       if (mounted) {
+        final loc = context.loc;
+        showCustomToast(context, loc.notificationsErrorRole(e.toString()),
+            type: ToastType.error);
         setState(() {
           userRole = 'user';
           isLoadingRole = false;
@@ -55,14 +61,17 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = context.loc;
+    final filterTypes = _getFilterTypes(loc);
+
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
-        title: const Text(
-          'Notifications',
-          style: TextStyle(
+        title: Text(
+          loc.settingsSectionNotifications,
+          style: const TextStyle(
             color: Color(0xFF191919),
             fontWeight: FontWeight.bold,
           ),
@@ -78,42 +87,38 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             child: ListView(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              children:
-                  filterTypes.entries.map((entry) {
-                    final isSelected = selectedFilter == entry.key;
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: FilterChip(
-                        label: Text(entry.value),
-                        selected: isSelected,
-                        onSelected: (selected) {
-                          setState(() {
-                            selectedFilter = entry.key;
-                          });
-                        },
-                        backgroundColor: Colors.grey.shade100,
-                        selectedColor: const Color(0xFF191919),
-                        labelStyle: TextStyle(
-                          color:
-                              isSelected
-                                  ? Colors.white
-                                  : const Color(0xFF191919),
-                          fontWeight:
-                              isSelected ? FontWeight.bold : FontWeight.normal,
-                        ),
-                        checkmarkColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          side: BorderSide(
-                            color:
-                                isSelected
-                                    ? const Color(0xFF191919)
-                                    : Colors.transparent,
-                          ),
-                        ),
+              children: filterTypes.entries.map((entry) {
+                final isSelected = selectedFilter == entry.key;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: FilterChip(
+                    label: Text(entry.value),
+                    selected: isSelected,
+                    onSelected: (selected) {
+                      setState(() {
+                        selectedFilter = entry.key;
+                      });
+                    },
+                    backgroundColor: Colors.grey.shade100,
+                    selectedColor: const Color(0xFF191919),
+                    labelStyle: TextStyle(
+                      color:
+                          isSelected ? Colors.white : const Color(0xFF191919),
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.normal,
+                    ),
+                    checkmarkColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: BorderSide(
+                        color: isSelected
+                            ? const Color(0xFF191919)
+                            : Colors.transparent,
                       ),
-                    );
-                  }).toList(),
+                    ),
+                  ),
+                );
+              }).toList(),
             ),
           ),
           const Divider(height: 1),
@@ -139,7 +144,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          "No notifications yet",
+                          loc.notificationsEmptyTitle,
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w500,
@@ -148,7 +153,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          "We'll notify you when something arrives",
+                          loc.notificationsEmptySubtitle,
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey.shade400,
@@ -161,12 +166,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
                 // Filter notifications
                 final allNotifications = snapshot.data!;
-                final filteredNotifications =
-                    selectedFilter == 'all'
-                        ? allNotifications
-                        : allNotifications
-                            .where((n) => n.type == selectedFilter)
-                            .toList();
+                final filteredNotifications = selectedFilter == 'all'
+                    ? allNotifications
+                    : allNotifications
+                        .where((n) => n.type == selectedFilter)
+                        .toList();
 
                 if (filteredNotifications.isEmpty) {
                   return Center(
@@ -180,7 +184,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          "No ${filterTypes[selectedFilter]?.toLowerCase()}",
+                          loc.notificationsEmptyFiltered(
+                              filterTypes[selectedFilter] ?? ''),
                           style: TextStyle(
                             fontSize: 16,
                             color: Colors.grey.shade600,
@@ -194,25 +199,25 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 return ListView.separated(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   itemCount: filteredNotifications.length,
-                  separatorBuilder:
-                      (context, index) => const Divider(height: 1, indent: 72),
+                  separatorBuilder: (context, index) =>
+                      const Divider(height: 1, indent: 72),
                   itemBuilder: (context, index) {
                     final notif = filteredNotifications[index];
                     return Dismissible(
                       key: Key(notif.uid ?? 'notif_$index'),
                       direction: DismissDirection.endToStart,
                       confirmDismiss: (direction) async {
-                        return await _showDeleteConfirmation(notif);
+                        return await _showDeleteConfirmation(notif, loc);
                       },
                       onDismissed: (direction) async {
                         await notificationRepo.deleteNotification(notif.uid!);
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: const Text('Notification deleted'),
+                              content: Text(loc.notificationsDeleted),
                               behavior: SnackBarBehavior.floating,
                               action: SnackBarAction(
-                                label: 'Undo',
+                                label: loc.notificationsUndo,
                                 onPressed: () {
                                   // Note: Implementing undo would require
                                   // storing deleted notification data temporarily
@@ -226,14 +231,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         color: Colors.red,
                         alignment: Alignment.centerRight,
                         padding: const EdgeInsets.only(right: 20),
-                        child: const Column(
+                        child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.delete, color: Colors.white, size: 28),
-                            SizedBox(height: 4),
+                            const Icon(Icons.delete,
+                                color: Colors.white, size: 28),
+                            const SizedBox(height: 4),
                             Text(
-                              'Delete',
-                              style: TextStyle(
+                              loc.friendButtonLabelDelete,
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 12,
@@ -243,10 +249,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         ),
                       ),
                       child: Container(
-                        color:
-                            notif.isRead
-                                ? Colors.white
-                                : const Color(0xFF191919).withOpacity(0.02),
+                        color: notif.isRead
+                            ? Colors.white
+                            : const Color(0xFF191919).withOpacity(0.02),
                         child: ListTile(
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 16,
@@ -256,30 +261,27 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                             width: 48,
                             height: 48,
                             decoration: BoxDecoration(
-                              color:
-                                  notif.isRead
-                                      ? Colors.grey.shade200
-                                      : _getNotificationColor(
-                                        notif.type,
-                                      ).withOpacity(0.1),
+                              color: notif.isRead
+                                  ? Colors.grey.shade200
+                                  : _getNotificationColor(
+                                      notif.type,
+                                    ).withOpacity(0.1),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
                               _getNotificationIcon(notif.type),
-                              color:
-                                  notif.isRead
-                                      ? Colors.grey
-                                      : _getNotificationColor(notif.type),
+                              color: notif.isRead
+                                  ? Colors.grey
+                                  : _getNotificationColor(notif.type),
                               size: 24,
                             ),
                           ),
                           title: Text(
                             notif.title,
                             style: TextStyle(
-                              fontWeight:
-                                  notif.isRead
-                                      ? FontWeight.w500
-                                      : FontWeight.bold,
+                              fontWeight: notif.isRead
+                                  ? FontWeight.w500
+                                  : FontWeight.bold,
                               fontSize: 15,
                               color: const Color(0xFF191919),
                             ),
@@ -301,7 +303,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
-                                _getTimeAgo(notif.createdAt.toDate()),
+                                _getTimeAgo(notif.createdAt.toDate(), loc),
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.grey.shade500,
@@ -341,25 +343,25 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
-  Future<bool?> _showDeleteConfirmation(NotificationModel notif) {
+  Future<bool?> _showDeleteConfirmation(
+      NotificationModel notif, AppLocalizations loc) {
     return showDialog<bool>(
       context: context,
-      builder:
-          (context) => AlertDialog.adaptive(
-            title: const Text('Delete Notification'),
-            content: Text('Delete "${notif.title}"?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                style: TextButton.styleFrom(foregroundColor: Colors.red),
-                child: const Text('Delete'),
-              ),
-            ],
+      builder: (context) => AlertDialog.adaptive(
+        title: Text(loc.notificationsDeleteTitle),
+        content: Text(loc.notificationsDeleteContent(notif.title)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(loc.profileBioCancel),
           ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: Text(loc.friendButtonLabelDelete),
+          ),
+        ],
+      ),
     );
   }
 
@@ -370,9 +372,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder:
-                  (context) =>
-                      TrainerRequestsScreen(filterByUid: notif.senderUid),
+              builder: (context) =>
+                  TrainerRequestsScreen(filterByUid: notif.senderUid),
             ),
           );
         }
@@ -414,13 +415,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
   }
 
-  String _getTimeAgo(DateTime dateTime) {
+  String _getTimeAgo(DateTime dateTime, AppLocalizations loc) {
     final diff = DateTime.now().difference(dateTime);
-    if (diff.inSeconds < 60) return 'Just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    if (diff.inDays < 7) return '${diff.inDays}d ago';
-    if (diff.inDays < 30) return '${(diff.inDays / 7).floor()}w ago';
-    return '${(diff.inDays / 30).floor()}mo ago';
+    if (diff.inSeconds < 60) return loc.storiesTimestampJustNow;
+    if (diff.inMinutes < 60) return loc.storiesTimestampMinutesAgo(diff.inMinutes);
+    if (diff.inHours < 24) return loc.storiesTimestampHoursAgo(diff.inHours);
+    if (diff.inDays < 7) return loc.storiesTimestampDaysAgo(diff.inDays);
+    if (diff.inDays < 30) {
+      return loc.notificationsTimestampWeeksAgo((diff.inDays / 7).floor());
+    }
+    return loc
+        .notificationsTimestampMonthsAgo((diff.inDays / 30).floor());
   }
 }

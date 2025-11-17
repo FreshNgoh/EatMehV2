@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:eatmehv2/bloc/auth/auth_bloc.dart';
 import 'package:eatmehv2/core/constants/route_constants.dart';
 import 'package:eatmehv2/presentation/screens/user/simple_user_manual_screen.dart';
@@ -7,6 +9,7 @@ import 'package:eatmehv2/utils/language_cubit.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:eatmehv2/core/localization/app_localizations.dart';
 
 class SettingScreen extends StatefulWidget {
   const SettingScreen({super.key});
@@ -20,6 +23,7 @@ class _SettingScreenState extends State<SettingScreen> {
   bool _notificationsEnabled = true;
 
   Future<void> _signOut(BuildContext context) async {
+    final loc = context.loc;
     try {
       context.read<AuthBloc>().add(AuthLogoutRequested());
       await FirebaseAuth.instance.signOut();
@@ -30,7 +34,7 @@ class _SettingScreenState extends State<SettingScreen> {
         ).pushNamedAndRemoveUntil(RouteConstants.login, (route) => false);
       }
     } catch (e) {
-      final errorMsg = 'Logout failed: $e';
+      final errorMsg = loc.settingsLogoutError(e.toString());
       showCustomToast(context, errorMsg, type: ToastType.error);
     }
   }
@@ -40,13 +44,14 @@ class _SettingScreenState extends State<SettingScreen> {
     return BlocBuilder<LanguageCubit, LanguageState>(
       builder: (context, languageState) {
         final currentLanguage = languageState.locale.languageCode;
+        final loc = context.loc;
 
         return Scaffold(
           appBar: AppBar(
             elevation: 0,
             centerTitle: true,
             leadingWidth: 60,
-            title: const Text('Settings'),
+            title: Text(loc.settingsTitle),
           ),
           body: Padding(
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
@@ -56,12 +61,12 @@ class _SettingScreenState extends State<SettingScreen> {
                 children: [
                   // THEME SECTION
                   Row(
-                    children: const [
-                      Icon(Icons.light_mode, size: 23),
-                      SizedBox(width: 6),
+                    children: [
+                      const Icon(Icons.light_mode, size: 23),
+                      const SizedBox(width: 6),
                       Text(
-                        'Theme',
-                        style: TextStyle(
+                        loc.settingsSectionTheme,
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w600,
                         ),
@@ -86,7 +91,7 @@ class _SettingScreenState extends State<SettingScreen> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  "Light",
+                                  loc.settingsThemeLight,
                                   style: TextStyle(
                                     fontWeight: FontWeight.w600,
                                     color:
@@ -116,7 +121,7 @@ class _SettingScreenState extends State<SettingScreen> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  "Dark",
+                                  loc.settingsThemeDark,
                                   style: TextStyle(
                                     fontWeight: FontWeight.w600,
                                     color:
@@ -137,12 +142,12 @@ class _SettingScreenState extends State<SettingScreen> {
 
                   // NOTIFICATIONS SECTION
                   Row(
-                    children: const [
-                      Icon(Icons.notifications, size: 23),
-                      SizedBox(width: 6),
+                    children: [
+                      const Icon(Icons.notifications, size: 23),
+                      const SizedBox(width: 6),
                       Text(
-                        'Notifications',
-                        style: TextStyle(
+                        loc.settingsSectionNotifications,
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w600,
                         ),
@@ -154,9 +159,9 @@ class _SettingScreenState extends State<SettingScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          "Enable Notifications",
-                          style: TextStyle(fontSize: 16),
+                        Text(
+                          loc.settingsNotificationsEnable,
+                          style: const TextStyle(fontSize: 16),
                         ),
                         Transform.scale(
                           scale: 0.8,
@@ -177,12 +182,12 @@ class _SettingScreenState extends State<SettingScreen> {
 
                   // LANGUAGE SECTION
                   Row(
-                    children: const [
-                      Icon(Icons.language_sharp, size: 23),
-                      SizedBox(width: 6),
+                    children: [
+                      const Icon(Icons.language_sharp, size: 23),
+                      const SizedBox(width: 6),
                       Text(
-                        'Language',
-                        style: TextStyle(
+                        loc.settingsSectionLanguage,
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w600,
                         ),
@@ -194,9 +199,9 @@ class _SettingScreenState extends State<SettingScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          "Select Language",
-                          style: TextStyle(fontSize: 16),
+                        Text(
+                          loc.settingsLanguageSelect,
+                          style: const TextStyle(fontSize: 16),
                         ),
                         Transform.scale(
                           scale: 0.9,
@@ -204,12 +209,15 @@ class _SettingScreenState extends State<SettingScreen> {
                             value: currentLanguage,
                             underline: const SizedBox(),
                             isDense: true,
-                            items: const [
+                            items: [
                               DropdownMenuItem(
                                 value: "en",
-                                child: Text("English"),
+                                child: Text(loc.settingsLanguageEnglish),
                               ),
-                              DropdownMenuItem(value: "zh", child: Text("中文")),
+                              DropdownMenuItem(
+                                value: "zh",
+                                child: Text(loc.settingsLanguageChinese),
+                              ),
                             ],
                             onChanged: (value) async {
                               if (value != null && value != currentLanguage) {
@@ -219,7 +227,7 @@ class _SettingScreenState extends State<SettingScreen> {
                                 if (context.mounted) {
                                   showCustomToast(
                                     context,
-                                    'Language changed successfully',
+                                    loc.settingsLanguageSuccess,
                                     type: ToastType.success,
                                   );
                                 }
@@ -235,12 +243,12 @@ class _SettingScreenState extends State<SettingScreen> {
 
                   // OTHER SECTION
                   Row(
-                    children: const [
-                      Icon(Icons.grid_view_outlined, size: 23),
-                      SizedBox(width: 6),
+                    children: [
+                      const Icon(Icons.grid_view_outlined, size: 23),
+                      const SizedBox(width: 6),
                       Text(
-                        'Other',
-                        style: TextStyle(
+                        loc.settingsSectionOther,
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w600,
                         ),
@@ -259,12 +267,13 @@ class _SettingScreenState extends State<SettingScreen> {
                     },
                     child: CustomCard(
                       child: Row(
-                        children: const [
-                          Icon(Icons.menu_book, color: Colors.indigo),
-                          SizedBox(width: 12),
-                          Text("User Manual", style: TextStyle(fontSize: 16)),
-                          Spacer(),
-                          Icon(
+                        children: [
+                          const Icon(Icons.menu_book, color: Colors.indigo),
+                          const SizedBox(width: 12),
+                          Text(loc.settingsOtherUserManual,
+                              style: const TextStyle(fontSize: 16)),
+                          const Spacer(),
+                          const Icon(
                             Icons.arrow_forward_ios,
                             size: 16,
                             color: Colors.grey,
@@ -283,12 +292,13 @@ class _SettingScreenState extends State<SettingScreen> {
                     },
                     child: CustomCard(
                       child: Row(
-                        children: const [
-                          Icon(Icons.exit_to_app, color: Colors.red),
-                          SizedBox(width: 12),
-                          Text("Sign Out", style: TextStyle(fontSize: 16)),
-                          Spacer(),
-                          Icon(
+                        children: [
+                          const Icon(Icons.exit_to_app, color: Colors.red),
+                          const SizedBox(width: 12),
+                          Text(loc.settingsOtherSignOut,
+                              style: const TextStyle(fontSize: 16)),
+                          const Spacer(),
+                          const Icon(
                             Icons.arrow_forward_ios,
                             size: 16,
                             color: Colors.grey,

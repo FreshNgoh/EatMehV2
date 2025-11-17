@@ -2,6 +2,7 @@ import 'package:eatmehv2/data/models/user/user_model.dart';
 import 'package:eatmehv2/data/repos/user_repo.dart';
 import 'package:eatmehv2/presentation/screens/user/profile_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:eatmehv2/core/localization/app_localizations.dart';
 
 class ProfileMeTab extends StatefulWidget {
   final int caloriesTaken;
@@ -93,6 +94,7 @@ class _ProfileMeTabState extends State<ProfileMeTab> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = context.loc;
     final bool hasFriends = _friends.isNotEmpty;
     final bool hasTrainer = _trainer != null;
 
@@ -104,7 +106,7 @@ class _ProfileMeTabState extends State<ProfileMeTab> {
             Icon(Icons.today, size: 23, color: Color(0xFF2D3748)),
             SizedBox(width: 6),
             Text(
-              "Today's Status",
+              loc.profileMeTodayStatus,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
@@ -164,7 +166,7 @@ class _ProfileMeTabState extends State<ProfileMeTab> {
                 ),
               ),
               Text(
-                'kcal',
+                loc.profileMeKcal,
                 style: TextStyle(
                   fontSize: 16,
                   color: widget.netCaloriesColor.withOpacity(0.7),
@@ -195,14 +197,14 @@ class _ProfileMeTabState extends State<ProfileMeTab> {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   _buildCalorieInfo(
-                    'Taken',
+                    loc.profileMeTaken,
                     widget.caloriesTaken,
                     Colors.orange,
                     Icons.local_fire_department,
                   ),
                   Container(height: 40, width: 1, color: Colors.grey[300]),
                   _buildCalorieInfo(
-                    'Burnt',
+                    loc.profileMeBurnt,
                     widget.caloriesBurnt,
                     Colors.blue,
                     Icons.directions_run,
@@ -225,7 +227,7 @@ class _ProfileMeTabState extends State<ProfileMeTab> {
               ),
               SizedBox(width: 6),
               Text(
-                "Friends",
+                loc.profileMeFriends,
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
@@ -260,57 +262,57 @@ class _ProfileMeTabState extends State<ProfileMeTab> {
             child:
                 _isLoadingFriends
                     ? const Center(
-                      child: SizedBox(
-                        width: 30,
-                        height: 30,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    )
+                        child: SizedBox(
+                          width: 30,
+                          height: 30,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
                     : ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _friends.length,
-                      itemBuilder: (context, index) {
-                        final friend = _friends[index];
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 12.0),
-                          child: GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder:
-                                      (_) => ProfileScreen(userUid: friend.uid),
-                                ),
-                              );
-                            },
-                            child: Column(
-                              children: [
-                                CircleAvatar(
-                                  radius: 25,
-                                  backgroundColor: Colors.grey.shade300,
-                                  backgroundImage:
-                                      friend.imageUrl != null &&
-                                              friend.imageUrl!.isNotEmpty
-                                          ? NetworkImage(friend.imageUrl!)
-                                          : null,
-                                  child:
-                                      friend.imageUrl == null ||
-                                              friend.imageUrl!.isEmpty
-                                          ? Text(
-                                            friend.username[0].toUpperCase(),
-                                            style: const TextStyle(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          )
-                                          : null,
-                                ),
-                              ],
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _friends.length,
+                        itemBuilder: (context, index) {
+                          final friend = _friends[index];
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 12.0),
+                            child: GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (_) => ProfileScreen(userUid: friend.uid),
+                                  ),
+                                );
+                              },
+                              child: Column(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 25,
+                                    backgroundColor: Colors.grey.shade300,
+                                    backgroundImage:
+                                        friend.imageUrl != null &&
+                                                friend.imageUrl!.isNotEmpty
+                                            ? NetworkImage(friend.imageUrl!)
+                                            : null,
+                                    child:
+                                        friend.imageUrl == null ||
+                                                friend.imageUrl!.isEmpty
+                                            ? Text(
+                                                friend.username[0].toUpperCase(),
+                                                style: const TextStyle(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              )
+                                            : null,
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
+                          );
+                        },
+                      ),
           ),
           const SizedBox(height: 24),
         ],
@@ -322,7 +324,7 @@ class _ProfileMeTabState extends State<ProfileMeTab> {
               Icon(Icons.fitness_center, size: 23, color: Color(0xFF2D3748)),
               SizedBox(width: 6),
               Text(
-                "Trainer",
+                loc.profileMeTrainer,
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
@@ -337,83 +339,83 @@ class _ProfileMeTabState extends State<ProfileMeTab> {
             child:
                 _isLoadingTrainer
                     ? const Center(
-                      child: SizedBox(
-                        width: 30,
-                        height: 30,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    )
+                        child: SizedBox(
+                          width: 30,
+                          height: 30,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
                     : _trainer != null
                     ? GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (_) => ProfileScreen(userUid: _trainer!.uid),
-                          ),
-                        );
-                      },
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 25,
-                            backgroundColor: Colors.grey.shade300,
-                            backgroundImage:
-                                _trainer!.imageUrl != null &&
-                                        _trainer!.imageUrl!.isNotEmpty
-                                    ? NetworkImage(_trainer!.imageUrl!)
-                                    : null,
-                            child:
-                                _trainer!.imageUrl == null ||
-                                        _trainer!.imageUrl!.isEmpty
-                                    ? Text(
-                                      _trainer!.username[0].toUpperCase(),
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    )
-                                    : null,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  _trainer!.username,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                if (_trainer!.trainerProfile != null)
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        Icons.star,
-                                        size: 14,
-                                        color: Colors.amber,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        _trainer!.trainerProfile!.rating
-                                            .toStringAsFixed(1),
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          color: Colors.grey.shade600,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                              ],
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (_) => ProfileScreen(userUid: _trainer!.uid),
                             ),
-                          ),
-                        ],
-                      ),
-                    )
+                          );
+                        },
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 25,
+                              backgroundColor: Colors.grey.shade300,
+                              backgroundImage:
+                                  _trainer!.imageUrl != null &&
+                                          _trainer!.imageUrl!.isNotEmpty
+                                      ? NetworkImage(_trainer!.imageUrl!)
+                                      : null,
+                              child:
+                                  _trainer!.imageUrl == null ||
+                                          _trainer!.imageUrl!.isEmpty
+                                      ? Text(
+                                          _trainer!.username[0].toUpperCase(),
+                                          style: const TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        )
+                                      : null,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    _trainer!.username,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  if (_trainer!.trainerProfile != null)
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.star,
+                                          size: 14,
+                                          color: Colors.amber,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          _trainer!.trainerProfile!.rating
+                                              .toStringAsFixed(1),
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: Colors.grey.shade600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
                     : const SizedBox.shrink(),
           ),
         ],
@@ -427,6 +429,7 @@ class _ProfileMeTabState extends State<ProfileMeTab> {
     Color color,
     IconData icon,
   ) {
+    final loc = context.loc;
     return Column(
       children: [
         Row(
@@ -441,7 +444,7 @@ class _ProfileMeTabState extends State<ProfileMeTab> {
         ),
         const SizedBox(height: 4),
         Text(
-          '$value kcal',
+          loc.profileMeKcalValue(value),
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,

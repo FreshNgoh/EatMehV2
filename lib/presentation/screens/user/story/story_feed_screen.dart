@@ -11,6 +11,7 @@ import 'package:eatmehv2/presentation/screens/user/story/story_viewer_screen.dar
 import 'package:eatmehv2/presentation/widgets/toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:eatmehv2/core/localization/app_localizations.dart';
 
 class StoriesFeedScreen extends StatefulWidget {
   const StoriesFeedScreen({super.key});
@@ -57,7 +58,8 @@ class _StoriesFeedScreenState extends State<StoriesFeedScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        final errorMsg = 'Error loading stories: $e';
+        final loc = context.loc;
+        final errorMsg = loc.storiesErrorLoad(e.toString());
         showCustomToast(context, errorMsg, type: ToastType.error);
       }
     }
@@ -72,11 +74,11 @@ class _StoriesFeedScreenState extends State<StoriesFeedScreen> {
       MaterialPageRoute(
         builder:
             (context) => StoryViewerScreen(
-              stories: stories,
-              currentUserId: currentUser.uid,
-              currentUsername: currentUser.username,
-              currentUserImageUrl: currentUser.imageUrl ?? '',
-            ),
+          stories: stories,
+          currentUserId: currentUser.uid,
+          currentUsername: currentUser.username,
+          currentUserImageUrl: currentUser.imageUrl ?? '',
+        ),
       ),
     ).then((_) => _loadStoriesAndFriends());
   }
@@ -87,6 +89,7 @@ class _StoriesFeedScreenState extends State<StoriesFeedScreen> {
     required List<StoryModel> userStories,
     required bool isCurrentUser,
     required String currentUserId,
+    required AppLocalizations loc,
     String? imageUrl,
     String? username,
   }) {
@@ -99,7 +102,7 @@ class _StoriesFeedScreenState extends State<StoriesFeedScreen> {
         (userStories.isNotEmpty ? userStories.first.userImageUrl : '');
     final displayUsername =
         username ??
-        (userStories.isNotEmpty ? userStories.first.username : 'You');
+        (userStories.isNotEmpty ? userStories.first.username : loc.storiesYou);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -229,7 +232,7 @@ class _StoriesFeedScreenState extends State<StoriesFeedScreen> {
             SizedBox(
               width: 70,
               child: Text(
-                isCurrentUser ? 'Your Story' : displayUsername,
+                isCurrentUser ? loc.storiesYourStory : displayUsername,
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -248,6 +251,7 @@ class _StoriesFeedScreenState extends State<StoriesFeedScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = context.loc;
     final authState = context.read<AuthBloc>().state as Authenticated;
     final currentUser = authState.user;
 
@@ -259,96 +263,98 @@ class _StoriesFeedScreenState extends State<StoriesFeedScreen> {
           _isLoading
               ? const Center(child: CircularProgressIndicator())
               : Column(
-                children: [
-                  // Story Rings Row - Always show current user + friends with stories
-                  Container(
-                    height: 120,
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      children: [
-                        // Always show current user first
-                        _buildStoryRing(
-                          userId: currentUser.uid,
-                          userStories: currentUserStories,
-                          isCurrentUser: true,
-                          currentUserId: currentUser.uid,
-                          imageUrl: currentUser.imageUrl,
-                          username: currentUser.username,
-                        ),
-                        // Show friends with stories
-                        ..._groupedStories.entries
-                            .where((entry) => entry.key != currentUser.uid)
-                            .map((entry) {
-                              final userId = entry.key;
-                              final userStories = entry.value;
+                  children: [
+                    // Story Rings Row - Always show current user + friends with stories
+                    Container(
+                      height: 120,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        children: [
+                          // Always show current user first
+                          _buildStoryRing(
+                            userId: currentUser.uid,
+                            userStories: currentUserStories,
+                            isCurrentUser: true,
+                            currentUserId: currentUser.uid,
+                            imageUrl: currentUser.imageUrl,
+                            username: currentUser.username,
+                            loc: loc,
+                          ),
+                          // Show friends with stories
+                          ..._groupedStories.entries
+                              .where((entry) => entry.key != currentUser.uid)
+                              .map((entry) {
+                                final userId = entry.key;
+                                final userStories = entry.value;
 
-                              return _buildStoryRing(
-                                userId: userId,
-                                userStories: userStories,
-                                isCurrentUser: false,
-                                currentUserId: currentUser.uid,
-                              );
-                            }),
-                      ],
-                    ),
-                  ),
-
-                  // Friends List
-                  Expanded(
-                    child:
-                        _allFriends.isEmpty
-                            ? Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.people_outline,
-                                    size: 64,
-                                    color: Colors.grey.shade400,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    'No friends yet',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      color: Colors.grey.shade600,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Add friends to see their stories',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.grey.shade500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )
-                            : ListView.builder(
-                              padding: const EdgeInsets.fromLTRB(16, 1, 16, 18),
-                              itemCount: _allFriends.length,
-                              itemBuilder: (context, index) {
-                                final friend = _allFriends[index];
-                                final hasStories = _groupedStories.containsKey(
-                                  friend.uid,
+                                return _buildStoryRing(
+                                  userId: userId,
+                                  userStories: userStories,
+                                  isCurrentUser: false,
+                                  currentUserId: currentUser.uid,
+                                  loc: loc,
                                 );
-                                final userStories =
-                                    hasStories
-                                        ? _groupedStories[friend.uid]!
-                                        : <StoryModel>[];
+                              }),
+                        ],
+                      ),
+                    ),
 
-                                // Check if user has unviewed stories
-                                final hasUnviewed =
-                                    hasStories &&
-                                    userStories.any(
-                                      (story) =>
-                                          !story.views.contains(
-                                            currentUser.uid,
-                                          ),
+                    // Friends List
+                    Expanded(
+                      child:
+                          _allFriends.isEmpty
+                              ? Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.people_outline,
+                                        size: 64,
+                                        color: Colors.grey.shade400,
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        loc.storiesNoFriendsTitle,
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          color: Colors.grey.shade600,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        loc.storiesNoFriendsSubtitle,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey.shade500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : ListView.builder(
+                                  padding: const EdgeInsets.fromLTRB(16, 1, 16, 18),
+                                  itemCount: _allFriends.length,
+                                  itemBuilder: (context, index) {
+                                    final friend = _allFriends[index];
+                                    final hasStories = _groupedStories.containsKey(
+                                      friend.uid,
                                     );
+                                    final userStories =
+                                        hasStories
+                                            ? _groupedStories[friend.uid]!
+                                            : <StoryModel>[];
+
+                                    // Check if user has unviewed stories
+                                    final hasUnviewed =
+                                        hasStories &&
+                                        userStories.any(
+                                          (story) =>
+                                              !story.views.contains(
+                                                currentUser.uid,
+                                              ),
+                                        );
 
                                 return Container(
                                   margin: const EdgeInsets.symmetric(
@@ -444,45 +450,45 @@ class _StoriesFeedScreenState extends State<StoriesFeedScreen> {
                                                                     BorderRadius.circular(
                                                                       8,
                                                                     ),
+                                                                  ),
+                                                                  child: Row(
+                                                                    mainAxisSize:
+                                                                        MainAxisSize
+                                                                            .min,
+                                                                    children: [
+                                                                      Icon(
+                                                                        Icons
+                                                                            .person,
+                                                                        size: 15,
+                                                                        color:
+                                                                            Colors
+                                                                                .black54,
+                                                                      ),
+                                                                      SizedBox(
+                                                                        width: 8,
+                                                                      ),
+                                                                      Text(
+                                                                        loc.storiesViewProfile,
+                                                                        style: TextStyle(
+                                                                          fontSize:
+                                                                              15,
+                                                                          color:
+                                                                              Colors
+                                                                                  .black54,
+                                                                        ),
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                ),
                                                               ),
-                                                              child: Row(
-                                                                mainAxisSize:
-                                                                    MainAxisSize
-                                                                        .min,
-                                                                children: const [
-                                                                  Icon(
-                                                                    Icons
-                                                                        .person,
-                                                                    size: 15,
-                                                                    color:
-                                                                        Colors
-                                                                            .black54,
-                                                                  ),
-                                                                  SizedBox(
-                                                                    width: 8,
-                                                                  ),
-                                                                  Text(
-                                                                    "View Profile",
-                                                                    style: TextStyle(
-                                                                      fontSize:
-                                                                          15,
-                                                                      color:
-                                                                          Colors
-                                                                              .black54,
-                                                                    ),
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                            ),
+                                                            ],
                                                           ),
-                                                        ],
+                                                        ),
                                                       ),
-                                                    ),
-                                                  ),
-                                                ],
+                                                    ],
+                                                  );
+                                                },
                                               );
-                                            },
-                                          );
 
                                           Overlay.of(
                                             context,
@@ -620,68 +626,68 @@ class _StoriesFeedScreenState extends State<StoriesFeedScreen> {
                                         ),
                                       ),
 
-                                      const SizedBox(width: 16),
+                                          const SizedBox(width: 16),
 
-                                      // Title and subtitle
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              friend.username,
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.w600,
-                                                fontSize: 16,
-                                              ),
+                                          // Title and subtitle
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  friend.username,
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                    fontSize: 16,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  hasStories
+                                                      ? '${userStories.length} ${userStories.length == 1 ? loc.storiesCountSingular : loc.storiesCountPlural} • ${_formatTimestamp(userStories.first.createdAt, loc)}'
+                                                      : loc.storiesNoStory,
+                                                  style: TextStyle(
+                                                    color: Colors.grey.shade600,
+                                                    fontSize: 13,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
-                                            Text(
-                                              hasStories
-                                                  ? '${userStories.length} ${userStories.length == 1 ? "story" : "stories"} • ${_formatTimestamp(userStories.first.createdAt)}'
-                                                  : 'No story',
-                                              style: TextStyle(
-                                                color: Colors.grey.shade600,
-                                                fontSize: 13,
-                                              ),
+                                          ),
+
+                                          // Trailing icon
+                                          if (hasStories)
+                                            Icon(
+                                              Icons.circle,
+                                              size: 12,
+                                              color:
+                                                  hasUnviewed
+                                                      ? Colors.blue
+                                                      : Colors.grey.shade300,
                                             ),
-                                          ],
-                                        ),
+                                        ],
                                       ),
-
-                                      // Trailing icon
-                                      if (hasStories)
-                                        Icon(
-                                          Icons.circle,
-                                          size: 12,
-                                          color:
-                                              hasUnviewed
-                                                  ? Colors.blue
-                                                  : Colors.grey.shade300,
-                                        ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
-                  ),
-                ],
-              ),
+                                    );
+                                  },
+                                ),
+                    ),
+                  ],
+                ),
     );
   }
 
-  String _formatTimestamp(Timestamp timestamp) {
+  String _formatTimestamp(Timestamp timestamp, AppLocalizations loc) {
     final now = DateTime.now();
     final date = timestamp.toDate();
     final difference = now.difference(date);
 
     if (difference.inMinutes < 1) {
-      return 'Just now';
+      return loc.storiesTimestampJustNow;
     } else if (difference.inHours < 1) {
-      return '${difference.inMinutes}m ago';
+      return loc.storiesTimestampMinutesAgo(difference.inMinutes);
     } else if (difference.inHours < 24) {
-      return '${difference.inHours}h ago';
+      return loc.storiesTimestampHoursAgo(difference.inHours);
     } else {
-      return '${difference.inDays}d ago';
+      return loc.storiesTimestampDaysAgo(difference.inDays);
     }
   }
 }

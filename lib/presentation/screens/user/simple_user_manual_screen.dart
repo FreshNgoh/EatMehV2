@@ -1,3 +1,4 @@
+import 'package:eatmehv2/core/localization/app_localizations.dart';
 import 'package:eatmehv2/presentation/widgets/video_player.dart';
 import 'package:flutter/material.dart';
 
@@ -17,30 +18,40 @@ class SimpleUserManualScreen extends StatefulWidget {
 
 class _SimpleUserManualScreenState extends State<SimpleUserManualScreen> {
   int _currentStep = 0;
+  List<ManualStep> _steps = [];
 
-  // ✅ Dynamic steps with video + text
-  final List<ManualStep> _steps = [
-    ManualStep(
-      videoAsset: 'assets/videos/scan_manual.mov',
-      text: 'Scan your meal, get healthy',
-    ),
-    ManualStep(
-      videoAsset: 'assets/videos/story_manual.mov',
-      text: 'Post a story, share your meal',
-    ),
-    ManualStep(
-      videoAsset: 'assets/videos/record_manual.mov',
-      text: 'Track your record, stay healthy',
-    ),
-    ManualStep(
-      videoAsset: 'assets/videos/trainee_manual.mov',
-      text: 'Find a consult, customize your goal',
-    ),
-    ManualStep(
-      videoAsset: 'assets/videos/trainer_manual.mov',
-      text: 'Apply a consult, get your trainees',
-    ),
-  ];
+  // ✅ Helper to load localized steps
+  void _loadSteps(AppLocalizations loc) {
+    _steps = [
+      ManualStep(
+        videoAsset: 'assets/videos/scan_manual.mov',
+        text: loc.manualStepScan,
+      ),
+      ManualStep(
+        videoAsset: 'assets/videos/story_manual.mov',
+        text: loc.manualStepStory,
+      ),
+      ManualStep(
+        videoAsset: 'assets/videos/record_manual.mov',
+        text: loc.manualStepRecord,
+      ),
+      ManualStep(
+        videoAsset: 'assets/videos/trainee_manual.mov',
+        text: loc.manualStepTrainee,
+      ),
+      ManualStep(
+        videoAsset: 'assets/videos/trainer_manual.mov',
+        text: loc.manualStepTrainer,
+      ),
+    ];
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Load steps here to ensure `loc` is available
+    _loadSteps(context.loc);
+  }
 
   void _nextStep() {
     if (_currentStep == _steps.length - 1) {
@@ -58,8 +69,15 @@ class _SimpleUserManualScreenState extends State<SimpleUserManualScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = context.loc;
+    // Ensure steps are loaded if build is called before didChangeDependencies
+    if (_steps.isEmpty) {
+      _loadSteps(loc);
+    }
+
     return Scaffold(
-      appBar: AppBar(title: const Text("User Manual"), leadingWidth: 60),
+      appBar:
+          AppBar(title: Text(loc.settingsOtherUserManual), leadingWidth: 60),
       body: Padding(
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
         child: Column(
@@ -74,7 +92,10 @@ class _SimpleUserManualScreenState extends State<SimpleUserManualScreen> {
 
             // Step counter
             Text(
-              "${_currentStep + 1} of ${_steps.length}",
+              loc.manualStepCounter(
+                _currentStep + 1,
+                _steps.length,
+              ),
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey.shade600,
@@ -100,9 +121,9 @@ class _SimpleUserManualScreenState extends State<SimpleUserManualScreen> {
                         side: const BorderSide(color: Colors.green),
                         minimumSize: const Size(double.infinity, 50),
                       ),
-                      child: const Text(
-                        "Previous",
-                        style: TextStyle(
+                      child: Text(
+                        loc.manualButtonPrevious,
+                        style: const TextStyle(
                           color: Colors.green,
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
@@ -122,7 +143,9 @@ class _SimpleUserManualScreenState extends State<SimpleUserManualScreen> {
                       minimumSize: const Size(double.infinity, 50),
                     ),
                     child: Text(
-                      _currentStep == _steps.length - 1 ? "Finish" : "Next",
+                      _currentStep == _steps.length - 1
+                          ? loc.trainerInstructionButtonFinish
+                          : loc.manualButtonNext,
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,

@@ -1,4 +1,5 @@
 import 'package:eatmehv2/bloc/auth/auth_bloc.dart';
+import 'package:eatmehv2/core/localization/app_localizations.dart';
 import 'package:eatmehv2/data/models/user/user_model.dart';
 import 'package:eatmehv2/data/repos/chat_room_repo.dart';
 import 'package:eatmehv2/data/repos/trainer_profile_repo.dart';
@@ -33,7 +34,7 @@ class _UserFeedbackScreenState extends State<UserFeedbackScreen> {
 
   Future<void> loadTrainerProfile() async {
     final trainer = await userRepo.getUser(widget.trainerUid);
-
+    if (!mounted) return;
     setState(() {
       _trainer = trainer;
       isLoading = false;
@@ -41,10 +42,12 @@ class _UserFeedbackScreenState extends State<UserFeedbackScreen> {
   }
 
   Future<void> _submitRating() async {
+    if (!mounted) return;
+    final loc = context.loc;
     if (_rating == 0.0) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Please select a rating')));
+      ).showSnackBar(SnackBar(content: Text(loc.feedbackErrorSelectRating)));
       return;
     }
 
@@ -60,8 +63,8 @@ class _UserFeedbackScreenState extends State<UserFeedbackScreen> {
           SnackBar(
             content: Text(
               _existingRating == null
-                  ? 'Rating submitted successfully!'
-                  : 'Rating updated successfully!',
+                  ? loc.feedbackSuccessSubmitted
+                  : loc.feedbackSuccessUpdated,
             ),
             backgroundColor: Colors.green,
           ),
@@ -69,11 +72,11 @@ class _UserFeedbackScreenState extends State<UserFeedbackScreen> {
         Navigator.pop(context);
       }
     } catch (e) {
-      Exception('Error submitting rating: $e');
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ).showSnackBar(
+            SnackBar(content: Text(loc.feedbackErrorSubmit(e.toString()))));
       }
     } finally {
       if (mounted) {
@@ -90,14 +93,15 @@ class _UserFeedbackScreenState extends State<UserFeedbackScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = context.loc;
     if (isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (_trainer == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Error')),
-        body: const Center(child: Text("Trainer not found")),
+        appBar: AppBar(title: Text(loc.trainerGoalErrorTitle)),
+        body: Center(child: Text(loc.feedbackErrorTrainerNotFound)),
       );
     }
 
@@ -113,9 +117,9 @@ class _UserFeedbackScreenState extends State<UserFeedbackScreen> {
           icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Rate Your Trainer',
-          style: TextStyle(color: Colors.black),
+        title: Text(
+          loc.feedbackTitle,
+          style: const TextStyle(color: Colors.black),
         ),
         actions: [
           IconButton(
@@ -149,22 +153,20 @@ class _UserFeedbackScreenState extends State<UserFeedbackScreen> {
                         child: CircleAvatar(
                           radius: 40,
                           backgroundColor: Colors.grey.shade200,
-                          backgroundImage:
-                              _trainer!.imageUrl != null &&
-                                      _trainer!.imageUrl!.isNotEmpty
-                                  ? NetworkImage(_trainer!.imageUrl!)
-                                  : null,
-                          child:
-                              (_trainer!.imageUrl == null ||
-                                      _trainer!.imageUrl!.isEmpty)
-                                  ? Text(
-                                    _trainer!.username[0].toUpperCase(),
-                                    style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  )
-                                  : null,
+                          backgroundImage: _trainer!.imageUrl != null &&
+                                  _trainer!.imageUrl!.isNotEmpty
+                              ? NetworkImage(_trainer!.imageUrl!)
+                              : null,
+                          child: (_trainer!.imageUrl == null ||
+                                  _trainer!.imageUrl!.isEmpty)
+                              ? Text(
+                                  _trainer!.username[0].toUpperCase(),
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                )
+                              : null,
                         ),
                       ),
                       Positioned(
@@ -203,9 +205,9 @@ class _UserFeedbackScreenState extends State<UserFeedbackScreen> {
                     onLongPress: () {
                       Clipboard.setData(ClipboardData(text: _trainer!.uid));
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Trainer ID copied!'),
-                          duration: Duration(seconds: 1),
+                        SnackBar(
+                          content: Text(loc.feedbackTrainerIDCopied),
+                          duration: const Duration(seconds: 1),
                         ),
                       );
                     },
@@ -238,8 +240,8 @@ class _UserFeedbackScreenState extends State<UserFeedbackScreen> {
                     ),
                     child: Text(
                       _trainingMonths > 0
-                          ? 'Training together for $_trainingMonths ${_trainingMonths == 1 ? "month" : "months"}'
-                          : 'Recently started training',
+                          ? loc.feedbackTrainingDuration(_trainingMonths)
+                          : loc.feedbackTrainingDurationRecent,
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.blue[900],
@@ -269,8 +271,8 @@ class _UserFeedbackScreenState extends State<UserFeedbackScreen> {
                       const SizedBox(width: 8),
                       Text(
                         _existingRating != null
-                            ? 'Update Your Rating'
-                            : 'Rate Your Experience',
+                            ? loc.feedbackUpdateRatingTitle
+                            : loc.feedbackRateExperienceTitle,
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -280,7 +282,7 @@ class _UserFeedbackScreenState extends State<UserFeedbackScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'How would you rate $trainerName as your trainer?',
+                    loc.feedbackRatingPrompt(trainerName),
                     style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                   ),
                   const SizedBox(height: 24),
@@ -305,10 +307,9 @@ class _UserFeedbackScreenState extends State<UserFeedbackScreen> {
                                   ? Icons.star_rounded
                                   : Icons.star_outline_rounded,
                               size: 48,
-                              color:
-                                  index < _rating
-                                      ? Colors.amber[600]
-                                      : Colors.grey[300],
+                              color: index < _rating
+                                  ? Colors.amber[600]
+                                  : Colors.grey[300],
                             ),
                           ),
                         );
@@ -320,7 +321,7 @@ class _UserFeedbackScreenState extends State<UserFeedbackScreen> {
                     const SizedBox(height: 12),
                     Center(
                       child: Text(
-                        _getRatingText(_rating),
+                        _getRatingText(_rating, loc),
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -334,9 +335,11 @@ class _UserFeedbackScreenState extends State<UserFeedbackScreen> {
 
                   // Submit Button
                   CustomButton(
-                    text: isSaving ? 'Saving...' : 'Submit Rating',
+                    text: isSaving
+                        ? loc.cameraSaving
+                        : loc.feedbackSubmitButton,
                     onPressed: isSaving ? null : _submitRating,
-                    backgroundColor: Color(0xFF191919),
+                    backgroundColor: const Color(0xFF191919),
                   ),
                 ],
               ),
@@ -355,7 +358,7 @@ class _UserFeedbackScreenState extends State<UserFeedbackScreen> {
                       size: 28,
                       color: Colors.blue[600],
                     ),
-                    value: 'Send Friend Request',
+                    value: loc.feedbackSendFriendRequest,
                     actionIcons: [
                       ListActionIcon(icon: Icons.arrow_forward_ios),
                     ],
@@ -370,7 +373,7 @@ class _UserFeedbackScreenState extends State<UserFeedbackScreen> {
 
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Friend request sent!')),
+                          SnackBar(content: Text(loc.friendButtonSuccessSent)),
                         );
                       }
                     },
@@ -382,12 +385,12 @@ class _UserFeedbackScreenState extends State<UserFeedbackScreen> {
                       size: 28,
                       color: Colors.orange[600],
                     ),
-                    value: 'Change Trainer',
+                    value: loc.feedbackChangeTrainer,
                     actionIcons: [
                       ListActionIcon(icon: Icons.arrow_forward_ios),
                     ],
                     onFieldTap: () {
-                      _showChangeTrainerDialog();
+                      _showChangeTrainerDialog(loc);
                     },
                   ),
                 ],
@@ -401,18 +404,18 @@ class _UserFeedbackScreenState extends State<UserFeedbackScreen> {
     );
   }
 
-  String _getRatingText(double rating) {
+  String _getRatingText(double rating, AppLocalizations loc) {
     switch (rating) {
       case 1:
-        return 'Poor';
+        return loc.feedbackRatingPoor;
       case 2:
-        return 'Fair';
+        return loc.feedbackRatingFair;
       case 3:
-        return 'Good';
+        return loc.feedbackRatingGood;
       case 4:
-        return 'Very Good';
+        return loc.feedbackRatingVeryGood;
       case 5:
-        return 'Excellent';
+        return loc.feedbackRatingExcellent;
       default:
         return '';
     }
@@ -424,88 +427,81 @@ class _UserFeedbackScreenState extends State<UserFeedbackScreen> {
     return Colors.green;
   }
 
-  void _showChangeTrainerDialog() {
+  void _showChangeTrainerDialog(AppLocalizations loc) {
     final authState = context.read<AuthBloc>().state as Authenticated;
     final currentUserUid = authState.user.uid;
     final chatRepo = ChatRoomRepo(ChatRoomService());
 
     showDialog(
       context: context,
-      builder:
-          (dialogContext) => AlertDialog.adaptive(
-            title: const Text('Change Trainer'),
-            content: const Text(
-              'Are you sure you want to change your trainer? You will need to find a new trainer.',
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () async {
-                  Navigator.pop(dialogContext);
-
-                  if (!mounted) return;
-
-                  showDialog(
-                    context: context,
-                    barrierDismissible: false,
-                    builder:
-                        (context) =>
-                            const Center(child: CircularProgressIndicator()),
-                  );
-
-                  try {
-                    await userRepo.changeTrainer(
-                      widget.trainerUid,
-                      currentUserUid,
-                    );
-
-                    await chatRepo.deleteChatRoom(
-                      currentUserUid,
-                      widget.trainerUid,
-                    );
-
-                    await userRepo.deleteUserGoal(currentUserUid);
-
-                    Navigator.pop(context);
-                    Navigator.pop(context);
-
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Trainer removed. You can now request a new trainer.',
-                        ),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
-
-                    // Pop the feedback screen
-                    Navigator.pop(context);
-                  } catch (e) {
-                    if (!mounted) return;
-
-                    // Pop loading indicator
-                    Navigator.pop(context);
-
-                    // Show error message
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Error: $e'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
-                },
-                style: TextButton.styleFrom(foregroundColor: Colors.red),
-                child: const Text('Confirm'),
-              ),
-            ],
+      builder: (dialogContext) => AlertDialog.adaptive(
+        title: Text(loc.feedbackChangeTrainer),
+        content: Text(loc.feedbackChangeTrainerConfirmMsg),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(loc.profileBioCancel),
           ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+
+              if (!mounted) return;
+
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (context) =>
+                    const Center(child: CircularProgressIndicator()),
+              );
+
+              try {
+                await userRepo.changeTrainer(
+                  widget.trainerUid,
+                  currentUserUid,
+                );
+
+                await chatRepo.deleteChatRoom(
+                  currentUserUid,
+                  widget.trainerUid,
+                );
+
+                await userRepo.deleteUserGoal(currentUserUid);
+
+                if (!mounted) return;
+                Navigator.pop(context); // Pop loading indicator
+                Navigator.pop(context); // Pop feedback screen
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(loc.feedbackChangeTrainerSuccessMsg),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              } catch (e) {
+                if (!mounted) return;
+
+                // Pop loading indicator
+                Navigator.pop(context);
+
+                // Show error message
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content:
+                        Text(loc.feedbackErrorChangeTrainer(e.toString())),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: Text(loc.friendButtonLabelConfirm),
+          ),
+        ],
+      ),
     );
   }
 }

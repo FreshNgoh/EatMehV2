@@ -8,6 +8,7 @@ import 'package:eatmehv2/presentation/screens/user/user_feedback_screen.dart';
 import 'package:eatmehv2/presentation/widgets/trainer_chat_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:eatmehv2/core/localization/app_localizations.dart';
 
 class TrainerChatRoom extends StatefulWidget {
   final String receiverUid;
@@ -40,8 +41,9 @@ class _TrainerChatRoomState extends State<TrainerChatRoom> {
     } else {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
+        final loc = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('You must be logged in to chat.')),
+          SnackBar(content: Text(loc.chatErrorNotLoggedIn)),
         );
       });
       Navigator.pop(context);
@@ -57,6 +59,7 @@ class _TrainerChatRoomState extends State<TrainerChatRoom> {
   @override
   Widget build(BuildContext context) {
     final authState = context.watch<AuthBloc>().state as Authenticated;
+    final loc = context.loc;
 
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
@@ -115,7 +118,9 @@ class _TrainerChatRoomState extends State<TrainerChatRoom> {
 
                   // Handle errors
                   if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
+                    return Center(
+                        child: Text(
+                            loc.chatErrorLoadMessages(snapshot.error.toString())));
                   }
 
                   // Check if have data
@@ -128,7 +133,7 @@ class _TrainerChatRoomState extends State<TrainerChatRoom> {
                   // Only show "Say hi" if we're connected AND truly have no messages
                   if (messages.isEmpty &&
                       snapshot.connectionState == ConnectionState.active) {
-                    return const Center(child: Text("Say hi 👋"));
+                    return Center(child: Text(loc.chatEmptyState));
                   }
 
                   return ListView.builder(
@@ -182,8 +187,8 @@ class _TrainerChatRoomState extends State<TrainerChatRoom> {
                     Expanded(
                       child: TextField(
                         controller: _controller,
-                        decoration: const InputDecoration(
-                          hintText: "Write message...",
+                        decoration: InputDecoration(
+                          hintText: loc.chatInputHint,
                           border: InputBorder.none,
                         ),
                       ),

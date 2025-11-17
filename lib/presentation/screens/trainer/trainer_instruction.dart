@@ -2,6 +2,7 @@ import 'package:eatmehv2/presentation/widgets/custom_button.dart';
 import 'package:eatmehv2/presentation/screens/trainer/trainer_form.dart';
 import 'package:flutter/material.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:eatmehv2/core/localization/app_localizations.dart';
 
 class TrainerInstruction extends StatefulWidget {
   const TrainerInstruction({super.key});
@@ -40,6 +41,7 @@ class _TrainerInstructionState extends State<TrainerInstruction> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = context.loc;
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -47,7 +49,7 @@ class _TrainerInstructionState extends State<TrainerInstruction> {
           color: Colors.black87,
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Trainer Instructions'),
+        title: Text(loc.trainerInstructionTitle),
       ),
       body: SafeArea(
         child: Column(
@@ -90,9 +92,8 @@ class _TrainerInstructionState extends State<TrainerInstruction> {
                   _buildInstruction(
                     icon: Icons.fitness_center,
                     iconColor: Colors.green.shade600,
-                    title: 'Welcome to Trainer Mode',
-                    text:
-                        'Empower users to achieve their fitness and nutrition goals with personalized guidance.',
+                    title: loc.trainerInstructionPage1Title,
+                    text: loc.trainerInstructionPage1Sub,
                     gradient: LinearGradient(
                       colors: [Colors.green.shade50, Colors.white],
                       begin: Alignment.topCenter,
@@ -102,9 +103,8 @@ class _TrainerInstructionState extends State<TrainerInstruction> {
                   _buildInstruction(
                     icon: Icons.restaurant_menu,
                     iconColor: Colors.orange.shade600,
-                    title: 'Personalized Diet Plans',
-                    text:
-                        'Create customized nutrition plans tailored to each trainee\'s unique needs and objectives.',
+                    title: loc.trainerInstructionPage2Title,
+                    text: loc.trainerInstructionPage2Sub,
                     gradient: LinearGradient(
                       colors: [Colors.orange.shade50, Colors.white],
                       begin: Alignment.topCenter,
@@ -114,9 +114,8 @@ class _TrainerInstructionState extends State<TrainerInstruction> {
                   _buildInstruction(
                     icon: Icons.trending_up,
                     iconColor: Colors.blue.shade600,
-                    title: 'Track & Optimize',
-                    text:
-                        'Monitor progress weekly and adjust plans to ensure continuous improvement and results.',
+                    title: loc.trainerInstructionPage3Title,
+                    text: loc.trainerInstructionPage3Sub,
                     gradient: LinearGradient(
                       colors: [Colors.blue.shade50, Colors.white],
                       begin: Alignment.topCenter,
@@ -155,7 +154,7 @@ class _TrainerInstructionState extends State<TrainerInstruction> {
                         );
                       },
                       child: Text(
-                        'Skip',
+                        loc.trainerInstructionButtonSkip,
                         style: TextStyle(
                           color: Colors.grey.shade600,
                           fontSize: 16,
@@ -179,7 +178,9 @@ class _TrainerInstructionState extends State<TrainerInstruction> {
                       ],
                     ),
                     child: CustomButton(
-                      text: currentPage == 2 ? "Get Started" : "Continue",
+                      text: currentPage == 2
+                          ? loc.trainerInstructionButtonFinish
+                          : loc.trainerInstructionButtonNext,
                       onPressed: _moveNextPage,
                       backgroundColor: Colors.transparent,
                       textColor: Colors.white,
