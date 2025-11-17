@@ -1,4 +1,5 @@
 import 'package:eatmehv2/bloc/auth/auth_bloc.dart';
+import 'package:eatmehv2/core/localization/app_localizations.dart';
 import 'package:eatmehv2/data/repos/user_repo.dart';
 import 'package:eatmehv2/presentation/screens/trainer/trainer_list.dart';
 import 'package:eatmehv2/presentation/widgets/custom_button.dart';
@@ -24,6 +25,7 @@ class _UserGoalsState extends State<UserGoals> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = context.loc;
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -32,7 +34,7 @@ class _UserGoalsState extends State<UserGoals> {
             Navigator.pop(context);
           },
         ),
-        title: const Text('Set Your Goals'),
+        title: Text(loc.userGoalTitle),
         titleTextStyle: const TextStyle(
           color: Colors.black87,
           fontSize: 20,
@@ -47,7 +49,7 @@ class _UserGoalsState extends State<UserGoals> {
               children: [
                 const SizedBox(height: 20),
                 Text(
-                  "Select one goal that best describes what you want to achieve.",
+                  loc.userGoalSubtitle,
                   textAlign: TextAlign.center,
                   style: Theme.of(
                     context,
@@ -58,24 +60,24 @@ class _UserGoalsState extends State<UserGoals> {
           ),
           const SizedBox(height: 20),
           CustomGoal(
-            title: 'Lose Weight',
-            description: 'Focus on fat loss and lean muscle retention.',
+            title: loc.userGoalLoseWeightTitle,
+            description: loc.userGoalLoseWeightDesc,
             icon: Icons.fitness_center,
             isSelected: selectedGoal == 'Lose Weight',
             onFieldTap: () => selectGoal('Lose Weight'),
           ),
           const SizedBox(height: 10),
           CustomGoal(
-            title: 'Maintain Weight',
-            description: 'Sustain current fitness level and body composition.',
+            title: loc.userGoalMaintainWeightTitle,
+            description: loc.userGoalMaintainWeightDesc,
             icon: Icons.balance,
             isSelected: selectedGoal == 'Maintain Weight',
             onFieldTap: () => selectGoal('Maintain Weight'),
           ),
           const SizedBox(height: 10),
           CustomGoal(
-            title: 'Gain Weight',
-            description: 'Build muscle mass and overall strength safely.',
+            title: loc.userGoalGainWeightTitle,
+            description: loc.userGoalGainWeightDesc,
             icon: Icons.trending_up,
             isSelected: selectedGoal == 'Gain Weight',
             onFieldTap: () => selectGoal('Gain Weight'),
@@ -84,13 +86,12 @@ class _UserGoalsState extends State<UserGoals> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 60),
             child: CustomButton(
-              text: 'Finish',
-              onPressed:
-                  selectedGoal == null
-                      ? null
-                      : () {
-                        updateUserGoal();
-                      },
+              text: loc.trainerInstructionButtonFinish,
+              onPressed: selectedGoal == null
+                  ? null
+                  : () {
+                      updateUserGoal();
+                    },
             ),
           ),
         ],
@@ -105,6 +106,7 @@ class _UserGoalsState extends State<UserGoals> {
 
     await userRepo.updateGoal(currentUserUid, selectedGoal);
 
+    if (!mounted) return;
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => const TrainerList()),

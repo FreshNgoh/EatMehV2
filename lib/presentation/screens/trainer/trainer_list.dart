@@ -9,6 +9,7 @@ import 'package:eatmehv2/presentation/screens/user/profile_screen.dart';
 import 'package:eatmehv2/presentation/widgets/custom_list.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:eatmehv2/core/localization/app_localizations.dart';
 
 class TrainerList extends StatefulWidget {
   const TrainerList({super.key});
@@ -41,6 +42,7 @@ class _TrainerListState extends State<TrainerList> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = context.loc;
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -49,7 +51,7 @@ class _TrainerListState extends State<TrainerList> {
             Navigator.pop(context);
           },
         ),
-        title: const Text('Trainer List'),
+        title: Text(loc.trainerListTitle),
         titleTextStyle: const TextStyle(
           color: Colors.black87,
           fontSize: 20,
@@ -60,96 +62,96 @@ class _TrainerListState extends State<TrainerList> {
           isLoading
               ? const Center(child: CircularProgressIndicator())
               : trainers.isEmpty
-              ? const Center(child: Text("No trainers available"))
+              ? Center(child: Text(loc.trainerListNoTrainers))
               : ListView.builder(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 30,
-                ),
-                itemCount: trainers.length,
-                itemBuilder: (context, index) {
-                  final trainer = trainers[index];
-                  final imageUrl = trainer['imageUrl'] ?? "";
-                  final name = trainer['name'] ?? "Trainer";
-                  return CustomList(
-                    profile: CircleAvatar(
-                      radius: 25,
-                      backgroundColor: Colors.grey.shade200,
-                      backgroundImage:
-                          imageUrl.isNotEmpty ? NetworkImage(imageUrl) : null,
-                      child:
-                          imageUrl.isEmpty
-                              ? Text(
-                                name[0].toUpperCase(),
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 30,
+                  ),
+                  itemCount: trainers.length,
+                  itemBuilder: (context, index) {
+                    final trainer = trainers[index];
+                    final imageUrl = trainer['imageUrl'] ?? "";
+                    final name = trainer['name'] ?? loc.trainerListDefaultName;
+                    return CustomList(
+                      profile: CircleAvatar(
+                        radius: 25,
+                        backgroundColor: Colors.grey.shade200,
+                        backgroundImage:
+                            imageUrl.isNotEmpty ? NetworkImage(imageUrl) : null,
+                        child:
+                            imageUrl.isEmpty
+                                ? Text(
+                                    name[0].toUpperCase(),
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  )
+                                : null,
+                      ),
+                      onProfileTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) =>
+                                    ProfileScreen(userUid: trainer['uid']),
+                          ),
+                        );
+                      },
+                      value: trainer['name'],
+                      actionIcons: [
+                        ListActionIcon(
+                          icon: Icons.add,
+                          onPressed: () async {
+                            final authState =
+                                context.read<AuthBloc>().state as Authenticated;
+                            final currentUser = authState.user.uid;
+
+                            // Check if a request already exists
+                            final existRequest = await notificationRepo
+                                .checkExistingTrainerRequest(
+                                    currentUser,
+                                    trainer['uid'],
+                                    );
+
+                            if (existRequest) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    loc.trainerListRequestExists,
+                                  ),
                                 ),
-                              )
-                              : null,
-                    ),
-                    onProfileTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (context) =>
-                                  ProfileScreen(userUid: trainer['uid']),
-                        ),
-                      );
-                    },
-                    value: trainer['name'],
-                    actionIcons: [
-                      ListActionIcon(
-                        icon: Icons.add,
-                        onPressed: () async {
-                          final authState =
-                              context.read<AuthBloc>().state as Authenticated;
-                          final currentUser = authState.user.uid;
-
-                          // Check if a request already exists
-                          final existRequest = await notificationRepo
-                              .checkExistingTrainerRequest(
-                                currentUser,
-                                trainer['uid'],
                               );
+                              return;
+                            }
 
-                          if (existRequest) {
+                            final request = NotificationModel(
+                              senderUid: currentUser,
+                              receiverUid: trainer['uid'],
+                              title: loc.trainerListRequestTitle,
+                              message: loc.trainerListRequestMessage,
+                              type: 'trainer_request',
+                              status: 'pending',
+                              createdAt: Timestamp.now(),
+                            );
+                            await notificationRepo.sendNotification(request);
+
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
-                                  'You have already sent a request to this trainer.',
+                                  loc.trainerListRequestSent(trainer['name']),
                                 ),
                               ),
                             );
-                            return;
-                          }
-
-                          final request = NotificationModel(
-                            senderUid: currentUser,
-                            receiverUid: trainer['uid'],
-                            title: "New trainee request",
-                            message: 'A user has requested to be your trainee.',
-                            type: 'trainer_request',
-                            status: 'pending',
-                            createdAt: Timestamp.now(),
-                          );
-                          await notificationRepo.sendNotification(request);
-
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Trainer request sent to ${trainer['name']}',
-                              ),
-                            ),
-                          );
-                        },
-                        tooltip: 'Request Trainer',
-                      ),
-                    ],
-                  );
-                },
-              ),
+                          },
+                          tooltip: loc.trainerListRequestTooltip,
+                        ),
+                      ],
+                    );
+                  },
+                ),
     );
   }
 }

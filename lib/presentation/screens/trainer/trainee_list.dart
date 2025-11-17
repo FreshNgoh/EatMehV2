@@ -4,6 +4,7 @@ import 'package:eatmehv2/data/services/trainer_profile_service.dart';
 import 'package:eatmehv2/presentation/widgets/trainee_chat_preview.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:eatmehv2/core/localization/app_localizations.dart';
 
 class TraineeList extends StatefulWidget {
   const TraineeList({super.key});
@@ -65,6 +66,7 @@ class _TraineeListState extends State<TraineeList> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = context.loc;
     return Scaffold(
       body: Column(
         children: [
@@ -79,7 +81,7 @@ class _TraineeListState extends State<TraineeList> {
                 TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
-                    hintText: 'Search trainees...',
+                    hintText: loc.traineeListSearchHint,
                     hintStyle: TextStyle(
                       color: Colors.grey.shade400,
                       fontSize: 15,
@@ -124,7 +126,7 @@ class _TraineeListState extends State<TraineeList> {
                 _loading
                     ? const Center(child: CircularProgressIndicator())
                     : _traineeUids.isEmpty
-                    ? _buildEmptyState()
+                    ? _buildEmptyState(loc)
                     : StreamBuilder<List<Map<String, dynamic>>>(
                       stream: trainerProfileRepo.getTraineesDetailsStream(
                         _traineeUids,
@@ -138,9 +140,9 @@ class _TraineeListState extends State<TraineeList> {
                           );
                         }
 
-                        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                          return _buildEmptyState();
-                        }
+                          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                            return _buildEmptyState(loc);
+                          }
 
                         var trainees = snapshot.data!;
 
@@ -168,7 +170,7 @@ class _TraineeListState extends State<TraineeList> {
                                     )
                                     .toList();
 
-                        if (filtered.isEmpty) return _buildNoResultsState();
+                          if (filtered.isEmpty) return _buildNoResultsState(loc);
 
                         return RefreshIndicator(
                           onRefresh: _initTrainerData,
@@ -211,7 +213,7 @@ class _TraineeListState extends State<TraineeList> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(AppLocalizations loc) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -230,7 +232,7 @@ class _TraineeListState extends State<TraineeList> {
           ),
           const SizedBox(height: 24),
           Text(
-            'No trainees yet',
+            loc.traineeListEmptyTitle,
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -239,7 +241,7 @@ class _TraineeListState extends State<TraineeList> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Start accepting trainee requests\nto see them here',
+            loc.traineeListEmptySubtitle,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 15,
@@ -252,7 +254,7 @@ class _TraineeListState extends State<TraineeList> {
     );
   }
 
-  Widget _buildNoResultsState() {
+  Widget _buildNoResultsState(AppLocalizations loc) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -260,7 +262,7 @@ class _TraineeListState extends State<TraineeList> {
           Icon(Icons.search_off, size: 64, color: Colors.grey.shade300),
           const SizedBox(height: 16),
           Text(
-            'No trainees found',
+            loc.traineeListNoResultsTitle,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -269,14 +271,14 @@ class _TraineeListState extends State<TraineeList> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Try searching with a different name',
+            loc.traineeListNoResultsSubtitle,
             style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
           ),
           const SizedBox(height: 16),
           TextButton.icon(
             onPressed: () => _searchController.clear(),
             icon: const Icon(Icons.clear),
-            label: const Text('Clear search'),
+            label: Text(loc.traineeListClearSearch),
             style: TextButton.styleFrom(
               foregroundColor: const Color(0xFF191919),
             ),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:eatmehv2/bloc/auth/auth_bloc.dart';
 import 'package:eatmehv2/data/repos/user_repo.dart';
+import 'package:eatmehv2/core/localization/app_localizations.dart';
 
 class FriendRequestButton extends StatefulWidget {
   final String targetUserId;
@@ -46,25 +47,26 @@ class _FriendRequestButtonState extends State<FriendRequestButton> {
     final currentUserId = _getCurrentUserId();
     if (currentUserId.isEmpty) return;
 
+    final loc = context.loc;
     setState(() => _isLoading = true);
 
     try {
       if (_isFriend) {
         await _userRepo.removeFriend(currentUserId, widget.targetUserId);
         if (mounted) {
-          final successMsg = 'Friend removed!';
+          final successMsg = loc.friendButtonSuccessRemoved;
           showCustomToast(context, successMsg, type: ToastType.success);
         }
       } else if (_isPending) {
         await _userRepo.rejectFriendRequest(widget.targetUserId, currentUserId);
         if (mounted) {
-          final successMsg = 'Friend request cancelled!';
+          final successMsg = loc.friendButtonSuccessCancelled;
           showCustomToast(context, successMsg, type: ToastType.success);
         }
       } else {
         await _userRepo.sendFriendRequest(currentUserId, widget.targetUserId);
         if (mounted) {
-          final successMsg = 'Friend request sent!';
+          final successMsg = loc.friendButtonSuccessSent;
           showCustomToast(context, successMsg, type: ToastType.success);
         }
       }
@@ -75,7 +77,7 @@ class _FriendRequestButtonState extends State<FriendRequestButton> {
       }
     } catch (e) {
       if (mounted) {
-        final errorMsg = 'Error: $e';
+        final errorMsg = loc.friendButtonError(e.toString());
         showCustomToast(context, errorMsg, type: ToastType.error);
       }
     } finally {
@@ -87,18 +89,19 @@ class _FriendRequestButtonState extends State<FriendRequestButton> {
     final currentUserId = _getCurrentUserId();
     if (currentUserId.isEmpty) return;
 
+    final loc = context.loc;
     setState(() => _isLoading = true);
     try {
       await _userRepo.acceptFriendRequest(currentUserId, widget.targetUserId);
       if (mounted) {
-        final successMsg = 'Friend request accepted';
+        final successMsg = loc.friendButtonSuccessAccepted;
         showCustomToast(context, successMsg, type: ToastType.success);
         // Trigger refresh after successful action
         widget.onStatusChanged?.call();
       }
     } catch (e) {
       if (mounted) {
-        final errorMsg = 'Error: $e';
+        final errorMsg = loc.friendButtonError(e.toString());
         showCustomToast(context, errorMsg, type: ToastType.error);
       }
     } finally {
@@ -110,18 +113,19 @@ class _FriendRequestButtonState extends State<FriendRequestButton> {
     final currentUserId = _getCurrentUserId();
     if (currentUserId.isEmpty) return;
 
+    final loc = context.loc;
     setState(() => _isLoading = true);
     try {
       await _userRepo.rejectFriendRequest(currentUserId, widget.targetUserId);
       if (mounted) {
-        final successMsg = 'Friend request deleted';
+        final successMsg = loc.friendButtonSuccessDeleted;
         showCustomToast(context, successMsg, type: ToastType.success);
         // Trigger refresh after successful action
         widget.onStatusChanged?.call();
       }
     } catch (e) {
       if (mounted) {
-        final errorMsg = 'Error: $e';
+        final errorMsg = loc.friendButtonError(e.toString());
         showCustomToast(context, errorMsg, type: ToastType.error);
       }
     } finally {
@@ -131,6 +135,7 @@ class _FriendRequestButtonState extends State<FriendRequestButton> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = context.loc;
     if (isRequesting) {
       // Show Confirm + Delete buttons
       return Row(
@@ -153,22 +158,22 @@ class _FriendRequestButtonState extends State<FriendRequestButton> {
                 child:
                     _isLoading
                         ? const SizedBox(
-                          height: 15,
-                          width: 15,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white,
+                            height: 15,
+                            width: 15,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                          )
+                        : Text(
+                            loc.friendButtonLabelConfirm,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                        )
-                        : const Text(
-                          'Confirm',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
               ),
             ),
           ),
@@ -191,22 +196,22 @@ class _FriendRequestButtonState extends State<FriendRequestButton> {
                 child:
                     _isLoading
                         ? const SizedBox(
-                          height: 15,
-                          width: 15,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white,
+                            height: 15,
+                            width: 15,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                          )
+                        : Text(
+                            loc.friendButtonLabelDelete,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                        )
-                        : const Text(
-                          'Delete',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
               ),
             ),
           ),
@@ -221,17 +226,17 @@ class _FriendRequestButtonState extends State<FriendRequestButton> {
     IconData icon;
 
     if (_isFriend) {
-      buttonText = 'Friends';
+      buttonText = loc.friendButtonLabelFriends;
       backgroundColor = Colors.grey.shade100;
       textColor = Colors.grey.shade700;
       icon = Icons.check;
     } else if (_isPending) {
-      buttonText = 'Requesting';
+      buttonText = loc.friendButtonLabelRequesting;
       backgroundColor = Colors.grey.shade200;
       textColor = Colors.grey.shade700;
       icon = Icons.schedule;
     } else {
-      buttonText = 'Request';
+      buttonText = loc.friendButtonLabelRequest;
       backgroundColor = const Color(0xFF191919);
       textColor = Colors.white;
       icon = Icons.person_add;
@@ -254,27 +259,27 @@ class _FriendRequestButtonState extends State<FriendRequestButton> {
         child:
             _isLoading
                 ? SizedBox(
-                  height: 15,
-                  width: 15,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(textColor),
-                  ),
-                )
-                : Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(icon, size: 18),
-                    const SizedBox(width: 8),
-                    Text(
-                      buttonText,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    height: 15,
+                    width: 15,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(textColor),
                     ),
-                  ],
-                ),
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(icon, size: 18),
+                      const SizedBox(width: 8),
+                      Text(
+                        buttonText,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
       ),
     );
   }

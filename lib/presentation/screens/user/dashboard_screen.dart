@@ -7,6 +7,7 @@ import 'package:eatmehv2/data/repos/exercise_repo.dart';
 import 'package:eatmehv2/data/repos/meal_records_repo.dart';
 import 'package:eatmehv2/data/repos/user_repo.dart';
 import 'package:eatmehv2/presentation/widgets/custom_card.dart';
+import 'package:eatmehv2/core/localization/app_localizations.dart';
 import 'package:eatmehv2/utils/calorie_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -55,6 +56,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = context.loc;
     final today = DateTime.now();
 
     if (_isLoadingUser) {
@@ -62,8 +64,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     if (_user == null) {
-      return const Scaffold(
-        body: Center(child: Text('Failed to load user data')),
+      return Scaffold(
+        body: Center(child: Text(loc.profileErrorUserNotFound)),
       );
     }
 
@@ -71,8 +73,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final userUid = user.uid;
 
     // ✅ Check if user has completed their profile
-    final hasCompleteProfile =
-        user.height != null &&
+    final hasCompleteProfile = user.height != null &&
         user.weight != null &&
         user.age != null &&
         user.gender != null;
@@ -83,29 +84,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
       weightKg: user.weight,
     );
 
-    final double? maintenanceCalories =
-        hasCompleteProfile
-            ? CalorieUtils.calculateMaintenanceCalories(
-              weightKg: user.weight!,
-              heightCm: user.height!,
-              age: user.age!,
-              gender: user.gender!,
-            )
-            : null;
+    final double? maintenanceCalories = hasCompleteProfile
+        ? CalorieUtils.calculateMaintenanceCalories(
+            weightKg: user.weight!,
+            heightCm: user.height!,
+            age: user.age!,
+            gender: user.gender!,
+          )
+        : null;
 
-    final double? lowThreshold =
-        maintenanceCalories != null
-            ? CalorieUtils.getLowCalorieThreshold(
-              maintenanceCalories: maintenanceCalories,
-            )
-            : null;
+    final double? lowThreshold = maintenanceCalories != null
+        ? CalorieUtils.getLowCalorieThreshold(
+            maintenanceCalories: maintenanceCalories,
+          )
+        : null;
 
-    final double? highThreshold =
-        maintenanceCalories != null
-            ? CalorieUtils.getHighCalorieThreshold(
-              maintenanceCalories: maintenanceCalories,
-            )
-            : null;
+    final double? highThreshold = maintenanceCalories != null
+        ? CalorieUtils.getHighCalorieThreshold(
+            maintenanceCalories: maintenanceCalories,
+          )
+        : null;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9F9),
@@ -121,7 +119,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Hello, ${user.username}!',
+                    loc.dashboardHello(user.username),
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -130,7 +128,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    DateFormat('EEEE, MMMM d, yyyy').format(today),
+                    DateFormat('EEEE, MMMM d, yyyy', loc.locale.languageCode)
+                        .format(today),
                     style: const TextStyle(
                       fontSize: 14,
                       color: Color(0xFF718096),
@@ -144,8 +143,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Expanded(
                         child: _buildStatCard(
                           icon: Icons.height,
-                          label: 'Height',
-                          value: '${user.height?.toStringAsFixed(0) ?? '-'} cm',
+                          label: loc.dashboardHeight,
+                          value: loc.dashboardUnitCm(
+                              user.height?.toStringAsFixed(0) ?? '-'),
                           color: AppColors.info,
                         ),
                       ),
@@ -153,8 +153,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Expanded(
                         child: _buildStatCard(
                           icon: Icons.monitor_weight,
-                          label: 'Weight',
-                          value: '${user.weight?.toStringAsFixed(1) ?? '-'} kg',
+                          label: loc.dashboardWeight,
+                          value: loc.dashboardUnitKg(
+                              user.weight?.toStringAsFixed(1) ?? '-'),
                           color: AppColors.secondary,
                         ),
                       ),
@@ -186,9 +187,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
-                                  'Body Mass Index (BMI)',
-                                  style: TextStyle(
+                                Text(
+                                  loc.dashboardBMI,
+                                  style: const TextStyle(
                                     fontSize: 14,
                                     color: Color(0xFF718096),
                                   ),
@@ -221,7 +222,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                         style: TextStyle(
                                           fontSize: 12,
                                           fontWeight: FontWeight.bold,
-                                          color: CalorieUtils.getBMIColor(bmi),
+                                          color:
+                                              CalorieUtils.getBMIColor(bmi),
                                         ),
                                       ),
                                     ),
@@ -240,9 +242,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   if (hasCompleteProfile &&
                       lowThreshold != null &&
                       highThreshold != null) ...[
-                    const Text(
-                      'Daily Calorie Guide',
-                      style: TextStyle(
+                    Text(
+                      loc.dashboardCalorieGuide,
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF2D3748),
@@ -254,7 +256,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         Expanded(
                           child: _buildCalorieThresholdCard(
                             icon: Icons.trending_down,
-                            label: 'Too Low',
+                            label: loc.dashboardCalorieLow,
                             value: '< ${lowThreshold.toInt()}',
                             color: AppColors.caloriesLow,
                           ),
@@ -263,7 +265,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         Expanded(
                           child: _buildCalorieThresholdCard(
                             icon: Icons.check_circle,
-                            label: 'Healthy',
+                            label: loc.dashboardCalorieHealthy,
                             value:
                                 '${lowThreshold.toInt()}-${highThreshold.toInt()}',
                             color: AppColors.caloriesMedium,
@@ -273,7 +275,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         Expanded(
                           child: _buildCalorieThresholdCard(
                             icon: Icons.trending_up,
-                            label: 'Too High',
+                            label: loc.dashboardCalorieHigh,
                             value: '> ${highThreshold.toInt()}',
                             color: AppColors.caloriesHigh,
                           ),
@@ -325,30 +327,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                 final nutritionData = [
                   _NutritionData(
-                    'Protein',
+                    loc.recordNutrientProtein,
                     totalProtein,
-                    50,
+                    50, // TODO: Use dynamic goal
                     AppColors.proteinIcon,
                     AppColors.proteinColor,
                   ),
                   _NutritionData(
-                    'Carbs',
+                    loc.recordNutrientCarbs,
                     totalCarbs,
-                    250,
+                    250, // TODO: Use dynamic goal
                     AppColors.carbsIcon,
                     AppColors.carbsColor,
                   ),
                   _NutritionData(
-                    'Fat',
+                    loc.recordNutrientFat,
                     totalFat,
-                    70,
+                    70, // TODO: Use dynamic goal
                     AppColors.fatIcon,
                     AppColors.fatColor,
                   ),
                   _NutritionData(
-                    'Fiber',
+                    loc.recordNutrientFiber,
                     totalFiber,
-                    30,
+                    30, // TODO: Use dynamic goal
                     AppColors.fiberIcon,
                     AppColors.fiberColor,
                   ),
@@ -367,9 +369,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             color: Color(0xFF2D3748),
                           ),
                           const SizedBox(width: 8),
-                          const Text(
-                            "Today's Nutrition",
-                            style: TextStyle(
+                          Text(
+                            loc.dashboardTodayNutrition,
+                            style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w600,
                               color: Color(0xFF2D3748),
@@ -378,43 +380,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ],
                       ),
                     ),
-
                     meals.isEmpty
                         ? Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: CustomCard(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Image.asset(
-                                  'assets/noData.png',
-                                  height: 200,
-                                  width: 200,
-                                ),
-                                const SizedBox(height: 12),
-                                const Text(
-                                  "No meals recorded today",
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: Color(0xFF403D39),
-                                    fontWeight: FontWeight.w500,
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 20),
+                            child: CustomCard(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Image.asset(
+                                    'assets/noData.png',
+                                    height: 200,
+                                    width: 200,
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    loc.recordNoData,
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      color: Color(0xFF403D39),
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                        : SizedBox(
+                            height: 160,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 12),
+                              itemCount: nutritionData.length,
+                              itemBuilder: (context, index) =>
+                                  _buildNutritionCard(nutritionData[index]),
                             ),
                           ),
-                        )
-                        : SizedBox(
-                          height: 160,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            itemCount: nutritionData.length,
-                            itemBuilder:
-                                (context, index) =>
-                                    _buildNutritionCard(nutritionData[index]),
-                          ),
-                        ),
                   ],
                 );
               },
@@ -454,9 +456,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             color: Color(0xFF2D3748),
                           ),
                           const SizedBox(width: 8),
-                          const Text(
-                            "Today's Exercise",
-                            style: TextStyle(
+                          Text(
+                            loc.dashboardTodayExercise,
+                            style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w600,
                               color: Color(0xFF2D3748),
@@ -467,40 +469,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     exercises.isEmpty
                         ? Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: CustomCard(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Image.asset(
-                                  'assets/noData.png',
-                                  height: 200,
-                                  width: 200,
-                                ),
-                                const SizedBox(height: 12),
-                                const Text(
-                                  "No exercises recorded today",
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: Color(0xFF403D39),
-                                    fontWeight: FontWeight.w500,
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 20),
+                            child: CustomCard(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Image.asset(
+                                    'assets/noData.png',
+                                    height: 200,
+                                    width: 200,
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    loc.exerciseNoData,
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      color: Color(0xFF403D39),
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                        : SizedBox(
+                            height: 160,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 12),
+                              itemCount: exercises.length,
+                              itemBuilder: (context, index) =>
+                                  _buildExerciseCard(exercises[index]),
                             ),
                           ),
-                        )
-                        : SizedBox(
-                          height: 160,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            itemCount: exercises.length,
-                            itemBuilder:
-                                (context, index) =>
-                                    _buildExerciseCard(exercises[index]),
-                          ),
-                        ),
                   ],
                 );
               },
@@ -537,9 +540,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             color: Color(0xFF2D3748),
                           ),
                           const SizedBox(width: 8),
-                          const Text(
-                            "Today's Meals",
-                            style: TextStyle(
+                          Text(
+                            loc.dashboardTodayMeals,
+                            style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w600,
                               color: Color(0xFF2D3748),
@@ -550,7 +553,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       const SizedBox(height: 16),
                       ...meals
                           .map(
-                            (meal) => _buildMealCard(meal, maintenanceCalories),
+                            (meal) =>
+                                _buildMealCard(meal, maintenanceCalories),
                           )
                           .toList(),
                     ],
@@ -606,6 +610,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     required String value,
     required Color color,
   }) {
+    final loc = context.loc;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -635,9 +640,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
           const SizedBox(height: 2),
-          const Text(
-            'kcal',
-            style: TextStyle(fontSize: 10, color: Color(0xFF718096)),
+          Text(
+            loc.profileMeKcal,
+            style: const TextStyle(fontSize: 10, color: Color(0xFF718096)),
           ),
         ],
       ),
@@ -645,6 +650,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildNutritionCard(_NutritionData data) {
+    final loc = context.loc;
     final progress = (data.goal == 0) ? 0.0 : (data.current / data.goal);
     final Color mainColor = data.color;
 
@@ -684,7 +690,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Icon(data.icon, color: mainColor, size: 24),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: mainColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
@@ -712,7 +719,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Row(
             children: [
               Text(
-                '${data.current.toStringAsFixed(1)}g',
+                loc.dashboardUnitGram(data.current.toStringAsFixed(1)),
                 style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -720,8 +727,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
               Text(
-                ' / ${data.goal}g',
-                style: const TextStyle(fontSize: 13, color: Color(0xFF718096)),
+                ' / ${loc.dashboardUnitGram(data.goal.toString())}',
+                style:
+                    const TextStyle(fontSize: 13, color: Color(0xFF718096)),
               ),
             ],
           ),
@@ -741,6 +749,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildExerciseCard(ExerciseRecordModel exercise) {
+    final loc = context.loc;
     final iconData = AppColors.exerciseIconData[exercise.exerciseName];
     final icon = iconData?['icon'] as IconData? ?? Icons.fitness_center;
     final color = iconData?['color'] as Color? ?? Colors.blue;
@@ -791,8 +800,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const Icon(Icons.timer, size: 14, color: Color(0xFF718096)),
               const SizedBox(width: 4),
               Text(
-                '${exercise.duration} mins',
-                style: const TextStyle(fontSize: 12, color: Color(0xFF718096)),
+                '${exercise.duration} ${loc.exerciseMins}',
+                style:
+                    const TextStyle(fontSize: 12, color: Color(0xFF718096)),
               ),
             ],
           ),
@@ -813,7 +823,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  '${exercise.caloriesBurnt} kcal',
+                  '${exercise.caloriesBurnt} ${loc.exerciseCal}',
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
@@ -829,7 +839,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildMealCard(MealRecordModel meal, double? maintenanceCalories) {
-    // Use general meal calorie thresholds (not user-specific for individual meals)
+    final loc = context.loc;
     final calorieColor = AppColors.getCalorieColor(meal.calories);
 
     return CustomCard(
@@ -843,11 +853,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Image.network(
                 meal.imageUrl ?? '',
                 fit: BoxFit.cover,
-                errorBuilder:
-                    (_, __, ___) => Image.asset(
-                      'assets/images/error.png',
-                      fit: BoxFit.cover,
-                    ),
+                errorBuilder: (_, __, ___) => Image.asset(
+                  'assets/images/error.png',
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
           ),
@@ -887,27 +896,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   children: [
                     _buildNutritionChip(
                       Icons.local_fire_department,
-                      '${meal.calories} kcal',
+                      '${meal.calories} ${loc.exerciseCal}',
                       calorieColor,
                     ),
                     _buildNutritionChip(
                       AppColors.proteinIcon,
-                      '${meal.nutritionInfo.protein}g',
+                      loc.dashboardUnitGram(
+                          meal.nutritionInfo.protein.toString()),
                       AppColors.proteinColor,
                     ),
                     _buildNutritionChip(
                       AppColors.carbsIcon,
-                      '${meal.nutritionInfo.carbs}g',
+                      loc.dashboardUnitGram(
+                          meal.nutritionInfo.carbs.toString()),
                       AppColors.carbsColor,
                     ),
                     _buildNutritionChip(
                       AppColors.fatIcon,
-                      '${meal.nutritionInfo.fat}g',
+                      loc.dashboardUnitGram(
+                          meal.nutritionInfo.fat.toString()),
                       AppColors.fatColor,
                     ),
                     _buildNutritionChip(
                       AppColors.fiberIcon,
-                      '${meal.nutritionInfo.fiber}g',
+                      loc.dashboardUnitGram(
+                          meal.nutritionInfo.fiber.toString()),
                       AppColors.fiberColor,
                     ),
                   ],

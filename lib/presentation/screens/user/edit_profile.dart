@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:eatmehv2/core/localization/app_localizations.dart';
 import 'package:eatmehv2/core/theme/app_colors.dart';
 import 'package:eatmehv2/presentation/widgets/toast.dart';
 import 'package:eatmehv2/utils/firebase_storage_service.dart';
@@ -109,6 +110,8 @@ class _EditProfileState extends State<EditProfile> {
   }
 
   Future<void> _updateProfile() async {
+    if (!mounted) return;
+    final loc = context.loc;
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
@@ -147,13 +150,16 @@ class _EditProfileState extends State<EditProfile> {
             await user.updatePassword(_passwordController.text.trim());
           } on FirebaseAuthException catch (e) {
             if (e.code == 'requires-recent-login') {
-              final warningMsg =
-                  'Please re-login before changing your password.';
-              showCustomToast(context, warningMsg, type: ToastType.warning);
+              final warningMsg = loc.editProfileReloginWarning;
+              if (mounted) {
+                showCustomToast(context, warningMsg,
+                    type: ToastType.warning);
+              }
               setState(() => _isLoading = false);
               return;
             } else {
-              throw Exception('Password update failed: ${e.message}');
+              throw Exception(
+                  loc.editProfilePasswordUpdateFailed(e.message ?? ''));
             }
           }
         }
@@ -165,136 +171,147 @@ class _EditProfileState extends State<EditProfile> {
       // ✅ 3. Update Firestore user document
       await _userRepo.updateUser(widget.user.uid, updatedData);
 
-      final successMsg = 'Profile updated successfully!';
-      showCustomToast(context, successMsg, type: ToastType.success);
-
-      Navigator.pop(context, true);
+      final successMsg = loc.editProfileUpdateSuccess;
+      if (mounted) {
+        showCustomToast(context, successMsg, type: ToastType.success);
+        Navigator.pop(context, true);
+      }
     } catch (e) {
-      final errorMsg = 'Update failed: ${e.toString()}';
-      showCustomToast(context, errorMsg, type: ToastType.error);
+      final errorMsg = loc.editProfileUpdateFailed(e.toString());
+      if (mounted) {
+        showCustomToast(context, errorMsg, type: ToastType.error);
+      }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   Widget _buildGenderSelector() {
+    final loc = context.loc;
     const genders = ['male', 'female'];
+    final genderMap = {
+      'male': loc.genderMale,
+      'female': loc.genderFemale,
+    };
 
     return Wrap(
       spacing: 8,
       runSpacing: 8,
-      children:
-          genders.map((gender) {
-            final isSelected = _selectedGender == gender;
+      children: genders.map((gender) {
+        final isSelected = _selectedGender == gender;
 
-            return AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color:
-                    isSelected
-                        ? (_selectedGender == 'male'
-                            ? Colors.blue.withOpacity(0.1)
-                            : _selectedGender == 'female'
-                            ? Colors.pink.withOpacity(0.1)
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? (_selectedGender == 'male'
+                    ? Colors.blue.withOpacity(0.1)
+                    : _selectedGender == 'female'
+                        ? Colors.pink.withOpacity(0.1)
+                        : Colors.grey[200])
+                : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isSelected
+                  ? (_selectedGender == 'male'
+                      ? Colors.blue.withOpacity(0.3)
+                      : _selectedGender == 'female'
+                          ? Colors.pink.withOpacity(0.3)
+                          : Colors.grey[200]!)
+                  : const Color(
+                      0xFFE2E8F0,
+                    ), // use the original unselected border color
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 5,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: InkWell(
+            onTap: () => setState(() => _selectedGender = gender),
+            borderRadius: BorderRadius.circular(16),
+            child: Text(
+              genderMap[gender] ?? gender,
+              style: TextStyle(
+                color: isSelected
+                    ? (_selectedGender == 'male'
+                        ? Colors.blue
+                        : _selectedGender == 'female'
+                            ? Colors.pink
                             : Colors.grey[200])
-                        : Colors.white,
-                borderRadius: BorderRadius.circular(16),
-
-                border: Border.all(
-                  color:
-                      isSelected
-                          ? (_selectedGender == 'male'
-                              ? Colors.blue.withOpacity(0.3)
-                              : _selectedGender == 'female'
-                              ? Colors.pink.withOpacity(0.3)
-                              : Colors.grey[200]!)
-                          : const Color(
-                            0xFFE2E8F0,
-                          ), // use the original unselected border color
-                  width: 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 5,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+                    : Colors.black54,
+                fontWeight: FontWeight.w500,
               ),
-              child: InkWell(
-                onTap: () => setState(() => _selectedGender = gender),
-                borderRadius: BorderRadius.circular(16),
-                child: Text(
-                  gender,
-                  style: TextStyle(
-                    color:
-                        isSelected
-                            ? (_selectedGender == 'male'
-                                ? Colors.blue
-                                : _selectedGender == 'female'
-                                ? Colors.pink
-                                : Colors.grey[200])
-                            : Colors.black54,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 
   Widget _buildDietSelector() {
+    final loc = context.loc;
     const diets = ['Vegetarian', 'Vegan', 'Omnivore', 'Pescatarian'];
+    final dietMap = {
+      'Vegetarian': loc.dietVegetarian,
+      'Vegan': loc.dietVegan,
+      'Omnivore': loc.dietOmnivore,
+      'Pescatarian': loc.dietPescatarian,
+    };
 
     return Wrap(
       spacing: 8,
       runSpacing: 8,
-      children:
-          diets.map((diet) {
-            final isSelected = _selectedDietType == diet;
-            final baseColor = AppColors.getDietColor(diet);
+      children: diets.map((diet) {
+        final isSelected = _selectedDietType == diet;
+        final baseColor = AppColors.getDietColor(diet);
 
-            return AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: isSelected ? baseColor.withOpacity(0.1) : Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color:
-                      isSelected
-                          ? baseColor.withOpacity(0.3)
-                          : const Color(0xFFE2E8F0),
-                  width: 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 5,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? baseColor.withOpacity(0.1) : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isSelected
+                  ? baseColor.withOpacity(0.3)
+                  : const Color(0xFFE2E8F0),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 5,
+                offset: const Offset(0, 2),
               ),
-              child: InkWell(
-                onTap: () => setState(() => _selectedDietType = diet),
-                borderRadius: BorderRadius.circular(16),
-                child: Text(
-                  diet,
-                  style: TextStyle(
-                    color: isSelected ? baseColor : Colors.black54,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+            ],
+          ),
+          child: InkWell(
+            onTap: () => setState(() => _selectedDietType = diet),
+            borderRadius: BorderRadius.circular(16),
+            child: Text(
+              dietMap[diet] ?? diet,
+              style: TextStyle(
+                color: isSelected ? baseColor : Colors.black54,
+                fontWeight: FontWeight.w500,
               ),
-            );
-          }).toList(),
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final loc = context.loc;
     final ImageProvider avatarImage;
     if (_newImageFile != null) {
       avatarImage = FileImage(_newImageFile!); // local picked image
@@ -306,7 +323,7 @@ class _EditProfileState extends State<EditProfile> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Profile'),
+        title: Text(loc.editProfileTitle),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -334,26 +351,25 @@ class _EditProfileState extends State<EditProfile> {
                               child: SizedBox(
                                 width: 150,
                                 height: 150,
-                                child:
-                                    (_newImageFile == null &&
-                                            (_avatarUrl == null ||
-                                                _avatarUrl!.isEmpty))
-                                        ? CircleAvatar(
-                                          radius: 75,
-                                          backgroundColor: Colors.grey.shade300,
-                                          child: Text(
-                                            widget.user.username[0]
-                                                .toUpperCase(),
-                                            style: const TextStyle(
-                                              fontSize: 45,
-                                              fontWeight: FontWeight.bold,
-                                            ),
+                                child: (_newImageFile == null &&
+                                        (_avatarUrl == null ||
+                                            _avatarUrl!.isEmpty))
+                                    ? CircleAvatar(
+                                        radius: 75,
+                                        backgroundColor: Colors.grey.shade300,
+                                        child: Text(
+                                          widget.user.username[0]
+                                              .toUpperCase(),
+                                          style: const TextStyle(
+                                            fontSize: 45,
+                                            fontWeight: FontWeight.bold,
                                           ),
-                                        )
-                                        : Image(
-                                          image: avatarImage,
-                                          fit: BoxFit.cover,
                                         ),
+                                      )
+                                    : Image(
+                                        image: avatarImage,
+                                        fit: BoxFit.cover,
+                                      ),
                               ),
                             ),
                             Positioned(
@@ -388,7 +404,7 @@ class _EditProfileState extends State<EditProfile> {
                           Clipboard.setData(
                             ClipboardData(text: widget.user.uid),
                           );
-                          final infoMsg = 'User ID copied to clipboard!';
+                          final infoMsg = loc.profileCopiedToClipboard;
                           showCustomToast(
                             context,
                             infoMsg,
@@ -423,15 +439,15 @@ class _EditProfileState extends State<EditProfile> {
                 // Username
                 CustomTextField(
                   controller: _usernameController,
-                  label: 'Username',
-                  hint: 'Enter your username',
+                  label: loc.usernameLabel,
+                  hint: loc.usernameHint,
                   prefixIcon: Icons.person_outlined,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Username cannot be empty';
+                      return loc.usernameErrorEmpty;
                     }
                     if (value.length < 3) {
-                      return 'Username must be at least 3 characters';
+                      return loc.usernameErrorShort;
                     }
                     return null;
                   },
@@ -441,13 +457,13 @@ class _EditProfileState extends State<EditProfile> {
                 // Bio
                 CustomTextField(
                   controller: _bioController,
-                  label: 'Bio',
-                  hint: 'Tell something about yourself',
+                  label: loc.bioLabel,
+                  hint: loc.bioHint,
                   prefixIcon: Icons.text_snippet_outlined,
                   maxLines: 1,
                   validator: (value) {
                     if (value != null && value.length > 150) {
-                      return 'Bio cannot exceed 150 characters';
+                      return loc.bioErrorMaxLen;
                     }
                     return null;
                   },
@@ -457,17 +473,17 @@ class _EditProfileState extends State<EditProfile> {
                 // Age
                 CustomTextField(
                   controller: _ageController,
-                  label: 'Age',
-                  hint: 'Enter your age',
+                  label: loc.trainerFormAgeLabel,
+                  hint: loc.trainerFormAgeHint,
                   keyboardType: TextInputType.number,
                   prefixIcon: Icons.cake_outlined,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Age is required';
+                      return loc.ageErrorRequired;
                     }
                     final age = int.tryParse(value);
                     if (age == null || age <= 0) {
-                      return 'Enter a valid age';
+                      return loc.trainerFormErrorAgeInvalid;
                     }
                     return null;
                   },
@@ -475,9 +491,9 @@ class _EditProfileState extends State<EditProfile> {
                 const SizedBox(height: 20),
 
                 // Gender & Diet selectors (keep your previous _buildGenderSelector and _buildDietSelector)
-                const Text(
-                  'Gender',
-                  style: TextStyle(
+                Text(
+                  loc.genderLabel,
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: Color(0xFF2D3748),
@@ -487,9 +503,9 @@ class _EditProfileState extends State<EditProfile> {
                 _buildGenderSelector(),
                 const SizedBox(height: 20),
 
-                const Text(
-                  'Diet Type',
-                  style: TextStyle(
+                Text(
+                  loc.dietTypeLabel,
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: Color(0xFF2D3748),
@@ -502,17 +518,17 @@ class _EditProfileState extends State<EditProfile> {
                 // Height
                 CustomTextField(
                   controller: _heightController,
-                  label: 'Height (cm)',
-                  hint: 'Enter your height',
+                  label: loc.heightLabel,
+                  hint: loc.heightHint,
                   keyboardType: TextInputType.number,
                   prefixIcon: Icons.height_outlined,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Height is required';
+                      return loc.heightErrorRequired;
                     }
                     final height = double.tryParse(value);
                     if (height == null || height <= 0) {
-                      return 'Enter a valid height';
+                      return loc.heightErrorInvalid;
                     }
                     return null;
                   },
@@ -522,17 +538,17 @@ class _EditProfileState extends State<EditProfile> {
                 // Weight
                 CustomTextField(
                   controller: _weightController,
-                  label: 'Weight (kg)',
-                  hint: 'Enter your weight',
+                  label: loc.weightLabel,
+                  hint: loc.weightHint,
                   keyboardType: TextInputType.number,
                   prefixIcon: Icons.monitor_weight_outlined,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Weight is required';
+                      return loc.weightErrorRequired;
                     }
                     final weight = double.tryParse(value);
                     if (weight == null || weight <= 0) {
-                      return 'Enter a valid weight';
+                      return loc.weightErrorInvalid;
                     }
                     return null;
                   },
@@ -544,8 +560,8 @@ class _EditProfileState extends State<EditProfile> {
                   controller: _bmiController,
                   readOnly: true,
                   enabled: false,
-                  label: 'BMI',
-                  hint: 'Body Mass Index',
+                  label: loc.bmiLabel,
+                  hint: loc.bmiHint,
                   prefixIcon: Icons.line_style_outlined,
                 ),
                 const SizedBox(height: 20),
@@ -553,8 +569,8 @@ class _EditProfileState extends State<EditProfile> {
                 // Password
                 CustomTextField(
                   controller: _passwordController,
-                  label: 'New Password (optional)',
-                  hint: 'Enter new password',
+                  label: loc.newPasswordLabel,
+                  hint: loc.newPasswordHint,
                   obscureText: _obscurePassword,
                   prefixIcon: Icons.lock_outline,
                   suffixIcon: IconButton(
@@ -563,14 +579,15 @@ class _EditProfileState extends State<EditProfile> {
                           ? Icons.visibility_off
                           : Icons.visibility,
                     ),
-                    onPressed:
-                        () => setState(
-                          () => _obscurePassword = !_obscurePassword,
-                        ),
+                    onPressed: () => setState(
+                      () => _obscurePassword = !_obscurePassword,
+                    ),
                   ),
                   validator: (value) {
-                    if (value != null && value.isNotEmpty && value.length < 6) {
-                      return 'Password must be at least 6 characters';
+                    if (value != null &&
+                        value.isNotEmpty &&
+                        value.length < 6) {
+                      return loc.passwordErrorShort;
                     }
                     return null;
                   },
@@ -580,8 +597,8 @@ class _EditProfileState extends State<EditProfile> {
                 // Confirm Password
                 CustomTextField(
                   controller: _confirmPasswordController,
-                  label: 'Confirm Password',
-                  hint: 'Re-enter new password',
+                  label: loc.confirmPasswordLabel,
+                  hint: loc.confirmPasswordHint,
                   obscureText: _obscureConfirmPassword,
                   prefixIcon: Icons.lock_outline,
                   suffixIcon: IconButton(
@@ -590,17 +607,15 @@ class _EditProfileState extends State<EditProfile> {
                           ? Icons.visibility_off
                           : Icons.visibility,
                     ),
-                    onPressed:
-                        () => setState(
-                          () =>
-                              _obscureConfirmPassword =
-                                  !_obscureConfirmPassword,
-                        ),
+                    onPressed: () => setState(
+                      () =>
+                          _obscureConfirmPassword = !_obscureConfirmPassword,
+                    ),
                   ),
                   validator: (value) {
                     if (_passwordController.text.isNotEmpty &&
                         value != _passwordController.text) {
-                      return 'Passwords do not match';
+                      return loc.confirmPasswordErrorMismatch;
                     }
                     return null;
                   },
@@ -609,7 +624,7 @@ class _EditProfileState extends State<EditProfile> {
 
                 // Update Button
                 CustomButton(
-                  text: 'Update',
+                  text: loc.updateButton,
                   isLoading: _isLoading,
                   onPressed: _isLoading ? null : _updateProfile,
                 ),

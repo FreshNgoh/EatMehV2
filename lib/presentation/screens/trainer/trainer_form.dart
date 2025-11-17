@@ -8,8 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:image_picker/image_picker.dart';
-
-// --- ADD THIS IMPORT ---
 import 'package:eatmehv2/core/localization/app_localizations.dart';
 
 class TrainerForm extends StatefulWidget {
