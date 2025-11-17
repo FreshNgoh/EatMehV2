@@ -7,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eatmehv2/data/models/story/story_model.dart';
 import 'package:eatmehv2/data/models/story/comment_model.dart';
 import 'package:eatmehv2/data/repos/story_repo.dart';
+import 'package:eatmehv2/core/localization/app_localizations.dart';
 
 class StoryViewerScreen extends StatefulWidget {
   final List<StoryModel> stories;
@@ -129,6 +130,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
 
   Future<void> _addComment(String text) async {
     if (text.trim().isEmpty) return;
+    final loc = context.loc;
 
     // Fix: Handle empty string as null for userImageUrl
     final userImageUrl =
@@ -160,7 +162,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
       setState(() {
         _localComments[_currentIndex]?.removeLast();
       });
-      final errorMsg = 'Failed to post comment: $e';
+      final errorMsg = loc.storyViewerErrorComment(e.toString());
       showCustomToast(context, errorMsg, type: ToastType.error);
     }
   }
@@ -181,6 +183,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
 
   @override
   Widget build(BuildContext context) {
+    final loc = context.loc;
     final currentStory = widget.stories[_currentIndex];
     final displayComments = _localComments[_currentIndex] ?? [];
     final commentCount = displayComments.length;
@@ -239,29 +242,29 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                             child:
                                 index == _currentIndex
                                     ? AnimatedBuilder(
-                                      animation: _progressController,
-                                      builder: (context, child) {
-                                        return FractionallySizedBox(
-                                          alignment: Alignment.centerLeft,
-                                          widthFactor:
-                                              _progressController.value,
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              color: Colors.white,
-                                              borderRadius:
-                                                  BorderRadius.circular(2),
+                                        animation: _progressController,
+                                        builder: (context, child) {
+                                          return FractionallySizedBox(
+                                            alignment: Alignment.centerLeft,
+                                            widthFactor:
+                                                _progressController.value,
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(2),
+                                              ),
                                             ),
-                                          ),
-                                        );
-                                      },
-                                    )
+                                          );
+                                        },
+                                      )
                                     : index < _currentIndex
                                     ? Container(
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.circular(2),
-                                      ),
-                                    )
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(2),
+                                        ),
+                                      )
                                     : const SizedBox(),
                           ),
                         ),
@@ -287,8 +290,8 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                               MaterialPageRoute(
                                 builder:
                                     (context) => ProfileScreen(
-                                      userUid: currentStory.userId,
-                                    ),
+                                  userUid: currentStory.userId,
+                                ),
                               ),
                             );
                           },
@@ -302,13 +305,13 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                             child:
                                 !_hasValidImageUrl(currentStory.userImageUrl)
                                     ? ClipOval(
-                                      child: Image.asset(
-                                        "assets/teralero.png",
-                                        width: 40,
-                                        height: 40,
-                                        fit: BoxFit.cover,
-                                      ),
-                                    )
+                                        child: Image.asset(
+                                          "assets/teralero.png",
+                                          width: 40,
+                                          height: 40,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      )
                                     : null,
                           ),
                         ),
@@ -324,8 +327,8 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                                 MaterialPageRoute(
                                   builder:
                                       (context) => ProfileScreen(
-                                        userUid: currentStory.userId,
-                                      ),
+                                    userUid: currentStory.userId,
+                                  ),
                                 ),
                               );
                             },
@@ -340,7 +343,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                                   ),
                                 ),
                                 Text(
-                                  _formatTimestamp(currentStory.createdAt),
+                                  _formatTimestamp(currentStory.createdAt, loc),
                                   style: TextStyle(
                                     color: Colors.white.withOpacity(0.7),
                                     fontSize: 12,
@@ -430,9 +433,11 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                         ),
                         const SizedBox(width: 12),
                         Text(
-                          commentCount > 0
-                              ? 'View $commentCount ${commentCount == 1 ? "comment" : "comments"}'
-                              : 'Send message',
+                          commentCount == 0
+                              ? loc.storyViewerButtonSendMessage
+                              : commentCount == 1
+                                ? loc.storyViewerButtonViewComment
+                                : loc.storyViewerButtonViewComments(commentCount),
                           style: TextStyle(
                             color:
                                 commentCount > 0
@@ -488,8 +493,8 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                           children: [
                             Row(
                               children: [
-                                const Text(
-                                  'Comments',
+                                Text(
+                                  loc.storyViewerSheetTitle,
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w600,
@@ -537,116 +542,117 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                         child:
                             displayComments.isEmpty
                                 ? Center(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.chat_bubble_outline,
-                                        size: 48,
-                                        color: Colors.grey.shade300,
-                                      ),
-                                      const SizedBox(height: 12),
-                                      Text(
-                                        'No comments yet',
-                                        style: TextStyle(
-                                          color: Colors.grey.shade500,
-                                          fontSize: 16,
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.chat_bubble_outline,
+                                          size: 48,
+                                          color: Colors.grey.shade300,
                                         ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        'Be the first to comment!',
-                                        style: TextStyle(
-                                          color: Colors.grey.shade400,
-                                          fontSize: 14,
+                                        const SizedBox(height: 12),
+                                        Text(
+                                          loc.storyViewerEmptyTitle,
+                                          style: TextStyle(
+                                            color: Colors.grey.shade500,
+                                            fontSize: 16,
+                                          ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                )
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          loc.storyViewerEmptySubtitle,
+                                          style: TextStyle(
+                                            color: Colors.grey.shade400,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )
                                 : ListView.builder(
-                                  padding: const EdgeInsets.all(16),
-                                  itemCount: displayComments.length,
-                                  itemBuilder: (context, index) {
-                                    final comment = displayComments[index];
-                                    return Padding(
-                                      padding: const EdgeInsets.only(
-                                        bottom: 16,
-                                      ),
-                                      child: Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          CircleAvatar(
-                                            radius: 18,
-                                            backgroundColor: Colors.transparent,
-                                            backgroundImage:
-                                                _hasValidImageUrl(
-                                                      comment.userImageUrl,
-                                                    )
-                                                    ? NetworkImage(
-                                                      comment.userImageUrl,
-                                                    )
-                                                    : null,
-                                            child:
-                                                !_hasValidImageUrl(
-                                                      comment.userImageUrl,
-                                                    )
-                                                    ? CircleAvatar(
-                                                      radius: 20,
-                                                      backgroundColor:
-                                                          Colors.grey.shade300,
-                                                      child: Text(
-                                                        currentStory.username[0]
-                                                            .toUpperCase(),
+                                    padding: const EdgeInsets.all(16),
+                                    itemCount: displayComments.length,
+                                    itemBuilder: (context, index) {
+                                      final comment = displayComments[index];
+                                      return Padding(
+                                        padding: const EdgeInsets.only(
+                                          bottom: 16,
+                                        ),
+                                        child: Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            CircleAvatar(
+                                              radius: 18,
+                                              backgroundColor: Colors.transparent,
+                                              backgroundImage:
+                                                  _hasValidImageUrl(
+                                                        comment.userImageUrl,
+                                                      )
+                                                      ? NetworkImage(
+                                                          comment.userImageUrl,
+                                                        )
+                                                      : null,
+                                              child:
+                                                  !_hasValidImageUrl(
+                                                        comment.userImageUrl,
+                                                      )
+                                                      ? CircleAvatar(
+                                                          radius: 20,
+                                                          backgroundColor:
+                                                              Colors.grey.shade300,
+                                                          child: Text(
+                                                            currentStory.username[0]
+                                                                .toUpperCase(),
+                                                            style: const TextStyle(
+                                                              fontWeight:
+                                                                  FontWeight.bold,
+                                                            ),
+                                                          ),
+                                                        )
+                                                      : null,
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Row(
+                                                    children: [
+                                                      Text(
+                                                        comment.username,
                                                         style: const TextStyle(
                                                           fontWeight:
                                                               FontWeight.bold,
                                                         ),
                                                       ),
-                                                    )
-                                                    : null,
-                                          ),
-                                          const SizedBox(width: 12),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Row(
-                                                  children: [
-                                                    Text(
-                                                      comment.username,
-                                                      style: const TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.bold,
+                                                      const SizedBox(width: 8),
+                                                      Text(
+                                                        _formatTimestamp(
+                                                          comment.createdAt,
+                                                          loc
+                                                        ),
+                                                        style: TextStyle(
+                                                          color:
+                                                              Colors
+                                                                  .grey
+                                                                  .shade500,
+                                                          fontSize: 12,
+                                                        ),
                                                       ),
-                                                    ),
-                                                    const SizedBox(width: 8),
-                                                    Text(
-                                                      _formatTimestamp(
-                                                        comment.createdAt,
-                                                      ),
-                                                      style: TextStyle(
-                                                        color:
-                                                            Colors
-                                                                .grey
-                                                                .shade500,
-                                                        fontSize: 12,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                                const SizedBox(height: 4),
-                                                Text(comment.text),
-                                              ],
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  Text(comment.text),
+                                                ],
+                                              ),
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  ),
                       ),
 
                       // Comment input
@@ -670,16 +676,16 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                               child:
                                   !_hasValidImageUrl(widget.currentUserImageUrl)
                                       ? CircleAvatar(
-                                        radius: 20,
-                                        backgroundColor: Colors.grey.shade300,
-                                        child: Text(
-                                          currentStory.username[0]
-                                              .toUpperCase(),
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
+                                          radius: 20,
+                                          backgroundColor: Colors.grey.shade300,
+                                          child: Text(
+                                            currentStory.username[0]
+                                                .toUpperCase(),
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                           ),
-                                        ),
-                                      )
+                                        )
                                       : null,
                             ),
                             const SizedBox(width: 12),
@@ -687,7 +693,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                               child: TextField(
                                 controller: _commentController,
                                 decoration: InputDecoration(
-                                  hintText: 'Add a comment...',
+                                  hintText: loc.storyViewerInputHint,
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(25),
                                     borderSide: BorderSide.none,
@@ -720,19 +726,19 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
     );
   }
 
-  String _formatTimestamp(Timestamp timestamp) {
+  String _formatTimestamp(Timestamp timestamp, AppLocalizations loc) {
     final now = DateTime.now();
     final date = timestamp.toDate();
     final difference = now.difference(date);
 
     if (difference.inMinutes < 1) {
-      return 'Just now';
+      return loc.storiesTimestampJustNow;
     } else if (difference.inHours < 1) {
-      return '${difference.inMinutes}m ago';
+      return loc.storiesTimestampMinutesAgo(difference.inMinutes);
     } else if (difference.inHours < 24) {
-      return '${difference.inHours}h ago';
+      return loc.storiesTimestampHoursAgo(difference.inHours);
     } else {
-      return '${difference.inDays}d ago';
+      return loc.storiesTimestampDaysAgo(difference.inDays);
     }
   }
 }

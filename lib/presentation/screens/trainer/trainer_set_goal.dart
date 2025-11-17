@@ -9,6 +9,7 @@ import 'package:eatmehv2/presentation/widgets/custom_button.dart';
 import 'package:eatmehv2/presentation/widgets/custom_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:eatmehv2/core/localization/app_localizations.dart';
 
 class TrainerSetGoal extends StatefulWidget {
   final String traineeUid;
@@ -62,14 +63,15 @@ class _TrainerSetGoalState extends State<TrainerSetGoal> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = context.loc;
     if (isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (_user == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Error')),
-        body: const Center(child: Text("Trainee not found")),
+        appBar: AppBar(title: Text(loc.trainerGoalErrorTitle)),
+        body: Center(child: Text(loc.trainerGoalErrorNotFound)),
       );
     }
 
@@ -84,7 +86,7 @@ class _TrainerSetGoalState extends State<TrainerSetGoal> {
           icon: const Icon(Icons.arrow_back_ios),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text('Customize Goal'),
+        title: Text(loc.trainerGoalTitle),
       ),
       body: CustomScrollView(
         slivers: [
@@ -110,12 +112,12 @@ class _TrainerSetGoalState extends State<TrainerSetGoal> {
                       child:
                           (_user!.imageUrl == null || _user!.imageUrl!.isEmpty)
                               ? Text(
-                                _user!.username[0].toUpperCase(),
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              )
+                                  _user!.username[0].toUpperCase(),
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                )
                               : null,
                     ),
 
@@ -140,8 +142,8 @@ class _TrainerSetGoalState extends State<TrainerSetGoal> {
                                 ClipboardData(text: _user!.uid),
                               );
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('User ID copied!'),
+                                SnackBar(
+                                  content: Text(loc.trainerGoalUserIDCopied),
                                   duration: Duration(seconds: 1),
                                 ),
                               );
@@ -207,7 +209,8 @@ class _TrainerSetGoalState extends State<TrainerSetGoal> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
-                                '$userName hope to $userGoals',
+                                loc.trainerGoalUserHope(
+                                    userName, userGoals ?? ''),
                                 style: TextStyle(
                                   color: Colors.blue[900],
                                   fontWeight: FontWeight.w500,
@@ -218,8 +221,8 @@ class _TrainerSetGoalState extends State<TrainerSetGoal> {
                         ),
                       ),
 
-                    const Text(
-                      'Daily Nutritional Goals',
+                    Text(
+                      loc.trainerGoalSectionTitle,
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -229,76 +232,78 @@ class _TrainerSetGoalState extends State<TrainerSetGoal> {
 
                     CustomTextField(
                       controller: _caloriesController,
-                      label: 'Calories (kcal)',
-                      hint: 'Calories',
+                      label: loc.trainerGoalCaloriesLabel,
+                      hint: loc.trainerGoalCaloriesHint,
                       prefixIcon: Icons.local_fire_department,
                     ),
                     const SizedBox(height: 10),
 
                     CustomTextField(
                       controller: _proteinController,
-                      label: 'Protein (g)',
-                      hint: 'Protein',
+                      label: loc.trainerGoalProteinLabel,
+                      hint: loc.trainerGoalProteinHint,
                       prefixIcon: Icons.egg,
                     ),
                     const SizedBox(height: 10),
 
                     CustomTextField(
                       controller: _carbsController,
-                      label: 'Carbs (g)',
-                      hint: 'Carbs',
+                      label: loc.trainerGoalCarbsLabel,
+                      hint: loc.trainerGoalCarbsHint,
                       prefixIcon: Icons.rice_bowl,
                     ),
                     const SizedBox(height: 10),
 
                     CustomTextField(
                       controller: _fatController,
-                      label: 'Fat (g)',
-                      hint: 'Fat',
+                      label: loc.trainerGoalFatLabel,
+                      hint: loc.trainerGoalFatHint,
                       prefixIcon: Icons.water_drop,
                     ),
                     const SizedBox(height: 10),
 
                     CustomTextField(
                       controller: _fiberController,
-                      label: 'Fiber (g)',
-                      hint: 'Fiber',
+                      label: loc.trainerGoalFiberLabel,
+                      hint: loc.trainerGoalFiberHint,
                       prefixIcon: Icons.grass,
                     ),
                     const SizedBox(height: 10),
 
                     CustomTextField(
                       controller: _startDateController,
-                      label: 'Start Date',
-                      hint: 'Select start date',
+                      label: loc.trainerGoalStartDateLabel,
+                      hint: loc.trainerGoalStartDateHint,
                       prefixIcon: Icons.calendar_today,
                       readOnly: true,
                       onTap:
                           () => _selectDate(
-                            context: context,
-                            controller: _startDateController,
-                          ),
+                        context: context,
+                        controller: _startDateController,
+                      ),
                     ),
                     const SizedBox(height: 10),
 
                     CustomTextField(
                       controller: _endDateController,
-                      label: 'End Date',
-                      hint: 'Select end date',
+                      label: loc.trainerGoalEndDateLabel,
+                      hint: loc.trainerGoalEndDateHint,
                       prefixIcon: Icons.event,
                       readOnly: true,
                       onTap:
                           () => _selectDate(
-                            context: context,
-                            controller: _endDateController,
-                          ),
+                        context: context,
+                        controller: _endDateController,
+                      ),
                     ),
                     const SizedBox(height: 32),
 
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 50),
                       child: CustomButton(
-                        text: isSaving ? 'Saving...' : 'Save Goal',
+                        text: isSaving
+                            ? loc.trainerGoalSavingButton
+                            : loc.trainerGoalSaveButton,
                         onPressed: _saveGoal,
                       ),
                     ),
@@ -329,6 +334,7 @@ class _TrainerSetGoalState extends State<TrainerSetGoal> {
   }
 
   Future<void> _saveGoal() async {
+    final loc = context.loc;
     setState(() {
       isSaving = true;
     });
@@ -352,14 +358,14 @@ class _TrainerSetGoalState extends State<TrainerSetGoal> {
 
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Goal saved successfully!')));
+      ).showSnackBar(SnackBar(content: Text(loc.trainerGoalSaveSuccess)));
 
       Navigator.pop(context);
     } catch (e) {
       if (mounted) {
         setState(() => isSaving = false);
       }
-      throw ('Error saving goal: $e');
+      throw (loc.trainerGoalSaveError(e.toString()));
     }
   }
 }

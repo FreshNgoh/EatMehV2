@@ -7,6 +7,7 @@ import 'package:eatmehv2/data/services/trainer_profile_service.dart';
 import 'package:eatmehv2/presentation/widgets/custom_list.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:eatmehv2/core/localization/app_localizations.dart';
 
 class TrainerRequestsScreen extends StatefulWidget {
   final String? filterByUid;
@@ -26,10 +27,13 @@ class _TrainerRequestsScreenState extends State<TrainerRequestsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = context.loc;
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.filterByUid != null ? 'Trainer Request' : 'Trainer Requests',
+          widget.filterByUid != null
+              ? loc.trainerReqTitleSingle
+              : loc.trainerReqTitleMultiple,
         ),
       ),
       body: StreamBuilder<List<NotificationModel>>(
@@ -51,7 +55,7 @@ class _TrainerRequestsScreenState extends State<TrainerRequestsScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    "Error loading requests",
+                    loc.trainerReqErrorLoad,
                     style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
                   ),
                   const SizedBox(height: 8),
@@ -90,7 +94,7 @@ class _TrainerRequestsScreenState extends State<TrainerRequestsScreen> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      "This request is no longer available",
+                      loc.trainerReqFilteredEmptyTitle,
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.grey.shade600,
@@ -98,7 +102,7 @@ class _TrainerRequestsScreenState extends State<TrainerRequestsScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      "It may have been already processed",
+                      loc.trainerReqFilteredEmptySubtitle,
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey.shade400,
@@ -107,7 +111,7 @@ class _TrainerRequestsScreenState extends State<TrainerRequestsScreen> {
                     const SizedBox(height: 24),
                     ElevatedButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text('Go Back'),
+                      child: Text(loc.trainerReqFilteredEmptyButton),
                     ),
                   ],
                 ),
@@ -127,7 +131,7 @@ class _TrainerRequestsScreenState extends State<TrainerRequestsScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    "No trainer requests yet",
+                    loc.trainerReqEmptyTitle,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w500,
@@ -136,7 +140,7 @@ class _TrainerRequestsScreenState extends State<TrainerRequestsScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    "New requests will appear here",
+                    loc.trainerReqEmptySubtitle,
                     style: TextStyle(fontSize: 14, color: Colors.grey.shade400),
                   ),
                 ],
@@ -156,7 +160,7 @@ class _TrainerRequestsScreenState extends State<TrainerRequestsScreen> {
                 return const SizedBox.shrink();
               }
 
-              final traineeName = req.senderName ?? 'Unknown User';
+              final traineeName = req.senderName ?? loc.trainerReqDefaultUserName;
               final traineeImage = req.senderImage ?? '';
 
               return Padding(
@@ -172,30 +176,30 @@ class _TrainerRequestsScreenState extends State<TrainerRequestsScreen> {
                     child:
                         traineeImage.isEmpty
                             ? Text(
-                              traineeName[0].toUpperCase(),
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            )
+                                traineeName[0].toUpperCase(),
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              )
                             : null,
                   ),
-                  value: req.senderName ?? 'Unknown User',
+                  value: req.senderName ?? loc.trainerReqDefaultUserName,
                   actionIcons:
                       _isProcessing
                           ? []
                           : [
-                            ListActionIcon(
-                              icon: Icons.check,
-                              onPressed: () => _handleAccept(req),
-                              tooltip: 'Accept',
-                            ),
-                            ListActionIcon(
-                              icon: Icons.close,
-                              onPressed: () => _handleReject(req),
-                              tooltip: 'Reject',
-                            ),
-                          ],
+                              ListActionIcon(
+                                icon: Icons.check,
+                                onPressed: () => _handleAccept(req),
+                                tooltip: loc.trainerReqTooltipAccept,
+                              ),
+                              ListActionIcon(
+                                icon: Icons.close,
+                                onPressed: () => _handleReject(req),
+                                tooltip: loc.trainerReqTooltipReject,
+                              ),
+                            ],
                   onFieldTap: () {
                     _showRequestDetails(req);
                   },
@@ -210,19 +214,21 @@ class _TrainerRequestsScreenState extends State<TrainerRequestsScreen> {
 
   Future<void> _handleAccept(NotificationModel req) async {
     if (_isProcessing) return;
+    final loc = context.loc;
+    final traineeName = req.senderName ?? loc.trainerReqDefaultTraineeName;
 
     final confirm = await _showConfirmDialog(
-      title: 'Accept Request',
-      message: 'Accept ${req.senderName ?? 'this user'} as your trainee?',
-      confirmText: 'Accept',
+      title: loc.trainerReqDialogAcceptTitle,
+      message: loc.trainerReqDialogAcceptMsg(traineeName),
+      confirmText: loc.trainerReqDialogAcceptButton,
       confirmColor: Colors.green,
     );
 
     final acceptNotification = NotificationModel(
       senderUid: trainerUid,
       receiverUid: req.senderUid,
-      title: "Trainer Request Accepted",
-      message: 'Your request to be a trainee has been accepted by the trainer.',
+      title: loc.trainerReqNotifAcceptTitle,
+      message: loc.trainerReqNotifAcceptMsg,
       type: 'trainer_request',
       status: 'unread',
       createdAt: Timestamp.now(),
@@ -244,7 +250,7 @@ class _TrainerRequestsScreenState extends State<TrainerRequestsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('✓ Accepted ${req.senderName ?? 'trainee'}'),
+            content: Text(loc.trainerReqSnackbarAcceptSuccess(traineeName)),
             backgroundColor: Colors.green,
             behavior: SnackBarBehavior.floating,
           ),
@@ -259,7 +265,7 @@ class _TrainerRequestsScreenState extends State<TrainerRequestsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error accepting request: $e'),
+            content: Text(loc.trainerReqSnackbarAcceptError(e.toString())),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
           ),
@@ -274,19 +280,21 @@ class _TrainerRequestsScreenState extends State<TrainerRequestsScreen> {
 
   Future<void> _handleReject(NotificationModel req) async {
     if (_isProcessing) return;
+    final loc = context.loc;
+    final traineeName = req.senderName ?? loc.trainerReqDefaultTraineeName;
 
     final confirm = await _showConfirmDialog(
-      title: 'Reject Request',
-      message: 'Reject ${req.senderName ?? 'this user'}\'s trainer request?',
-      confirmText: 'Reject',
+      title: loc.trainerReqDialogRejectTitle,
+      message: loc.trainerReqDialogRejectMsg(traineeName),
+      confirmText: loc.trainerReqDialogRejectButton,
       confirmColor: Colors.red,
     );
 
     final declineNotification = NotificationModel(
       senderUid: trainerUid,
       receiverUid: req.senderUid,
-      title: "Trainer Request Declined",
-      message: 'Your request to be a trainee has been rejected by the trainer.',
+      title: loc.trainerReqNotifRejectTitle,
+      message: loc.trainerReqNotifRejectMsg,
       type: 'trainer_request',
       status: 'unread',
       createdAt: Timestamp.now(),
@@ -309,7 +317,7 @@ class _TrainerRequestsScreenState extends State<TrainerRequestsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Rejected ${req.senderName ?? 'trainee'}'),
+            content: Text(loc.trainerReqSnackbarRejectSuccess(traineeName)),
             backgroundColor: Colors.orange,
             behavior: SnackBarBehavior.floating,
           ),
@@ -324,7 +332,7 @@ class _TrainerRequestsScreenState extends State<TrainerRequestsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error rejecting request: $e'),
+            content: Text(loc.trainerReqSnackbarRejectError(e.toString())),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
           ),
@@ -343,6 +351,7 @@ class _TrainerRequestsScreenState extends State<TrainerRequestsScreen> {
     required String confirmText,
     required Color confirmColor,
   }) {
+    final loc = context.loc;
     return showDialog<bool>(
       context: context,
       builder:
@@ -352,7 +361,7 @@ class _TrainerRequestsScreenState extends State<TrainerRequestsScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
+                child: Text(loc.trainerReqDialogCancelButton),
               ),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context, true),
@@ -368,6 +377,7 @@ class _TrainerRequestsScreenState extends State<TrainerRequestsScreen> {
   }
 
   void _showRequestDetails(NotificationModel req) {
+    final loc = context.loc;
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -394,7 +404,7 @@ class _TrainerRequestsScreenState extends State<TrainerRequestsScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            req.senderName ?? 'Unknown User',
+                            req.senderName ?? loc.trainerReqDefaultUserName,
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -402,7 +412,7 @@ class _TrainerRequestsScreenState extends State<TrainerRequestsScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Trainer Request',
+                            loc.trainerReqSheetSubtitle,
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey.shade600,
@@ -415,7 +425,7 @@ class _TrainerRequestsScreenState extends State<TrainerRequestsScreen> {
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  'Message',
+                  loc.trainerReqSheetMsgLabel,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -437,7 +447,7 @@ class _TrainerRequestsScreenState extends State<TrainerRequestsScreen> {
                           foregroundColor: Colors.red,
                           side: const BorderSide(color: Colors.red),
                         ),
-                        child: const Text('Reject'),
+                        child: Text(loc.trainerReqDialogRejectButton),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -451,7 +461,7 @@ class _TrainerRequestsScreenState extends State<TrainerRequestsScreen> {
                           backgroundColor: Colors.green,
                           foregroundColor: Colors.white,
                         ),
-                        child: const Text('Accept'),
+                        child: Text(loc.trainerReqDialogAcceptButton),
                       ),
                     ),
                   ],

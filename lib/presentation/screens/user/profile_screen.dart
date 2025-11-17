@@ -17,6 +17,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:eatmehv2/presentation/widgets/friend_request_button.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+// Added import
+import 'package:eatmehv2/core/localization/app_localizations.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String userUid;
@@ -45,6 +47,9 @@ class _ProfileScreenState extends State<ProfileScreen>
   bool get isOwnProfile =>
       FirebaseAuth.instance.currentUser?.uid == widget.userUid;
 
+  // --- FIX 1: Add this flag ---
+  bool _isInitialized = false;
+
   @override
   void initState() {
     super.initState();
@@ -58,10 +63,24 @@ class _ProfileScreenState extends State<ProfileScreen>
       CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
     );
 
-    _loadUserData();
+    // --- FIX 2: REMOVE _loadUserData() from here ---
+    // _loadUserData();
+  }
+
+  // --- FIX 3: Add didChangeDependencies ---
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Load data only once when context is available
+    if (!_isInitialized) {
+      _loadUserData();
+      _isInitialized = true;
+    }
   }
 
   Future<void> _loadUserData() async {
+    // This is now safe because it's called from didChangeDependencies
+    final loc = context.loc;
     try {
       setState(() {
         _isLoading = true;
@@ -72,7 +91,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       final user = await _userRepo.getUser(widget.userUid);
       if (user == null) {
         setState(() {
-          _errorMessage = 'User not found';
+          _errorMessage = loc.profileErrorUserNotFound;
           _isLoading = false;
         });
         return;
@@ -104,7 +123,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       });
     } catch (e) {
       setState(() {
-        _errorMessage = 'Failed to load user data: $e';
+        _errorMessage = loc.profileErrorLoadFailed(e.toString());
         _isLoading = false;
       });
     }
@@ -177,6 +196,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   void _showBioEditor(BuildContext context) {
     if (!isOwnProfile) return; // Only allow editing own bio
+    final loc = context.loc;
 
     showModalBottomSheet(
       context: context,
@@ -184,23 +204,23 @@ class _ProfileScreenState extends State<ProfileScreen>
       backgroundColor: Colors.transparent,
       builder:
           (context) => BioEditorSheet(
-            currentBio: _user?.bio ?? '',
-            onSave: (newBio) async {
-              try {
-                await _userRepo.updateUser(widget.userUid, {'bio': newBio});
-                await _loadUserData(); // Reload data
-                if (mounted) {
-                  final successMsg = 'Bio updated!';
-                  showCustomToast(context, successMsg, type: ToastType.success);
-                }
-              } catch (e) {
-                if (mounted) {
-                  final errorMsg = 'Failed to update bio: $e';
-                  showCustomToast(context, errorMsg, type: ToastType.error);
-                }
-              }
-            },
-          ),
+        currentBio: _user?.bio ?? '',
+        onSave: (newBio) async {
+          try {
+            await _userRepo.updateUser(widget.userUid, {'bio': newBio});
+            await _loadUserData(); // Reload data
+            if (mounted) {
+              final successMsg = loc.profileBioUpdateSuccess;
+              showCustomToast(context, successMsg, type: ToastType.success);
+            }
+          } catch (e) {
+            if (mounted) {
+              final errorMsg = loc.profileBioUpdateError(e.toString());
+              showCustomToast(context, errorMsg, type: ToastType.error);
+            }
+          }
+        },
+      ),
     );
   }
 
@@ -227,10 +247,11 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   @override
   Widget build(BuildContext context) {
+    final loc = context.loc;
     if (_isLoading) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Profile'),
+          title: Text(loc.profileTitleLoading),
           centerTitle: true,
           leadingWidth: 60,
         ),
@@ -240,7 +261,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
     if (_errorMessage.isNotEmpty || _user == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Profile'), centerTitle: true),
+        appBar: AppBar(title: Text(loc.profileTitleError), centerTitle: true),
         body: Center(
           child: CustomCard(
             child: Column(
@@ -249,7 +270,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 Image.asset('assets/error.png', height: 200, width: 200),
                 const SizedBox(height: 12),
                 Text(
-                  'Error loading records:\n $_errorMessage',
+                  loc.profileErrorGeneric(_errorMessage),
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     color: Colors.red,
@@ -259,7 +280,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: _loadUserData,
-                  child: const Text('Retry'),
+                  child: Text(loc.profileErrorRetryButton),
                 ),
               ],
             ),
@@ -275,8 +296,8 @@ class _ProfileScreenState extends State<ProfileScreen>
         _user!.bio != null && _user!.bio!.isNotEmpty
             ? _user!.bio! // user has a bio, show it
             : isOwnProfile
-            ? 'Tap here to fill in your bio' // own profile, no bio yet
-            : 'This user hasn\'t written a bio yet'; // someone else's profile, no bio
+            ? loc.profileBioEmptyOwn // own profile, no bio yet
+            : loc.profileBioEmptyOther; // someone else's profile, no bio
 
     final hasBio = _user!.bio != null && _user!.bio!.isNotEmpty;
     final caloriesTaken = _calorieData?['taken']?.toInt() ?? 0;
@@ -299,7 +320,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         elevation: 0,
         centerTitle: true,
         leadingWidth: 60,
-        title: Text(isOwnProfile ? 'Profile' : userName),
+        title: Text(isOwnProfile ? loc.profileTitleOwn : userName),
         actions: [
           if (isOwnProfile) ...[
             IconButton(
@@ -358,7 +379,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                                           ClipboardData(text: _user!.uid),
                                         );
                                         final infoMsg =
-                                            'User ID copied to clipboard!';
+                                            loc.profileCopiedToClipboard;
                                         showCustomToast(
                                           context,
                                           infoMsg,
@@ -444,7 +465,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                               if (_user!.role == 'trainer')
                                 _buildBadge(
                                   Icons.fitness_center,
-                                  'Trainer',
+                                  loc.profileBadgeTrainer,
                                   Colors.orange,
                                 ),
                               if (_user!.dietType != null)
@@ -496,7 +517,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  'Me',
+                                  loc.profileTabMe,
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight:
@@ -518,17 +539,17 @@ class _ProfileScreenState extends State<ProfileScreen>
                                     gradient:
                                         _selectedTabIndex == 0
                                             ? const LinearGradient(
-                                              colors: [
-                                                Colors.lightGreen,
-                                                Colors.green,
-                                              ],
-                                            )
+                                                colors: [
+                                                  Colors.lightGreen,
+                                                  Colors.green,
+                                                ],
+                                              )
                                             : const LinearGradient(
-                                              colors: [
-                                                Colors.transparent,
-                                                Colors.transparent,
-                                              ],
-                                            ),
+                                                colors: [
+                                                  Colors.transparent,
+                                                  Colors.transparent,
+                                                ],
+                                              ),
                                   ),
                                 ),
                               ],
@@ -548,7 +569,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  'Consult',
+                                  loc.profileTabConsult,
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight:
@@ -570,17 +591,17 @@ class _ProfileScreenState extends State<ProfileScreen>
                                     gradient:
                                         _selectedTabIndex == 1
                                             ? const LinearGradient(
-                                              colors: [
-                                                Colors.lightGreen,
-                                                Colors.green,
-                                              ],
-                                            )
+                                                colors: [
+                                                  Colors.lightGreen,
+                                                  Colors.green,
+                                                ],
+                                              )
                                             : const LinearGradient(
-                                              colors: [
-                                                Colors.transparent,
-                                                Colors.transparent,
-                                              ],
-                                            ),
+                                                colors: [
+                                                  Colors.transparent,
+                                                  Colors.transparent,
+                                                ],
+                                              ),
                                   ),
                                 ),
                               ],
@@ -597,41 +618,41 @@ class _ProfileScreenState extends State<ProfileScreen>
                     child:
                         _selectedTabIndex == 0
                             ? ProfileMeTab(
-                              user: _user!,
-                              caloriesTaken: caloriesTaken,
-                              caloriesBurnt: caloriesBurnt,
-                              netCalories: netCalories,
-                              netCaloriesColor: netCaloriesColor,
-                              statusText: statusText,
-                              currentImagePath: _currentImagePath,
-                              fadeAnimation: _fadeAnimation,
-                              calorieStatusIcon: Icon(
-                                CalorieUtils.getStatusIcon(calorieStatus),
-                                size: 60,
-                                color: netCaloriesColor,
-                              ),
-                              onStatusIconError: () {},
-                            )
+                                user: _user!,
+                                caloriesTaken: caloriesTaken,
+                                caloriesBurnt: caloriesBurnt,
+                                netCalories: netCalories,
+                                netCaloriesColor: netCaloriesColor,
+                                statusText: statusText,
+                                currentImagePath: _currentImagePath,
+                                fadeAnimation: _fadeAnimation,
+                                calorieStatusIcon: Icon(
+                                  CalorieUtils.getStatusIcon(calorieStatus),
+                                  size: 60,
+                                  color: netCaloriesColor,
+                                ),
+                                onStatusIconError: () {},
+                              )
                             : (_user!.trainerProfile != null
                                 ? ProfileConsultTab(
-                                  trainerProfile: _user!.trainerProfile!,
-                                  trainerUid: _user!.uid,
-                                )
+                                    trainerProfile: _user!.trainerProfile!,
+                                    trainerUid: _user!.uid,
+                                  )
                                 : Center(
-                                  child: Padding(
-                                    padding: EdgeInsets.all(40.0),
-                                    child: Text(
-                                      isOwnProfile
-                                          ? "Apply as trainer!"
-                                          : 'He/She has no trainer profile yet.',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        color: Colors.grey,
+                                    child: Padding(
+                                      padding: EdgeInsets.all(40.0),
+                                      child: Text(
+                                        isOwnProfile
+                                            ? loc.profileConsultEmptyOwn
+                                            : loc.profileConsultEmptyOther,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          color: Colors.grey,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                )),
+                                  )),
                   ),
                 ],
               ),
@@ -736,6 +757,7 @@ class _BioEditorSheetState extends State<BioEditorSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = context.loc;
     return Container(
       height: MediaQuery.of(context).size.height * 0.6,
       decoration: const BoxDecoration(
@@ -763,13 +785,13 @@ class _BioEditorSheetState extends State<BioEditorSheet> {
               children: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text(
-                    'Cancel',
+                  child: Text(
+                    loc.profileBioCancel,
                     style: TextStyle(color: Colors.grey, fontSize: 16),
                   ),
                 ),
-                const Text(
-                  'Edit Bio',
+                Text(
+                  loc.profileBioTitle,
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -781,7 +803,7 @@ class _BioEditorSheetState extends State<BioEditorSheet> {
                     widget.onSave(_bioController.text);
                     Navigator.pop(context);
                   },
-                  child: const Text('Save', style: TextStyle(fontSize: 18)),
+                  child: Text(loc.profileBioSave, style: TextStyle(fontSize: 18)),
                 ),
               ],
             ),
@@ -794,8 +816,8 @@ class _BioEditorSheetState extends State<BioEditorSheet> {
                 controller: _bioController,
                 maxLines: 5,
                 maxLength: 150,
-                decoration: const InputDecoration(
-                  hintText: 'Tell us about yourself...',
+                decoration: InputDecoration(
+                  hintText: loc.profileBioHint,
                   border: OutlineInputBorder(),
                   alignLabelWithHint: true,
                 ),

@@ -14,7 +14,7 @@ import 'package:eatmehv2/presentation/widgets/custom_action_card.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
+import 'package:eatmehv2/core/localization/app_localizations.dart';
 class CarouselApp extends StatefulWidget {
   const CarouselApp({super.key});
 
@@ -100,8 +100,8 @@ class _CarouselAppState extends State<CarouselApp> {
         }
 
         if (snapshot.hasError) {
-          return const Scaffold(
-            body: Center(child: Text('Something went wrong.')),
+          return Scaffold(
+            body: Center(child: Text(context.loc.errorSomethingWentWrong)),
           );
         }
 
@@ -222,7 +222,7 @@ class _CarouselState extends State<Carousel> {
                 child: Column(
                   children: [
                     Text(
-                      'Transform Your Life',
+                      context.loc.consultHeaderTitle, // Localized
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 32,
@@ -233,7 +233,7 @@ class _CarouselState extends State<Carousel> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Choose your path to a healthier you',
+                      context.loc.consultHeaderSubtitle, // Localized
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 16,
@@ -255,61 +255,61 @@ class _CarouselState extends State<Carousel> {
                         ? const Center(child: CircularProgressIndicator())
                         : trainers.isEmpty
                         ? Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.info_outline,
-                              size: 50,
-                              color: Colors.grey.shade500,
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              "No trainers available",
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey.shade600,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.info_outline,
+                                size: 50,
+                                color: Colors.grey.shade500,
                               ),
-                            ),
-                          ],
-                        )
+                              const SizedBox(height: 12),
+                              Text(
+                                context.loc.trainerListNoTrainers, // Localized
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
+                          )
                         : PageView.builder(
-                          controller: _pageController,
-                          onPageChanged: (index) {
-                            setState(() {
-                              _currentPage = index % trainers.length;
-                            });
-                          },
-                          itemCount: 1000, // Infinite scroll
-                          itemBuilder: (context, index) {
-                            final actualIndex = index % trainers.length;
-                            final trainer = trainers[actualIndex];
+                            controller: _pageController,
+                            onPageChanged: (index) {
+                              setState(() {
+                                _currentPage = index % trainers.length;
+                              });
+                            },
+                            itemCount: 1000, // Infinite scroll
+                            itemBuilder: (context, index) {
+                              final actualIndex = index % trainers.length;
+                              final trainer = trainers[actualIndex];
 
-                            return AnimatedBuilder(
-                              animation: _pageController,
-                              builder: (context, child) {
-                                double value = 1.0;
-                                if (_pageController.position.haveDimensions) {
-                                  value = _pageController.page! - index;
-                                  value = (1 - (value.abs() * 0.3)).clamp(
-                                    0.0,
-                                    1.0,
+                              return AnimatedBuilder(
+                                animation: _pageController,
+                                builder: (context, child) {
+                                  double value = 1.0;
+                                  if (_pageController.position.haveDimensions) {
+                                    value = _pageController.page! - index;
+                                    value = (1 - (value.abs() * 0.3)).clamp(
+                                      0.0,
+                                      1.0,
+                                    );
+                                  }
+                                  return Center(
+                                    child: SizedBox(
+                                      height:
+                                          Curves.easeOut.transform(value) * 320,
+                                      child: child,
+                                    ),
                                   );
-                                }
-                                return Center(
-                                  child: SizedBox(
-                                    height:
-                                        Curves.easeOut.transform(value) * 320,
-                                    child: child,
-                                  ),
-                                );
-                              },
-                              child: HeroLayoutCard(
-                                name: trainer['name'],
-                                imageUrl: trainer['image'],
-                              ),
-                            );
-                          },
-                        ),
+                                },
+                                child: HeroLayoutCard(
+                                  name: trainer['name'],
+                                  imageUrl: trainer['image'],
+                                ),
+                              );
+                            },
+                          ),
               ),
 
               const SizedBox(height: 20),
@@ -345,8 +345,8 @@ class _CarouselState extends State<Carousel> {
                     // Trainer Card
                     CustomActionCard(
                       context: context,
-                      title: 'Become a Trainer',
-                      subtitle: 'Share your expertise and inspire others',
+                      title: context.loc.carouselButtonApply,
+                      subtitle: context.loc.consultTrainerSubtitle, 
                       icon: Icons.fitness_center,
                       gradient: LinearGradient(
                         colors: [Colors.green.shade600, Colors.green.shade400],
@@ -356,17 +356,17 @@ class _CarouselState extends State<Carousel> {
                           widget.applicationStatus == 'pending'
                               ? null
                               : () async {
-                                final result = await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const TrainerInstruction(),
-                                  ),
-                                );
+                                  final result = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const TrainerInstruction(),
+                                    ),
+                                  );
 
-                                if (result == 'submitted') {
-                                  await widget.onRefresh();
-                                }
-                              },
+                                  if (result == 'submitted') {
+                                    await widget.onRefresh();
+                                  }
+                                },
                     ),
 
                     const SizedBox(height: 16),
@@ -377,12 +377,12 @@ class _CarouselState extends State<Carousel> {
                         context: context,
                         title:
                             widget.hasTrainer
-                                ? 'Chat with Trainer'
-                                : 'Get a Trainer',
+                                ? context.loc.consultChatWithTrainer 
+                                : context.loc.consultGetTrainer, 
                         subtitle:
                             widget.hasTrainer
-                                ? 'Continue your fitness journey'
-                                : 'Find an expert to guide you',
+                                ? context.loc.consultChatSubtitle 
+                                : context.loc.consultGetTrainerSubtitle, 
                         icon:
                             widget.hasTrainer
                                 ? Icons.chat_bubble
@@ -418,7 +418,7 @@ class _CarouselState extends State<Carousel> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Why Choose Us?',
+          context.loc.consultWhyChooseUs, 
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -428,22 +428,22 @@ class _CarouselState extends State<Carousel> {
         const SizedBox(height: 16),
         _buildFeatureItem(
           icon: Icons.verified_user,
-          title: 'Certified Trainers',
-          subtitle: 'Work with verified fitness professionals',
+          title: context.loc.consultFeature1Title, 
+          subtitle: context.loc.consultFeature1Subtitle, 
           color: Colors.green,
         ),
         const SizedBox(height: 12),
         _buildFeatureItem(
           icon: Icons.track_changes,
-          title: 'Track Progress',
-          subtitle: 'Monitor your journey with detailed analytics',
+          title: context.loc.consultFeature2Title, 
+          subtitle: context.loc.consultFeature2Subtitle, 
           color: Colors.blue,
         ),
         const SizedBox(height: 12),
         _buildFeatureItem(
           icon: Icons.people,
-          title: 'Community Support',
-          subtitle: 'Join a community of fitness enthusiasts',
+          title: context.loc.consultFeature3Title, 
+          subtitle: context.loc.consultFeature3Subtitle, 
           color: Colors.orange,
         ),
       ],
