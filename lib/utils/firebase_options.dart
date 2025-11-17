@@ -46,7 +46,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '626087765038',
     projectId: 'eatmeh-a70a6',
     authDomain: 'eatmeh-a70a6.firebaseapp.com',
-    databaseURL: 'https://eatmeh-a70a6-default-rtdb.asia-southeast1.firebasedatabase.app',
+    databaseURL:
+        'https://eatmeh-a70a6-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'eatmeh-a70a6.firebasestorage.app',
   );
 
@@ -55,7 +56,8 @@ class DefaultFirebaseOptions {
     appId: '1:626087765038:android:59a2dc3124de8133382bbf',
     messagingSenderId: '626087765038',
     projectId: 'eatmeh-a70a6',
-    databaseURL: 'https://eatmeh-a70a6-default-rtdb.asia-southeast1.firebasedatabase.app',
+    databaseURL:
+        'https://eatmeh-a70a6-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'eatmeh-a70a6.firebasestorage.app',
   );
 
@@ -64,7 +66,8 @@ class DefaultFirebaseOptions {
     appId: '1:626087765038:ios:39a2d35675dff25c382bbf',
     messagingSenderId: '626087765038',
     projectId: 'eatmeh-a70a6',
-    databaseURL: 'https://eatmeh-a70a6-default-rtdb.asia-southeast1.firebasedatabase.app',
+    databaseURL:
+        'https://eatmeh-a70a6-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'eatmeh-a70a6.firebasestorage.app',
     iosBundleId: 'com.example.eatmehv2',
   );
@@ -74,7 +77,8 @@ class DefaultFirebaseOptions {
     appId: '1:626087765038:ios:39a2d35675dff25c382bbf',
     messagingSenderId: '626087765038',
     projectId: 'eatmeh-a70a6',
-    databaseURL: 'https://eatmeh-a70a6-default-rtdb.asia-southeast1.firebasedatabase.app',
+    databaseURL:
+        'https://eatmeh-a70a6-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'eatmeh-a70a6.firebasestorage.app',
     iosBundleId: 'com.example.eatmehv2',
   );
@@ -85,7 +89,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '626087765038',
     projectId: 'eatmeh-a70a6',
     authDomain: 'eatmeh-a70a6.firebaseapp.com',
-    databaseURL: 'https://eatmeh-a70a6-default-rtdb.asia-southeast1.firebasedatabase.app',
+    databaseURL:
+        'https://eatmeh-a70a6-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'eatmeh-a70a6.firebasestorage.app',
   );
 }

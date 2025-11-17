@@ -2,14 +2,15 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:bloc/bloc.dart';
-import 'package:eatmehv2/models/chat_message_model.dart';
-import 'package:eatmehv2/repos/chat_repo.dart';
+import '../../data/models/chat/chat_message_model.dart';
+import '../../data/repos/chat_repo.dart';
 import 'package:meta/meta.dart';
 part 'chat_bloc_event.dart';
 part 'chat_bloc_state.dart';
 
 class ChatBlocBloc extends Bloc<ChatBlocEvent, ChatBlocState> {
-  ChatBlocBloc() : super(ChatSuccessState(messages: [])) {
+  ChatBlocBloc({required chatRepository})
+    : super(ChatSuccessState(messages: [])) {
     on<ChatGenerateNewRecipeEvent>(chatGenerateNewRecipeEvent);
     on<AnalyzeMealImageEvent>(analyzeMealImageEvent);
   }
@@ -45,7 +46,9 @@ class ChatBlocBloc extends Bloc<ChatBlocEvent, ChatBlocState> {
       messages.add(userMessage);
       emit(ChatLoadingState());
 
-      final aiResponse = await ChatRepo.chatIRecipeGenerationRepo(messages);
+      final aiResponse = await ChatRepository.chatIRecipeGenerationRepo(
+        messages,
+      );
       final aiMessage = ChatMessageModel(
         parts: [ChatPartModel(text: _parseAIResponse(aiResponse))],
       );
@@ -86,8 +89,22 @@ class ChatBlocBloc extends Bloc<ChatBlocEvent, ChatBlocState> {
             inlineData: InlineData(mimeType: 'image/jpeg', data: base64Image),
           ),
           ChatPartModel(
-            text:
-                'This is a meal image for one serving, analyze the calories of the meal by giving an exact number although it may not be accurate. Also provide a brief recommendation to the meal in one sentence. Return your response in JSON format',
+            text: '''
+              This is a meal image for one serving. 
+              Analyze the food and return the following data **in strict JSON format only**:
+
+              {
+                "foodName": "short name of the meal",
+                "calories": number,
+                "protein": number (grams),
+                "carbs": number (grams),
+                "fat": number (grams),
+                "fiber": number (grams),
+                "recommendation": "short sentence recommending improvements (within 15 words)"
+              }
+
+              Make sure all numbers are integers and units are not included in the values.
+              ''',
           ),
         ],
       );
@@ -95,7 +112,9 @@ class ChatBlocBloc extends Bloc<ChatBlocEvent, ChatBlocState> {
       messages.add(analysis);
       emit(AnalyzeMealLoadingState());
 
-      final aiResponse = await ChatRepo.chatIRecipeGenerationRepo(messages);
+      final aiResponse = await ChatRepository.chatIRecipeGenerationRepo(
+        messages,
+      );
       final aiMessage = ChatMessageModel(
         parts: [ChatPartModel(text: _parseAIResponse(aiResponse))],
       );
