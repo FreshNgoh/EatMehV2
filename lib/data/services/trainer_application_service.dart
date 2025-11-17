@@ -5,7 +5,20 @@ import 'package:eatmehv2/data/models/trainer/trainer_application.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
 class TrainerApplicationService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore _firestore;
+  final FirebaseStorage _storage;
+
+  // Default constructor
+  TrainerApplicationService()
+    : _firestore = FirebaseFirestore.instance,
+      _storage = FirebaseStorage.instance;
+
+  // Test constructor (mock Firebase)
+  TrainerApplicationService.test({
+    required FirebaseFirestore firestore,
+    required FirebaseStorage storage,
+  }) : _firestore = firestore,
+       _storage = storage;
 
   CollectionReference<TrainerApplication> get _trainerApplicationsCollection {
     return _firestore
@@ -58,12 +71,12 @@ class TrainerApplicationService {
   Future<String> getApplicationStatus(String userId) async {
     final application = await getApplicationByUser(userId);
     if (application == null) return 'none';
-    return application.status.toLowerCase(); // pending / approved / rejected
+    return application.status.toLowerCase();
   }
 
   // Upload certificate
   Future<String> uploadCertificate(File file, String userId) async {
-    final ref = FirebaseStorage.instance
+    final ref = _storage
         .ref()
         .child('trainer_certificates')
         .child('$userId-${DateTime.now().millisecondsSinceEpoch}.jpg');
@@ -82,11 +95,12 @@ class TrainerApplicationService {
       'yearsOfExperience': application.experience,
     };
   }
+
+  // Stream of pending applications
   Stream<List<TrainerApplication>> getPendingApplications() {
     return _trainerApplicationsCollection
         .where('status', isEqualTo: 'pending')
         .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map((doc) => doc.data()).toList());
+        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
   }
 }
